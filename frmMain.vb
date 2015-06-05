@@ -49,6 +49,10 @@ Public Class frmMain
     Private SQLiteDB As New SQLiteConnection
     Private UniverseDB As New SQLiteConnection
 
+    Const INDENT As String = "    "
+    Const COLON As String = ":"
+    Const BLOCK_SEQUENCE As String = "-   "
+
     Public Sub New()
         MyBase.New()
 
@@ -160,6 +164,10 @@ Public Class frmMain
             MsgBox("Invalid database name", vbExclamation, Application.ProductName)
             Exit Sub
         End If
+
+        DatabaseName = txtDBName.Text
+        WorkingDirectory = lblFilePathText.Text
+        RootDirectory = lblRootDebugFolderPath.Text
 
         ' Save the file path as a text file and the database name
         MyStream = File.CreateText(SettingsFileName)
@@ -507,6 +515,11 @@ Public Class frmMain
 
     Private Sub CloseDBs()
         On Error Resume Next
+        SQLExpressConnection.Close()
+        SQLExpressConnection2.Close()
+        SQLExpressConnection3.Close()
+        SQLExpressProgressBar.Close()
+        SQLExpressConnectionExecute.Close()
         SQLiteDB.Close()
         UniverseDB.Close()
         On Error GoTo 0
@@ -1006,7 +1019,7 @@ Public Class frmMain
         SQL = "CREATE TABLE ALL_BLUEPRINTS ("
         SQL = SQL & "BLUEPRINT_ID INTEGER PRIMARY KEY,"
         SQL = SQL & "BLUEPRINT_NAME VARCHAR(" & GetLenSQLExpField("BLUEPRINT_NAME", "ALL_BLUEPRINTS") & ") NOT NULL,"
-        SQL = SQL & "BLUEPRINT_GROUP VARCHAR(" & GetLenSQLExpField(" BLUEPRINT_GROUP", "ALL_BLUEPRINTS") & ") NOT NULL,"
+        SQL = SQL & "BLUEPRINT_GROUP VARCHAR(" & GetLenSQLExpField("BLUEPRINT_GROUP", "ALL_BLUEPRINTS") & ") NOT NULL,"
         SQL = SQL & "ITEM_ID INTEGER NOT NULL,"
         SQL = SQL & "ITEM_NAME VARCHAR(" & GetLenSQLExpField("ITEM_NAME", "ALL_BLUEPRINTS") & ") NOT NULL,"
         SQL = SQL & "ITEM_GROUP_ID INTEGER NOT NULL,"
@@ -4802,13 +4815,13 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(3)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(4)) & ","
-            SQL = SQL & BuildInsertFieldString(CInt(msSQLReader.GetValue(5))) & ","
-            SQL = SQL & BuildInsertFieldString(CInt(msSQLReader.GetValue(6))) & ","
-            SQL = SQL & BuildInsertFieldString(CInt(msSQLReader.GetValue(7))) & ","
-            SQL = SQL & BuildInsertFieldString(CInt(msSQLReader.GetValue(8))) & ","
-            SQL = SQL & BuildInsertFieldString(CInt(msSQLReader.GetValue(9))) & ","
-            SQL = SQL & BuildInsertFieldString(CInt(msSQLReader.GetValue(10))) & ","
-            SQL = SQL & BuildInsertFieldString(CInt(msSQLReader.GetValue(11))) & ")"
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(5)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(6)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(7)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(8)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(9)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(10)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(11)) & ")"
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
@@ -5889,6 +5902,7 @@ Public Class frmMain
         Call CloseDBs()
 
         Me.Cursor = Cursors.Default
+        Application.UseWaitCursor = False
         btnBuildDatabase.Enabled = True
         btnBuildSQLServerDB.Enabled = True
         btnImageCopy.Enabled = True
@@ -5910,10 +5924,6 @@ Public Class frmMain
         Dim PreviousLevel As Integer ' Save the previous tree level
         Dim NodeName As String
 
-        Const INDENT As String = "  "
-        Const COLON As String = ":"
-        Const BLOCK_SEQUENCE As String = "- "
-
         Dim k As Integer = 0 ' For tracking sequence items
 
         Dim Sequence As Boolean = False
@@ -5923,6 +5933,9 @@ Public Class frmMain
 
         ' Load the yaml file into a string array for easier processing
         Dim Lines As String() = IO.File.ReadAllLines(FileName)
+
+        ' Set the block and index values
+        ' TO DO - reset these values and not const since CCP seems to change the values
 
         ' Base loop to read the file
         For i = 0 To Lines.Count - 1
@@ -5948,7 +5961,7 @@ Public Class frmMain
 
             If Lines(i) <> "" Then
                 ' Get the name of the node without the colon
-                If Trim(Lines(i)).Substring(0, 2) = BLOCK_SEQUENCE Then
+                If Trim(Lines(i)).Substring(0, Len(BLOCK_SEQUENCE)) = BLOCK_SEQUENCE Then
                     ' Trim the dash from the front
                     NodeName = Trim(Lines(i).Substring(InStr(Lines(i), BLOCK_SEQUENCE) + 1))
                     Sequence = True
@@ -5962,7 +5975,7 @@ Public Class frmMain
                 NodeName = Trim(NodeName.Substring(0, InStr(NodeName, COLON) - 1))
 
                 ' See if we are at the beginning of a block
-                If Lines(i).Substring(0, 2) = INDENT Then
+                If Lines(i).Substring(0, Len(INDENT)) = INDENT Then
                     ' We have an indent, so save the tree level of the indent (for assigning nodes to the correct tree)
                     TreeLevel = GetTreeLevel(Lines(i))
 
@@ -6060,11 +6073,12 @@ Public Class frmMain
             ' Find the first time a space does not occur
             If InputLine.Substring(i, 1) <> " " Then
                 ' Record the position and exit for
-                Return i / 2
+                Return i / Len(INDENT)
             End If
         Next
 
         Return 0
+
     End Function
 
     ' Loads the blueprints table from the YMAL file
@@ -7687,7 +7701,12 @@ Public Class frmMain
         msSQLReader = msSQLQuery.ExecuteReader()
         msSQLReader.Read()
 
-        ColumnLength = msSQLReader.GetValue(0)
+        If IsDBNull(msSQLReader.GetValue(0)) Then
+            ColumnLength = 100
+        Else
+            ColumnLength = msSQLReader.GetValue(0)
+        End If
+
         msSQLReader.Close()
 
         Return CStr(ColumnLength)
@@ -7722,4 +7741,8 @@ Public Class frmMain
 
     End Sub
 
+    Private Sub btnExit_Click(sender As System.Object, e As System.EventArgs) Handles btnExit.Click
+        Me.Dispose()
+        End
+    End Sub
 End Class

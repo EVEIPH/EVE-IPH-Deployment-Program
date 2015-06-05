@@ -38,14 +38,16 @@ Partial Class frmMain
         Me.btnSaveFilePath = New System.Windows.Forms.Button()
         Me.pgMain = New System.Windows.Forms.ProgressBar()
         Me.txtDBName = New System.Windows.Forms.TextBox()
-        Me.TreeView = New System.Windows.Forms.TreeView()
         Me.btnBuildSQLServerDB = New System.Windows.Forms.Button()
         Me.lblTableName = New System.Windows.Forms.Label()
         Me.btnBuildDatabase = New System.Windows.Forms.Button()
         Me.btnImageCopy = New System.Windows.Forms.Button()
         Me.TabPage2 = New System.Windows.Forms.TabPage()
+        Me.TreeView = New System.Windows.Forms.TreeView()
+        Me.btnExit = New System.Windows.Forms.Button()
         Me.TabControl1.SuspendLayout()
         Me.TabPage1.SuspendLayout()
+        Me.TabPage2.SuspendLayout()
         Me.SuspendLayout()
         '
         'TabControl1
@@ -60,6 +62,7 @@ Partial Class frmMain
         '
         'TabPage1
         '
+        Me.TabPage1.Controls.Add(Me.btnExit)
         Me.TabPage1.Controls.Add(Me.lblRootDebugFolderPath)
         Me.TabPage1.Controls.Add(Me.btnSelectRootDebugPath)
         Me.TabPage1.Controls.Add(Me.lblRootDebugFolder)
@@ -70,7 +73,6 @@ Partial Class frmMain
         Me.TabPage1.Controls.Add(Me.btnSaveFilePath)
         Me.TabPage1.Controls.Add(Me.pgMain)
         Me.TabPage1.Controls.Add(Me.txtDBName)
-        Me.TabPage1.Controls.Add(Me.TreeView)
         Me.TabPage1.Controls.Add(Me.btnBuildSQLServerDB)
         Me.TabPage1.Controls.Add(Me.lblTableName)
         Me.TabPage1.Controls.Add(Me.btnBuildDatabase)
@@ -148,7 +150,7 @@ Partial Class frmMain
         '
         'btnSaveFilePath
         '
-        Me.btnSaveFilePath.Location = New System.Drawing.Point(177, 96)
+        Me.btnSaveFilePath.Location = New System.Drawing.Point(121, 96)
         Me.btnSaveFilePath.Name = "btnSaveFilePath"
         Me.btnSaveFilePath.Size = New System.Drawing.Size(104, 38)
         Me.btnSaveFilePath.TabIndex = 26
@@ -169,14 +171,6 @@ Partial Class frmMain
         Me.txtDBName.Name = "txtDBName"
         Me.txtDBName.Size = New System.Drawing.Size(227, 20)
         Me.txtDBName.TabIndex = 25
-        '
-        'TreeView
-        '
-        Me.TreeView.Location = New System.Drawing.Point(144, 244)
-        Me.TreeView.Name = "TreeView"
-        Me.TreeView.Size = New System.Drawing.Size(295, 26)
-        Me.TreeView.TabIndex = 24
-        Me.TreeView.Visible = False
         '
         'btnBuildSQLServerDB
         '
@@ -215,6 +209,7 @@ Partial Class frmMain
         '
         'TabPage2
         '
+        Me.TabPage2.Controls.Add(Me.TreeView)
         Me.TabPage2.Location = New System.Drawing.Point(4, 22)
         Me.TabPage2.Name = "TabPage2"
         Me.TabPage2.Padding = New System.Windows.Forms.Padding(3)
@@ -222,6 +217,23 @@ Partial Class frmMain
         Me.TabPage2.TabIndex = 1
         Me.TabPage2.Text = "Deployment"
         Me.TabPage2.UseVisualStyleBackColor = True
+        '
+        'TreeView
+        '
+        Me.TreeView.Location = New System.Drawing.Point(6, 6)
+        Me.TreeView.Name = "TreeView"
+        Me.TreeView.Size = New System.Drawing.Size(451, 346)
+        Me.TreeView.TabIndex = 25
+        Me.TreeView.Visible = False
+        '
+        'btnExit
+        '
+        Me.btnExit.Location = New System.Drawing.Point(244, 96)
+        Me.btnExit.Name = "btnExit"
+        Me.btnExit.Size = New System.Drawing.Size(104, 38)
+        Me.btnExit.TabIndex = 34
+        Me.btnExit.Text = "Exit"
+        Me.btnExit.UseVisualStyleBackColor = True
         '
         'frmMain
         '
@@ -236,6 +248,7 @@ Partial Class frmMain
         Me.TabControl1.ResumeLayout(False)
         Me.TabPage1.ResumeLayout(False)
         Me.TabPage1.PerformLayout()
+        Me.TabPage2.ResumeLayout(False)
         Me.ResumeLayout(False)
 
     End Sub
@@ -253,11 +266,12 @@ Partial Class frmMain
     Friend WithEvents btnSaveFilePath As System.Windows.Forms.Button
     Friend WithEvents pgMain As System.Windows.Forms.ProgressBar
     Friend WithEvents txtDBName As System.Windows.Forms.TextBox
-    Friend WithEvents TreeView As System.Windows.Forms.TreeView
     Friend WithEvents btnBuildSQLServerDB As System.Windows.Forms.Button
     Friend WithEvents lblTableName As System.Windows.Forms.Label
     Friend WithEvents btnBuildDatabase As System.Windows.Forms.Button
     Friend WithEvents btnImageCopy As System.Windows.Forms.Button
     Friend WithEvents TabPage2 As System.Windows.Forms.TabPage
+    Friend WithEvents TreeView As System.Windows.Forms.TreeView
+    Friend WithEvents btnExit As System.Windows.Forms.Button
 
 End Class
