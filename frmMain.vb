@@ -18,7 +18,9 @@ Public Class frmMain
 
     ' DB
     Private DatabasePath As String ' Where we build the SQLite database
+    Private FinalDBPath As String ' Final DB
     Private DatabaseName As String ' also folder name to update YAML and Universe DB stuff
+    Private FinalDBName As String = "EVEIPH DB"
 
     ' Image folders
     Private IECFOlder As String
@@ -52,6 +54,8 @@ Public Class frmMain
     Const INDENT As String = "    "
     Const COLON As String = ":"
     Const BLOCK_SEQUENCE As String = "-   "
+
+    Const SpaceFlagCode As Integer = 500
 
     Public Sub New()
         MyBase.New()
@@ -102,6 +106,7 @@ Public Class frmMain
 
         WorkingImageFolder = WorkingDirectory
         DatabasePath = WorkingDirectory & DatabaseName
+        FinalDBPath = WorkingDirectory & FinalDBName
 
         txtDBName.Text = DatabaseName
         If WorkingDirectory <> "\" Then
@@ -457,18 +462,18 @@ Public Class frmMain
     Private Sub BuildDB()
 
         ' Check for SQLite DB
-        If File.Exists(DatabasePath & ".s3db") Then
+        If File.Exists(FinalDBPath & ".s3db") Then
             Try
                 SQLiteDB.Close()
             Catch
                 ' Nothing
             End Try
             ' Delete old one
-            File.Delete(DatabasePath & ".s3db")
+            File.Delete(FinalDBPath & ".s3db")
         End If
 
         ' Create new SQLite DB
-        SQLiteConnection.CreateFile(DatabasePath & ".s3db")
+        SQLiteConnection.CreateFile(FinalDBPath & ".s3db")
 
     End Sub
 
@@ -490,8 +495,8 @@ Public Class frmMain
             SQLExpressConnectionExecute.Open()
 
             ' SQL Lite DB
-            If File.Exists(DatabasePath & ".s3db") Then
-                SQLiteDB.ConnectionString = "Data Source=" & DatabasePath & ".s3db"
+            If File.Exists(FinalDBPath & ".s3db") Then
+                SQLiteDB.ConnectionString = "Data Source=" & FinalDBPath & ".s3db"
                 SQLiteDB.Open()
                 ' Set pragma to make this faster
                 Call Execute_SQLiteSQL("PRAGMA synchronous = OFF", SQLiteDB)
@@ -1245,14 +1250,11 @@ Public Class frmMain
         SQL = SQL & "ARRAY_TYPE_ID INTEGER NOT NULL,"
         SQL = SQL & "ARRAY_NAME VARCHAR(" & GetLenSQLExpField("typeName", "invTypes") & ") NOT NULL, "
         SQL = SQL & "ACTIVITY_ID INTEGER NOT NULL,"
-        SQL = SQL & "ACTIVITY_NAME VARCHAR(" & GetLenSQLExpField("activityName", "ramActivities") & ") NOT NULL, "
         SQL = SQL & "MATERIAL_MULTIPLIER REAL NOT NULL,"
         SQL = SQL & "TIME_MULTIPLIER REAL NOT NULL,"
         SQL = SQL & "COST_MULTIPLIER REAL NOT NULL,"
         SQL = SQL & "GROUP_ID INTEGER NOT NULL,"
-        SQL = SQL & "GROUP_NAME VARCHAR(" & GetLenSQLExpField("groupName", "invGroups") & "), "
-        SQL = SQL & "CATEGORY_ID INTEGER NOT NULL,"
-        SQL = SQL & "CATEGORY_NAME VARCHAR(" & GetLenSQLExpField("categoryName", "invCategories") & ") "
+        SQL = SQL & "CATEGORY_ID INTEGER NOT NULL"
         SQL = SQL & ")"
 
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
@@ -1261,13 +1263,11 @@ Public Class frmMain
         msSQL = "SELECT invTypes.typeID AS ARRAY_TYPE_ID, "
         msSQL = msSQL & "invTypes.typeName AS ARRAY_NAME, "
         msSQL = msSQL & "ramActivities.activityID AS ACTIVITY_ID, "
-        msSQL = msSQL & "ramActivities.activityName AS ACTIVITY_NAME, "
         msSQL = msSQL & "ramAssemblyLineTypes.baseMaterialMultiplier * ramAssemblyLineTypeDetailPerGroup.materialMultiplier AS MATERIAL_MULTIPLIER, "
         msSQL = msSQL & "ramAssemblyLineTypes.baseTimeMultiplier * ramAssemblyLineTypeDetailPerGroup.timeMultiplier AS TIME_MULTIPLIER, "
         msSQL = msSQL & "ramAssemblyLineTypes.baseCostMultiplier * ramAssemblyLineTypeDetailPerGroup.costMultiplier AS COST_MULTIPLIER, "
-        msSQL = msSQL & "invGroups.groupID AS GROUP_ID, invGroups.groupName AS GROUP_NAME, "
-        msSQL = msSQL & "0 AS CATEGORY_ID, "
-        msSQL = msSQL & "NULL AS CATEGORY_NAME  "
+        msSQL = msSQL & "invGroups.groupID AS GROUP_ID, "
+        msSQL = msSQL & "0 AS CATEGORY_ID "
         msSQL = msSQL & "FROM invTypes, ramInstallationTypeContents, invGroups AS IG1, "
         msSQL = msSQL & "ramActivities, ramAssemblyLineTypes, ramAssemblyLineTypeDetailPerGroup, invGroups "
         msSQL = msSQL & "WHERE ramAssemblyLineTypes.assemblyLineTypeID = ramInstallationTypeContents.assemblyLineTypeID "
@@ -1281,13 +1281,11 @@ Public Class frmMain
         msSQL = msSQL & "SELECT invTypes.typeID AS ARRAY_TYPE_ID, "
         msSQL = msSQL & "invTypes.typeName AS ARRAY_NAME, "
         msSQL = msSQL & "ramActivities.activityID AS ACTIVITY_ID, "
-        msSQL = msSQL & "ramActivities.activityName AS ACTIVITY_NAME,  "
         msSQL = msSQL & "ramAssemblyLineTypes.baseMaterialMultiplier * ramAssemblyLineTypeDetailPerCategory.materialMultiplier AS MATERIAL_MULTIPLIER, "
         msSQL = msSQL & "ramAssemblyLineTypes.baseTimeMultiplier * ramAssemblyLineTypeDetailPerCategory.timeMultiplier AS TIME_MULTIPLIER, "
         msSQL = msSQL & "ramAssemblyLineTypes.baseCostMultiplier * ramAssemblyLineTypeDetailPerCategory.costMultiplier AS COST_MULTIPLIER, "
-        msSQL = msSQL & "0 AS GROUP_ID, NULL AS GROUP_NAME, "
-        msSQL = msSQL & "invCategories.categoryID AS CATEGORY_ID, "
-        msSQL = msSQL & "invCategories.categoryName AS CATEGORY_NAME "
+        msSQL = msSQL & "0 AS GROUP_ID, "
+        msSQL = msSQL & "invCategories.categoryID AS CATEGORY_ID "
         msSQL = msSQL & "FROM invTypes, invGroups, ramInstallationTypeContents, "
         msSQL = msSQL & "ramActivities, ramAssemblyLineTypes, ramAssemblyLineTypeDetailPerCategory, invCategories "
         msSQL = msSQL & "WHERE ramAssemblyLineTypes.assemblyLineTypeID = ramInstallationTypeContents.assemblyLineTypeID "
@@ -1317,10 +1315,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(4)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(5)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(6)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(7)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(8)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(9)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(10)) & ")"
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(7)) & ")"
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
@@ -1363,15 +1358,12 @@ Public Class frmMain
         SQL = SQL & "FACILITY_TYPE_ID INT NOT NULL, "
         SQL = SQL & "FACILITY_TYPE VARCHAR(" & GetLenSQLExpField("typeName", "invTypes") & ") NOT NULL, "
         SQL = SQL & "ACTIVITY_ID INT NOT NULL, "
-        SQL = SQL & "ACTIVITY_NAME VARCHAR(" & GetLenSQLExpField("activityName", "ramActivities") & ") NOT NULL, "
         SQL = SQL & "FACILITY_TAX REAL NOT NULL, "
         SQL = SQL & "MATERIAL_MULTIPLIER REAL NOT NULL, "
         SQL = SQL & "TIME_MULTIPLIER REAL NOT NULL, "
         SQL = SQL & "COST_MULTIPLIER REAL NOT NULL, "
         SQL = SQL & "GROUP_ID INT NOT NULL, "
-        SQL = SQL & "GROUP_NAME VARCHAR(" & GetLenSQLExpField("groupName", "invGroups") & "), "
         SQL = SQL & "CATEGORY_ID INT NOT NULL, "
-        SQL = SQL & "CATEGORY_NAME VARCHAR(" & GetLenSQLExpField("categoryName", "invCategories") & "), "
         SQL = SQL & "COST_INDEX REAL NOT NULL, "
         SQL = SQL & "OUTPOST INT NOT NULL "
         SQL = SQL & ")"
@@ -1389,13 +1381,13 @@ Public Class frmMain
         msSQL = "SELECT staStations.stationID AS FACILITY_ID, stationName AS FACILITY_NAME, "
         msSQL = msSQL & "mapSolarSystems.solarSystemID AS SOLAR_SYSTEM_ID, mapSolarSystems.solarSystemName AS SOLAR_SYSTEM_NAME, mapSolarSystems.security AS SOLAR_SYSTEM_SECURITY, "
         msSQL = msSQL & "mapRegions.regionID AS REGION_ID, mapRegions.regionName AS REGION_NAME, "
-        msSQL = msSQL & "staStations.stationTypeID, typeName AS FACILITY_TYPE, ramActivities.activityID AS ACTIVITY_ID, ramActivities.activityName AS ACTIVITY_NAME, "
+        msSQL = msSQL & "staStations.stationTypeID, typeName AS FACILITY_TYPE, ramActivities.activityID AS ACTIVITY_ID, "
         msSQL = msSQL & ".1 as FACILITY_TAX, "
         msSQL = msSQL & "ramAssemblyLineTypes.baseMaterialMultiplier * ramAssemblyLineTypeDetailPerGroup.materialMultiplier AS MATERIAL_MULTIPLIER, "
         msSQL = msSQL & "ramAssemblyLineTypes.baseTimeMultiplier * ramAssemblyLineTypeDetailPerGroup.timeMultiplier AS TIME_MULTIPLIER,  "
         msSQL = msSQL & "ramAssemblyLineTypes.baseCostMultiplier * ramAssemblyLineTypeDetailPerGroup.costMultiplier AS COST_MULTIPLIER,  "
-        msSQL = msSQL & "invGroups.groupID AS GROUP_ID, invGroups.groupName AS GROUP_NAME, "
-        msSQL = msSQL & "0 AS CATEGORY_ID, NULL AS CATEGORY_NAME, 0 AS COST_INDEX, 0 AS OUTPOST "
+        msSQL = msSQL & "invGroups.groupID AS GROUP_ID, "
+        msSQL = msSQL & "0 AS CATEGORY_ID, 0 AS COST_INDEX, 0 AS OUTPOST "
         msSQL = msSQL & "FROM staStations, invTypes, ramAssemblyLineStations, mapRegions, mapSolarSystems, "
         msSQL = msSQL & "ramActivities, ramAssemblyLineTypes, ramAssemblyLineTypeDetailPerGroup, invGroups "
         msSQL = msSQL & "WHERE staStations.stationTypeID = invTypes.typeID "
@@ -1410,13 +1402,13 @@ Public Class frmMain
         msSQL = msSQL & "SELECT staStations.stationID, stationName, "
         msSQL = msSQL & "mapSolarSystems.solarSystemID AS SOLAR_SYSTEM_ID, mapSolarSystems.solarSystemName AS SOLAR_SYSTEM_NAME, mapSolarSystems.security AS SOLAR_SYSTEM_SECURITY, "
         msSQL = msSQL & "mapRegions.regionID AS REGION_ID, mapRegions.regionName AS REGION_NAME, "
-        msSQL = msSQL & "staStations.stationTypeID, typeName AS FACILITY_TYPE, ramActivities.activityID AS ACTIVITY_ID, ramActivities.activityName AS ACTIVITY_NAME, "
+        msSQL = msSQL & "staStations.stationTypeID, typeName AS FACILITY_TYPE, ramActivities.activityID AS ACTIVITY_ID, "
         msSQL = msSQL & ".1 as FACILITY_TAX, "
         msSQL = msSQL & "ramAssemblyLineTypes.baseMaterialMultiplier * ramAssemblyLineTypeDetailPerCategory.materialMultiplier AS MATERIAL_MULTIPLIER, "
         msSQL = msSQL & "ramAssemblyLineTypes.baseTimeMultiplier * ramAssemblyLineTypeDetailPerCategory.timeMultiplier AS TIME_MULTIPLIER,  "
         msSQL = msSQL & "ramAssemblyLineTypes.baseCostMultiplier * ramAssemblyLineTypeDetailPerCategory.costMultiplier AS COST_MULTIPLIER,    "
-        msSQL = msSQL & "0 AS GROUP_ID, NULL AS GROUP_NAME, "
-        msSQL = msSQL & "invCategories.categoryID AS CATEGORY_ID, invCategories.categoryName AS CATEGORY_NAME, 0 AS COST_INDEX, 0 AS OUTPOST "
+        msSQL = msSQL & "0 AS GROUP_ID, "
+        msSQL = msSQL & "invCategories.categoryID AS CATEGORY_ID, 0 AS COST_INDEX, 0 AS OUTPOST "
         msSQL = msSQL & "FROM staStations, invTypes, ramAssemblyLineStations, mapRegions, mapSolarSystems, "
         msSQL = msSQL & "ramActivities, ramAssemblyLineTypes, ramAssemblyLineTypeDetailPerCategory, invCategories "
         msSQL = msSQL & "WHERE staStations.stationTypeID = invTypes.typeID "
@@ -1455,10 +1447,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(14)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(15)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(16)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(17)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(18)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(19)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(20)) & ")"
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(17)) & ")"
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
@@ -1471,25 +1460,22 @@ Public Class frmMain
         Application.DoEvents()
 
         ' Finally do indexes
-        SQL = "CREATE INDEX IDX_SF_FN ON STATION_FACILITIES (FACILITY_NAME);"
+        SQL = "CREATE INDEX IDX_SF_FN_AID ON STATION_FACILITIES (FACILITY_NAME, ACTIVITY_ID);"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-        SQL = "CREATE INDEX IDX_SF_FID ON STATION_FACILITIES (FACILITY_ID);" ' not sure if I still need these
+        SQL = "CREATE INDEX IDX_SF_FID_AID_GID_CID ON STATION_FACILITIES (FACILITY_ID, ACTIVITY_ID, GROUP_ID, CATEGORY_ID);"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-        SQL = "CREATE INDEX IDX_SF_SSID_AID ON STATION_FACILITIES (SOLAR_SYSTEM_ID, ACTIVITY_ID);" ' not sure if I still need these
+        SQL = "CREATE INDEX IDX_SF_OP_FN_AID_CID ON STATION_FACILITIES (OUTPOST, FACILITY_NAME, ACTIVITY_ID, CATEGORY_ID);"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-        SQL = "CREATE INDEX IDX_SF_GID ON STATION_FACILITIES (GROUP_ID);"
+        SQL = "CREATE INDEX IDX_SF_OP_FN_AID_GID ON STATION_FACILITIES (OUTPOST, FACILITY_NAME, ACTIVITY_ID, GROUP_ID);"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-        SQL = "CREATE INDEX IDX_SF_OP_AID_CID_GID ON STATION_FACILITIES (OUTPOST, ACTIVITY_ID, CATEGORY_ID, GROUP_ID, REGION_NAME, SOLAR_SYSTEM_NAME);"
+        SQL = "CREATE INDEX IDX_SF_SSID_AID ON STATION_FACILITIES (SOLAR_SYSTEM_ID, ACTIVITY_ID);"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-        SQL = "CREATE INDEX IDX_SF_CID ON STATION_FACILITIES (CATEGORY_ID);"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
-
-        SQL = "CREATE INDEX IDX_SF_OP_FN_AID_CID_GID ON STATION_FACILITIES (OUTPOST, FACILITY_NAME, ACTIVITY_ID, CATEGORY_ID, GROUP_ID, REGION_NAME, SOLAR_SYSTEM_NAME);"
+        SQL = "CREATE INDEX IDX_SF_OP_AID_GID_CID_RN_SSN ON STATION_FACILITIES (OUTPOST, ACTIVITY_ID, GROUP_ID, CATEGORY_ID, REGION_NAME, SOLAR_SYSTEM_NAME);"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
         Call CommitSQLiteTransaction(SQLiteDB)
@@ -1520,14 +1506,14 @@ Public Class frmMain
 
         While msSQLReader.Read
             ' Look up all item categoryID's for the activity of all blueprints that have it
-            msSQL = "SELECT invCategories.categoryID, categoryName "
+            msSQL = "SELECT invCategories.categoryID "
             msSQL = msSQL & "FROM industryActivityProducts, invTypes, invGroups, invCategories "
             ' This line figures out the items made with the bp, and then attaches it to the activities on the bp - not elegant but works with CCPs system
             msSQL = msSQL & "WHERE (SELECT typeID FROM invTypes, industryActivityProducts AS X WHERE typeID = X.productTypeID AND X.activityID = 1 AND X.blueprintTypeID = industryActivityProducts.blueprintTypeID) = invTypes.typeID "
             msSQL = msSQL & "AND invTypes.groupID = invGroups.groupID "
             msSQL = msSQL & "AND invGroups.categoryID = invCategories.categoryID "
             msSQL = msSQL & "AND activityID = " & msSQLReader.GetValue(1) & " "
-            msSQL = msSQL & "GROUP BY invCategories.categoryID, invCategories.categoryName "
+            msSQL = msSQL & "GROUP BY invCategories.categoryID "
 
             msSQLQuery2 = New SqlCommand(msSQL, SQLExpressConnection2)
             msSQLReader2 = msSQLQuery2.ExecuteReader()
@@ -4962,7 +4948,7 @@ Public Class frmMain
         End While
 
         ' Add a final flag for space
-        SQL = "INSERT INTO INVENTORY_FLAGS VALUES (156,'Space','Space',0)"
+        SQL = "INSERT INTO INVENTORY_FLAGS VALUES (" & CStr(SpaceFlagCode) & ",'Space','Space',0)"
 
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
@@ -7744,4 +7730,91 @@ Public Class frmMain
         Me.Dispose()
         End
     End Sub
+
+    Private Sub btnBuildBinary_Click(sender As System.Object, e As System.EventArgs) Handles btnBuildBinary.Click
+        Dim FinalFolder As String = "C:\Users\Brian\EVE Stuff\EVE IPH Project\Deployment\EVEIPH v2\"
+        Dim FinalZip As String = "C:\Users\Brian\EVE Stuff\EVE IPH Project\Deployment\EVEIPH v3.1 Binaries.zip"
+        ' Paths
+        Dim RootDirectory As String = "C:\Users\Brian\EVE Stuff\EVE IPH Project\Root Directory\"
+        Dim DataDumpWorking As String = "C:\Users\Brian\EVE Stuff\EVE IPH Project\DataDump Working\"
+        ' Files
+        Dim ZipForgeDLL As String = "ZipForge.dll"
+        Dim JSONDLL As String = "Newtonsoft.Json.dll"
+        Dim SQLiteDLL As String = "System.Data.SQLite.dll"
+        Dim EVEIPHEXE As String = "EVE Isk per Hour.exe"
+        Dim EVEIPHUpdater As String = "EVEIPH Updater.exe"
+        Dim EVEIPHDB As String = "EVEIPH DB.s3db" ' Use DDWorking
+        Dim UpdaterManifest As String = "EVEIPH Updater.exe.manifest"
+        Dim EXEManifest As String = "EVE Isk per Hour.exe.manifest"
+        Dim LatestVersionXML As String
+        ' Image folder
+        Dim ImageFolder As String = "EVEIPH Images" ' IN DD Working
+
+        Dim TestBuild As Boolean = True
+
+        btnBuildBinary.Enabled = False
+        Application.UseWaitCursor = True
+        Application.DoEvents()
+
+        ' Make folder to put files in and zip
+        If Directory.Exists(FinalFolder) Then
+            Directory.Delete(FinalFolder, True)
+        End If
+
+        If File.Exists("C:\Users\Brian\EVE Stuff\EVE IPH Project\BinaryBuilder\Test.txt") Then
+            TestBuild = True
+            LatestVersionXML = "LatestVersionIPH Test.xml"
+        Else
+            TestBuild = False
+            LatestVersionXML = "LatestVersionIPH.xml"
+        End If
+
+        Directory.CreateDirectory(FinalFolder)
+
+        ' Copy all these files to the final Directory
+        File.Copy(RootDirectory & ZipForgeDLL, FinalFolder & ZipForgeDLL)
+        File.Copy(RootDirectory & JSONDLL, FinalFolder & JSONDLL)
+        File.Copy(RootDirectory & SQLiteDLL, FinalFolder & SQLiteDLL)
+        File.Copy(RootDirectory & EVEIPHEXE, FinalFolder & EVEIPHEXE)
+        File.Copy(RootDirectory & EVEIPHUpdater, FinalFolder & EVEIPHUpdater)
+        File.Copy(DataDumpWorking & EVEIPHDB, FinalFolder & EVEIPHDB)
+        File.Copy(RootDirectory & UpdaterManifest, FinalFolder & UpdaterManifest)
+        File.Copy(RootDirectory & EXEManifest, FinalFolder & EXEManifest)
+        File.Copy(RootDirectory & LatestVersionXML, FinalFolder & LatestVersionXML)
+
+        If TestBuild Then
+            ' Copy the test.txt to the binary
+            File.Copy("C:\Users\Brian\EVE Stuff\EVE IPH Project\BinaryBuilder\Test.txt", FinalFolder & "Test.txt")
+        End If
+
+        ' IPH images
+        My.Computer.FileSystem.CopyDirectory(DataDumpWorking & ImageFolder, FinalFolder & ImageFolder, True)
+
+        ' Zip the whole folder up for download
+        ' Create an instance of the ZipForge class
+        Dim archiver As New ZipForge()
+
+        If File.Exists(FinalZip) Then
+            File.Delete(FinalZip)
+        End If
+
+        ' Set the name of the archive file we want to create
+        archiver.FileName = FinalZip
+        ' Because we create a new archive, 
+        ' we set fileMode to System.IO.FileMode.Create
+        archiver.OpenArchive(System.IO.FileMode.Create)
+        ' Set base (default) directory for all archive operations
+        archiver.BaseDir = FinalFolder
+        ' Add files to the archive by mask
+        archiver.AddFiles("*.*")
+        archiver.CloseArchive()
+
+        Application.UseWaitCursor = False
+        Application.DoEvents()
+
+        MsgBox("Binary Built")
+        btnBuildBinary.Enabled = True
+
+    End Sub
+
 End Class
