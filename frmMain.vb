@@ -2,6 +2,7 @@
 Imports System.Data.SqlClient ' For SQL Server Connection
 Imports System.Data.SQLite
 Imports System.IO
+Imports System.Xml
 
 Imports ComponentAce.Compression.ZipForge
 ' This namespace contains ArchiverException class required for error handling
@@ -12,14 +13,18 @@ Public Class frmMain
 
     Private Const SettingsFileName As String = "Settings.txt"
 
+    Private VersionNumber As String = ""
+
     ' Directory files and paths
-    Private WorkingDirectory As String
     Private RootDirectory As String ' For the debugging process, will copy images here as well
+    Private WorkingDirectory As String ' Where the final DB and image zip is stored 
+    Private MediaFireDirectory As String ' Where all the files we want to sync to the Media fire server for download are
 
     ' DB
     Private DatabasePath As String ' Where we build the SQLite database
     Private FinalDBPath As String ' Final DB
     Private DatabaseName As String ' also folder name to update YAML and Universe DB stuff
+    Private ImagesVersion As String ' Version of the images we have in the zip
     Private FinalDBName As String = "EVEIPH DB"
 
     ' Image folders
@@ -29,6 +34,35 @@ Public Class frmMain
     ' When updating the image files to build the zip, update the root directory images as well so we have the updated images for running in debug mode
     Private WorkingImageFolder As String = "Root Directory\EVEIPH Images"
     Private MissingImagesFilePath As String
+
+    ' For saving and scanning the github folder for updates - this folder is in the deployment folder (same as installer and binary)
+    Private FinalBinaryFolder As String = "EVEIPH\"
+    Private FinalBinaryZip As String = "EVEIPH v" & VersionNumber & " Binaries.zip"
+
+    ' File names
+    Private MSIInstaller As String = "Eve Isk per Hour " & VersionNumber & ".msi"
+
+    Private ZipForgeDLL As String = "ZipForge.dll"
+    Private JSONDLL As String = "Newtonsoft.Json.dll"
+    Private SQLiteDLL As String = "System.Data.SQLite.dll"
+    Private EVEIPHEXE As String = "EVE Isk per Hour.exe"
+    Private EVEIPHUpdater As String = "EVEIPH Updater.exe"
+    Private EVEIPHDB As String = "EVEIPH DB.s3db"
+    Private UpdaterManifest As String = "EVEIPH Updater.exe.manifest"
+    Private EXEManifest As String = "EVE Isk per Hour.exe.manifest"
+    Private ImageZipFile As String = "EVEIPH Images.zip"
+    Private LatestVersionXML As String ' Set with scan for text.txt
+
+    ' File URLs
+    Private ZipForgeDLLURL As String = "http://www.mediafire.com/download/va7avejtnl5boto/ZipForge.dll"
+    Private JSONDLLURL As String = "http://www.mediafire.com/download/7a6ml9gwu14616d/Newtonsoft.Json.dll"
+    Private SQLiteDLLURL As String = "http://www.mediafire.com/download/b0px46xwaa8jgx4/System.Data.SQLite.dll"
+    Private EVEIPHEXEURL As String = "http://www.mediafire.com/download/2ckpd2th8xlpysv/EVE_Isk_per_Hour.exe"
+    Private EVEIPHUpdaterURL As String = "http://www.mediafire.com/download/r9innfrf287mnd7/EVEIPH_Updater.exe"
+    Private EVEIPHDBURL As String = "http://www.mediafire.com/download/cfylxmlq6v8i26c/EVEIPH_DB.s3db"
+    Private UpdaterManifestURL As String = "http://www.mediafire.com/download/c149x7vcf1gab2p/EVEIPH_Updater.exe.manifest"
+    Private EXEManifestURL As String = "http://www.mediafire.com/download/sdlrk28t18gv8z0/EVE_Isk_per_Hour.exe.manifest"
+    Private ImageZipFileURL As String = "http://www.mediafire.com/download/duq6nw4d0p59rci/EVEIPH_Images.zip"
 
     ' YAML files
     Private Const YAMLBlueprints As String = "blueprints.yaml"
@@ -55,7 +89,15 @@ Public Class frmMain
     Const COLON As String = ":"
     Const BLOCK_SEQUENCE As String = "-   "
 
+    Private TestBuild As Boolean
+    Private FileList As List(Of FileNameDate)
+
     Const SpaceFlagCode As Integer = 500
+
+    Structure FileNameDate
+        Dim FileName As String
+        Dim FileDate As DateTime
+    End Structure
 
     Public Sub New()
         MyBase.New()
@@ -64,65 +106,18 @@ Public Class frmMain
         InitializeComponent()
 
         'Add any initialization after the InitializeComponent() call
-
         Call GetFilePaths()
         Call SetFilePaths()
 
         ToolTip.SetToolTip(txtDBName, "Name of the database file and database in SQL Server - Use the name saved on the SDE Zip file")
+        ToolTip.SetToolTip(txtImageVersion, "Version of the images from the Types directory")
+        ToolTip.SetToolTip(btnCopyFilesBuildXML, "Copies all the files from directories and then builds the xml file and saves them all in the github folder for upload")
 
-    End Sub
+        ' Set the grid - scrollbar is 21
+        lstFileInformation.Columns.Add("File Name", 250, HorizontalAlignment.Left)
+        lstFileInformation.Columns.Add("File Date/Time", 150, HorizontalAlignment.Left)
 
-    Private Sub GetFilePaths()
-        ' Read the settings file and lines
-        Dim BPStream As StreamReader = Nothing
-        If File.Exists(SettingsFileName) Then
-            BPStream = New System.IO.StreamReader(SettingsFileName)
-
-            WorkingDirectory = BPStream.ReadLine()
-            DatabaseName = BPStream.ReadLine
-            RootDirectory = BPStream.ReadLine
-
-            BPStream.Close()
-        Else
-            WorkingDirectory = ""
-            DatabaseName = ""
-        End If
-    End Sub
-
-    Private Sub SetFilePaths()
-
-        ' Add the slash if not there
-        If WorkingDirectory <> "" Then
-            If WorkingDirectory.Substring(Len(WorkingDirectory) - 1) <> "\" Then
-                WorkingDirectory = WorkingDirectory & "\"
-            End If
-        End If
-
-        If RootDirectory <> "" Then
-            If RootDirectory.Substring(Len(RootDirectory) - 1) <> "\" Then
-                RootDirectory = RootDirectory & "\"
-            End If
-        End If
-
-        WorkingImageFolder = WorkingDirectory
-        DatabasePath = WorkingDirectory & DatabaseName
-        FinalDBPath = WorkingDirectory & FinalDBName
-
-        txtDBName.Text = DatabaseName
-        If WorkingDirectory <> "\" Then
-            lblFilePathText.Text = WorkingDirectory
-        End If
-
-        If RootDirectory <> "\" Then
-            lblRootDebugFolderPath.Text = RootDirectory
-        End If
-
-        ' When updating the image files to build the zip, update the root directory images as well so we have the updated images for running in debug mode
-        WorkingImageFolder = RootDirectory & "EVEIPH Images"
-
-        IECFOlder = WorkingDirectory & "Types"
-        EVEIPHImageFolder = WorkingDirectory & "EVEIPH Images"
-        MissingImagesFilePath = WorkingDirectory & DatabaseName & " Missing Images.txt"
+        Call LoadFileGrid()
 
     End Sub
 
@@ -132,6 +127,115 @@ Public Class frmMain
         SQLExpressConnection2.Close()
         SQLExpressConnection3.Close()
         SQLExpressProgressBar.Close()
+    End Sub
+
+    Private Sub btnExit_Click(sender As System.Object, e As System.EventArgs) Handles btnExit.Click
+        Me.Dispose()
+        End
+    End Sub
+
+    Private Sub GetFilePaths()
+        ' Read the settings file and lines
+        Dim BPStream As StreamReader = Nothing
+        If File.Exists(SettingsFileName) Then
+            BPStream = New System.IO.StreamReader(SettingsFileName)
+
+            DatabaseName = BPStream.ReadLine
+            ImagesVersion = BPStream.ReadLine
+            VersionNumber = BPStream.ReadLine
+
+            RootDirectory = BPStream.ReadLine
+            If Not Directory.Exists(RootDirectory) Then
+                RootDirectory = ""
+            End If
+            WorkingDirectory = BPStream.ReadLine
+            If Not Directory.Exists(WorkingDirectory) Then
+                WorkingDirectory = ""
+            End If
+            MediaFireDirectory = BPStream.ReadLine
+            If Not Directory.Exists(MediaFireDirectory) Then
+                MediaFireDirectory = ""
+            End If
+
+            If Not IsNothing(VersionNumber) Then
+                ' Set these if we have a version number
+                FinalBinaryZip = "EVEIPH v" & VersionNumber & " Binaries.zip"
+
+                ' File names
+                MSIInstaller = "Eve Isk per Hour " & VersionNumber & ".msi"
+            Else
+                FinalBinaryZip = "EVEIPH v3.1 Binaries.zip"
+                MSIInstaller = "Eve Isk per Hour 3.1.msi"
+            End If
+
+            BPStream.Close()
+        Else
+            DatabaseName = ""
+            ImagesVersion = ""
+            RootDirectory = ""
+            WorkingDirectory = ""
+            MediaFireDirectory = ""
+            VersionNumber = ""
+        End If
+    End Sub
+
+    Private Sub SetFilePaths()
+
+        ' Add the slash if not there
+        If RootDirectory <> "" Then
+            If RootDirectory.Substring(Len(RootDirectory) - 1) <> "\" Then
+                RootDirectory = RootDirectory & "\"
+            End If
+        End If
+
+        If WorkingDirectory <> "" Then
+            If WorkingDirectory.Substring(Len(WorkingDirectory) - 1) <> "\" Then
+                WorkingDirectory = WorkingDirectory & "\"
+            End If
+        End If
+
+        If MediaFireDirectory <> "" Then
+            If MediaFireDirectory.Substring(Len(MediaFireDirectory) - 1) <> "\" Then
+                MediaFireDirectory = MediaFireDirectory & "\"
+            End If
+        End If
+
+        WorkingImageFolder = WorkingDirectory
+        DatabasePath = WorkingDirectory & DatabaseName
+        FinalDBPath = WorkingDirectory & FinalDBName
+
+        txtDBName.Text = DatabaseName
+        txtImageVersion.Text = ImagesVersion
+        lblDBNameDisplay.Text = DatabaseName
+        txtVersionNumber.Text = VersionNumber
+
+        If WorkingDirectory <> "\" Then
+            lblWorkingFolderPath.Text = WorkingDirectory
+        End If
+
+        If MediaFireDirectory <> "\" Then
+            lblMediaFirePath.Text = MediaFireDirectory
+        End If
+
+        If RootDirectory <> "\" Then
+            lblRootDebugFolderPath.Text = RootDirectory
+        End If
+
+        If File.Exists(RootDirectory & "Test.txt") Then
+            TestBuild = True
+            LatestVersionXML = "LatestVersionIPH Test.xml"
+        Else
+            TestBuild = False
+            LatestVersionXML = "LatestVersionIPH.xml"
+        End If
+
+        ' When updating the image files to build the zip, update the root directory images as well so we have the updated images for running in debug mode
+        WorkingImageFolder = RootDirectory & "EVEIPH Images"
+
+        IECFOlder = WorkingDirectory & "Types"
+        EVEIPHImageFolder = WorkingDirectory & "EVEIPH Images"
+        MissingImagesFilePath = WorkingDirectory & DatabaseName & " Missing Images.txt"
+
     End Sub
 
     Private Sub SetProgressBarValues(ByVal TableName As String)
@@ -157,60 +261,134 @@ Public Class frmMain
 
     End Sub
 
-    Private Sub btnSaveFilePath_Click(sender As System.Object, e As System.EventArgs) Handles btnSaveFilePath.Click
-        Dim MyStream As StreamWriter
-
-        If Trim(lblFilePathText.Text) = "" Then
-            MsgBox("Invalid file path", vbExclamation, Application.ProductName)
-            Exit Sub
+    Private Sub btnSelectInstallerBinaryPath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectInstallerBinaryPath.Click
+        If MediaFireDirectory <> "" Then
+            FolderBrowserDialog.SelectedPath = MediaFireDirectory
         End If
 
-        If Trim(txtDBName.Text) = "" Then
-            MsgBox("Invalid database name", vbExclamation, Application.ProductName)
-            Exit Sub
+        If FolderBrowserDialog.ShowDialog() = DialogResult.OK Then
+            Try
+                lblMediaFirePath.Text = FolderBrowserDialog.SelectedPath
+                MediaFireDirectory = FolderBrowserDialog.SelectedPath
+                Call SetFilePaths()
+            Catch ex As Exception
+                MsgBox(Err.Description, vbExclamation, Application.ProductName)
+            End Try
         End If
-
-        DatabaseName = txtDBName.Text
-        WorkingDirectory = lblFilePathText.Text
-        RootDirectory = lblRootDebugFolderPath.Text
-
-        ' Save the file path as a text file and the database name
-        MyStream = File.CreateText(SettingsFileName)
-        MyStream.Write(lblFilePathText.Text & Environment.NewLine)
-        MyStream.Write(txtDBName.Text & Environment.NewLine)
-        MyStream.Write(lblRootDebugFolderPath.Text)
-
-        MyStream.Flush()
-        MyStream.Close()
-
-        MsgBox("Settings Saved", vbInformation, Application.ProductName)
-
     End Sub
 
-    Private Sub btnSelectFilePath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectFilePath.Click
+    Private Sub btnSelectDBImagesPath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectDBImagesPath.Click
         If WorkingDirectory <> "" Then
             FolderBrowserDialog.SelectedPath = WorkingDirectory
         End If
 
         If FolderBrowserDialog.ShowDialog() = DialogResult.OK Then
             Try
-                lblFilePathText.Text = FolderBrowserDialog.SelectedPath
+                lblWorkingFolderPath.Text = FolderBrowserDialog.SelectedPath
                 WorkingDirectory = FolderBrowserDialog.SelectedPath
                 Call SetFilePaths()
             Catch ex As Exception
                 MsgBox(Err.Description, vbExclamation, Application.ProductName)
             End Try
         End If
+    End Sub
+
+    Private Sub btnSaveFilePath_Click(sender As System.Object, e As System.EventArgs) Handles btnSaveFilePath.Click
+        Call SaveFilePaths()
+    End Sub
+
+    Private Sub SaveFilePaths()
+        Dim MyStream As StreamWriter
+
+        If Trim(txtDBName.Text) = "" Then
+            MsgBox("Invalid database name", vbExclamation, Application.ProductName)
+            TabPage2.Select()
+            txtDBName.Focus()
+            Exit Sub
+        End If
+
+        If Trim(lblMediaFirePath.Text) = "" Then
+            MsgBox("Invalid Installer/Binary file path", vbExclamation, Application.ProductName)
+            TabPage2.Select()
+            Exit Sub
+        End If
+
+        If Trim(lblWorkingFolderPath.Text) = "" Then
+            MsgBox("Invalid Images file path", vbExclamation, Application.ProductName)
+            TabPage2.Select()
+            Exit Sub
+        End If
+
+        If Trim(lblRootDebugFolderPath.Text) = "" Then
+            MsgBox("Invalid Root/Debug file path", vbExclamation, Application.ProductName)
+            TabPage2.Select()
+            Exit Sub
+        End If
+
+        If Trim(txtVersionNumber.Text) = "" Then
+            MsgBox("Invalid version number", vbExclamation, Application.ProductName)
+            TabPage2.Select()
+            txtVersionNumber.Focus()
+            Exit Sub
+        End If
+
+        If Trim(txtImageVersion.Text) = "" Then
+            MsgBox("Invalid Images Version number", vbExclamation, Application.ProductName)
+            TabPage2.Select()
+            txtImageVersion.Focus()
+            Exit Sub
+        End If
+
+        DatabaseName = txtDBName.Text
+        ImagesVersion = txtVersionNumber.Text
+        lblDBNameDisplay.Text = DatabaseName
+        VersionNumber = txtVersionNumber.Text
+
+        RootDirectory = lblRootDebugFolderPath.Text
+        WorkingDirectory = lblWorkingFolderPath.Text
+        MediaFireDirectory = lblMediaFirePath.Text
+
+        ' Set these if we have a version number
+        FinalBinaryZip = "EVEIPH v" & VersionNumber & " Binaries.zip"
+
+        ' File names
+        MSIInstaller = "Eve Isk per Hour " & VersionNumber & ".msi"
+
+        ' Save the file path as a text file and the database name
+        MyStream = File.CreateText(SettingsFileName)
+        MyStream.Write(txtDBName.Text & Environment.NewLine)
+        MyStream.Write(txtImageVersion.Text & Environment.NewLine)
+        MyStream.Write(txtVersionNumber.Text & Environment.NewLine)
+        MyStream.Write(lblRootDebugFolderPath.Text & Environment.NewLine)
+        MyStream.Write(lblWorkingFolderPath.Text & Environment.NewLine)
+        MyStream.Write(lblMediaFirePath.Text & Environment.NewLine)
+
+        MyStream.Flush()
+        MyStream.Close()
+
+        ' Reload this incase the folder changed
+        Call LoadFileGrid()
+
+        MsgBox("Settings Saved", vbInformation, Application.ProductName)
 
     End Sub
 
-    Private Sub btnSelectRootDebugPath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectRootDebugPath.Click
+    Private Sub btnSelectRootDebugPath2_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectRootDebugPath.Click
+        Call SelectRootDebugPath()
+    End Sub
+
+    Private Sub btnSelectRootDebugPath_Click(sender As System.Object, e As System.EventArgs)
+        Call SelectRootDebugPath()
+    End Sub
+
+    Private Sub SelectRootDebugPath()
         If RootDirectory <> "" Then
             FolderBrowserDialog.SelectedPath = RootDirectory
         End If
 
         If FolderBrowserDialog.ShowDialog() = DialogResult.OK Then
             Try
+                lblRootDebugFolderPath.Text = FolderBrowserDialog.SelectedPath
                 lblRootDebugFolderPath.Text = FolderBrowserDialog.SelectedPath
                 RootDirectory = FolderBrowserDialog.SelectedPath
                 Call SetFilePaths()
@@ -230,7 +408,45 @@ Public Class frmMain
         Call SetFilePaths()
     End Sub
 
-    ' Copy just the bp images that I use for EVE IPH from the latest dump into a new folder - TO DO
+    ' Loads up the grid with files in the github directory and shows the date they were last updated
+    Private Sub LoadFileGrid()
+        Dim lstViewRow As ListViewItem
+        Dim TempFile As FileNameDate
+
+        If MediaFireDirectory <> "" Then
+            Dim di As New DirectoryInfo(MediaFireDirectory)
+            Dim fiArr As FileInfo() = di.GetFiles()
+
+            ' Reset
+            FileList = New List(Of FileNameDate)
+
+            ' Add the names of the files.
+            Dim fri As FileInfo
+            For Each fri In fiArr
+                TempFile.FileDate = fri.LastWriteTime
+                TempFile.FileName = fri.Name
+                FileList.Add(TempFile)
+            Next fri
+
+            ' Sort the names
+            Call SortListDesc(FileList, 0, FileList.Count - 1)
+
+            ' Add them to the list
+            lstFileInformation.Items.Clear()
+            lstFileInformation.BeginUpdate()
+
+            For i = 0 To FileList.Count - 1
+                lstViewRow = lstFileInformation.Items.Add(FileList(i).FileName)
+                lstViewRow.SubItems.Add(CStr(FileList(i).FileDate))
+            Next
+
+            lstFileInformation.EndUpdate()
+
+        End If
+
+    End Sub
+
+    ' Copies just the bp images that I use for EVE IPH from the latest dump into a new folder and zips them up for deployment
     Private Sub btnImageCopy_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnImageCopy.Click
         Dim ReaderCount As Long
         Dim i As Long
@@ -246,12 +462,6 @@ Public Class frmMain
             Exit Sub
         End If
 
-        ' Make sure we have a DB first
-        If WorkingDirectory = "" Then
-            MsgBox("File Path not set", vbExclamation, Application.ProductName)
-            Call btnSelectFilePath.Focus()
-            Exit Sub
-        End If
 
         ' Make sure we have a DB first
         If RootDirectory = "" Then
@@ -400,9 +610,196 @@ Public Class frmMain
         btnBuildSQLServerDB.Enabled = True
         btnImageCopy.Enabled = True
 
-        MsgBox("Images Copied Successfully")
+        MsgBox("Images Copied Successfully", vbInformation, "Complete")
 
     End Sub
+
+    ' Builds the binary zip file
+    Private Sub btnBuildBinary_Click(sender As System.Object, e As System.EventArgs) Handles btnBuildBinary.Click
+        ' Build this in the working directory
+        Dim FinalBinaryFolderPath As String = WorkingDirectory & FinalBinaryFolder
+        Dim FinalBinaryZipPath As String = WorkingDirectory & FinalBinaryZip
+
+        ' Temp working Image folder to zip later
+        Dim ImageFolder As String = "EVEIPH Images" ' IN DD Working
+
+        btnBuildBinary.Enabled = False
+        Application.UseWaitCursor = True
+        Application.DoEvents()
+
+        ' Make folder to put files in and zip
+        If Directory.Exists(FinalBinaryFolderPath) Then
+            Directory.Delete(FinalBinaryFolderPath, True)
+        End If
+
+        If TestBuild Then
+            ' Copy the test.txt to the binary
+            File.Copy(RootDirectory & "Test.txt", FinalBinaryFolderPath & "Test.txt")
+        End If
+
+        Directory.CreateDirectory(FinalBinaryFolderPath)
+
+        ' Copy all these files from the media file directory (should be most up to date) to the working directory to make the zip
+        File.Copy(MediaFireDirectory & ZipForgeDLL, FinalBinaryFolderPath & ZipForgeDLL)
+        File.Copy(MediaFireDirectory & JSONDLL, FinalBinaryFolderPath & JSONDLL)
+        File.Copy(MediaFireDirectory & SQLiteDLL, FinalBinaryFolderPath & SQLiteDLL)
+        File.Copy(MediaFireDirectory & EVEIPHEXE, FinalBinaryFolderPath & EVEIPHEXE)
+        File.Copy(MediaFireDirectory & EVEIPHUpdater, FinalBinaryFolderPath & EVEIPHUpdater)
+        File.Copy(MediaFireDirectory & UpdaterManifest, FinalBinaryFolderPath & UpdaterManifest)
+        File.Copy(MediaFireDirectory & EXEManifest, FinalBinaryFolderPath & EXEManifest)
+        File.Copy(MediaFireDirectory & LatestVersionXML, FinalBinaryFolderPath & LatestVersionXML)
+
+        ' DB
+        File.Copy(WorkingDirectory & EVEIPHDB, FinalBinaryFolderPath & EVEIPHDB)
+
+        ' IPH images
+        My.Computer.FileSystem.CopyDirectory(WorkingDirectory & ImageFolder, FinalBinaryFolderPath & ImageFolder, True)
+
+        ' Zip the whole folder up for download
+        ' Create an instance of the ZipForge class
+        Dim archiver As New ZipForge()
+
+        If File.Exists(FinalBinaryZipPath) Then
+            File.Delete(FinalBinaryZipPath)
+        End If
+
+        ' Set the name of the archive file we want to create
+        archiver.FileName = FinalBinaryZipPath
+        ' Because we create a new archive, 
+        ' we set fileMode to System.IO.FileMode.Create
+        archiver.OpenArchive(System.IO.FileMode.Create)
+        ' Set base (default) directory for all archive operations
+        archiver.BaseDir = FinalBinaryFolderPath
+        ' Add files to the archive by mask
+        archiver.AddFiles("*.*")
+        archiver.CloseArchive()
+
+        If File.Exists(MediaFireDirectory & FinalBinaryZip) Then
+            File.Delete(MediaFireDirectory & FinalBinaryZip)
+        End If
+
+        ' Copy binary zip file to the media file directory
+        File.Copy(FinalBinaryZipPath, MediaFireDirectory & FinalBinaryZip)
+
+        Application.UseWaitCursor = False
+        Application.DoEvents()
+
+        ' Clean up working folder
+        If Directory.Exists(FinalBinaryFolderPath) Then
+            Directory.Delete(FinalBinaryFolderPath, True)
+        End If
+
+        ' Refresh this file in the list
+        Call LoadFileGrid()
+
+        MsgBox("Binary Build", vbInformation, "Complete")
+        btnBuildBinary.Enabled = True
+
+    End Sub
+
+#Region "Supporting Functions"
+
+    Private Structure Setting
+        Dim FileName As String
+        Dim Version As String
+        Dim MD5 As String
+        Dim URL As String
+
+        Public Sub New(inFileName As String, inVersion As String, inMD5 As String, inURL As String)
+            FileName = inFileName
+            Version = inVersion
+            MD5 = inMD5
+            URL = inURL
+        End Sub
+
+    End Structure
+
+    ' Sorts the material list by quantity
+    Private Sub SortListDesc(ByVal Sentlist As List(Of FileNameDate), ByVal First As Integer, ByVal Last As Integer)
+        Dim LowIndex As Integer
+        Dim HighIndex As Integer
+        Dim MidValue As Date
+
+        ' Quicksort
+        LowIndex = First
+        HighIndex = Last
+        MidValue = Sentlist((First + Last) \ 2).FileDate
+
+        Do
+            While Sentlist(LowIndex).FileDate > MidValue
+                LowIndex = LowIndex + 1
+            End While
+
+            While Sentlist(HighIndex).FileDate < MidValue
+                HighIndex = HighIndex - 1
+            End While
+
+            If LowIndex <= HighIndex Then
+                Swap(LowIndex, HighIndex)
+                LowIndex = LowIndex + 1
+                HighIndex = HighIndex - 1
+            End If
+        Loop While LowIndex <= HighIndex
+
+        If First < HighIndex Then
+            SortListDesc(Sentlist, First, HighIndex)
+        End If
+
+        If LowIndex < Last Then
+            SortListDesc(Sentlist, LowIndex, Last)
+        End If
+
+    End Sub
+
+    ' This swaps the list values
+    Private Sub Swap(ByRef IndexA As Integer, ByRef IndexB As Integer)
+        Dim Temp As FileNameDate
+
+        Temp = FileList(IndexA)
+        FileList(IndexA) = FileList(IndexB)
+        FileList(IndexB) = Temp
+
+    End Sub
+
+    ' MD5 Hash - specify the path to a file and this routine will calculate your hash
+    Public Function MD5CalcFile(ByVal filepath As String) As String
+
+        ' Open file (as read-only) - If it's not there, return ""
+        If IO.File.Exists(filepath) Then
+            Using reader As New System.IO.FileStream(filepath, IO.FileMode.Open, IO.FileAccess.Read)
+                Using md5 As New System.Security.Cryptography.MD5CryptoServiceProvider
+
+                    ' hash contents of this stream
+                    Dim hash() As Byte = md5.ComputeHash(reader)
+
+                    ' return formatted hash
+                    Return ByteArrayToString(hash)
+
+                End Using
+            End Using
+        End If
+
+        ' Something went wrong
+        Return ""
+
+    End Function
+
+    ' MD5 Hash - utility function to convert a byte array into a hex string
+    Private Function ByteArrayToString(ByVal arrInput() As Byte) As String
+
+        Dim sb As New System.Text.StringBuilder(arrInput.Length * 2)
+
+        For i As Integer = 0 To arrInput.Length - 1
+            sb.Append(arrInput(i).ToString("X2"))
+        Next
+
+        Return sb.ToString().ToLower
+
+    End Function
+
+#End Region
+
+#Region "Database Update"
 
     ' Create a new database, build tables and indexes, then populate it with the different updated tables
     Private Sub btnBuildDatabase_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnBuildDatabase.Click
@@ -411,13 +808,6 @@ Public Class frmMain
         If DatabaseName = "" Then
             MsgBox("Database Name not defined", vbExclamation, Application.ProductName)
             Call txtDBName.Focus()
-            Exit Sub
-        End If
-
-        ' Make sure we have a DB first
-        If WorkingDirectory = "" Then
-            MsgBox("File Path not set", vbExclamation, Application.ProductName)
-            Call btnSelectFilePath.Focus()
             Exit Sub
         End If
 
@@ -455,7 +845,7 @@ Public Class frmMain
         Call CloseDBs()
 
         Application.DoEvents()
-        MsgBox("Database Created")
+        Call MsgBox("Database Created", vbInformation, "Complete")
 
     End Sub
 
@@ -7722,99 +8112,186 @@ Public Class frmMain
 
     End Sub
 
-    Private Sub txtDBName_TextChanged(sender As System.Object, e As System.EventArgs)
+#End Region
 
+#Region "Deploy files"
+
+    Private Sub btnCopyFilesBuildXML_Click(sender As System.Object, e As System.EventArgs) Handles btnCopyFilesBuildXML.Click
+        Call CopyFilesBuildXML()
     End Sub
 
-    Private Sub btnExit_Click(sender As System.Object, e As System.EventArgs) Handles btnExit.Click
-        Me.Dispose()
-        End
-    End Sub
+    ' Copies all the files from directories and then builds the xml file and saves it here for upload to github
+    Private Sub CopyFilesBuildXML()
+        Dim NewFilesAdded As Boolean = False
 
-    Private Sub btnBuildBinary_Click(sender As System.Object, e As System.EventArgs) Handles btnBuildBinary.Click
-        Dim FinalFolder As String = "C:\Users\Brian\EVE Stuff\EVE IPH Project\Deployment\EVEIPH v2\"
-        Dim FinalZip As String = "C:\Users\Brian\EVE Stuff\EVE IPH Project\Deployment\EVEIPH v3.1 Binaries.zip"
-        ' Paths
-        Dim RootDirectory As String = "C:\Users\Brian\EVE Stuff\EVE IPH Project\Root Directory\"
-        Dim DataDumpWorking As String = "C:\Users\Brian\EVE Stuff\EVE IPH Project\DataDump Working\"
-        ' Files
-        Dim ZipForgeDLL As String = "ZipForge.dll"
-        Dim JSONDLL As String = "Newtonsoft.Json.dll"
-        Dim SQLiteDLL As String = "System.Data.SQLite.dll"
-        Dim EVEIPHEXE As String = "EVE Isk per Hour.exe"
-        Dim EVEIPHUpdater As String = "EVEIPH Updater.exe"
-        Dim EVEIPHDB As String = "EVEIPH DB.s3db" ' Use DDWorking
-        Dim UpdaterManifest As String = "EVEIPH Updater.exe.manifest"
-        Dim EXEManifest As String = "EVE Isk per Hour.exe.manifest"
-        Dim LatestVersionXML As String
-        ' Image folder
-        Dim ImageFolder As String = "EVEIPH Images" ' IN DD Working
-
-        Dim TestBuild As Boolean = True
-
-        btnBuildBinary.Enabled = False
-        Application.UseWaitCursor = True
+        On Error Resume Next
+        Me.Cursor = Cursors.WaitCursor
         Application.DoEvents()
 
-        ' Make folder to put files in and zip
-        If Directory.Exists(FinalFolder) Then
-            Directory.Delete(FinalFolder, True)
+        ' Copy the files over to the latest directory, overwrite if needed - check the hash first 
+        If MD5CalcFile(RootDirectory & ZipForgeDLL) <> MD5CalcFile(MediaFireDirectory & ZipForgeDLL) Then
+            File.Copy(RootDirectory & ZipForgeDLL, MediaFireDirectory & ZipForgeDLL, True)
+            NewFilesAdded = True
         End If
 
-        If File.Exists("C:\Users\Brian\EVE Stuff\EVE IPH Project\BinaryBuilder\Test.txt") Then
-            TestBuild = True
-            LatestVersionXML = "LatestVersionIPH Test.xml"
-        Else
-            TestBuild = False
-            LatestVersionXML = "LatestVersionIPH.xml"
+        If MD5CalcFile(RootDirectory & JSONDLL) <> MD5CalcFile(MediaFireDirectory & JSONDLL) Then
+            File.Copy(RootDirectory & JSONDLL, MediaFireDirectory & JSONDLL, True)
+            NewFilesAdded = True
         End If
 
-        Directory.CreateDirectory(FinalFolder)
-
-        ' Copy all these files to the final Directory
-        File.Copy(RootDirectory & ZipForgeDLL, FinalFolder & ZipForgeDLL)
-        File.Copy(RootDirectory & JSONDLL, FinalFolder & JSONDLL)
-        File.Copy(RootDirectory & SQLiteDLL, FinalFolder & SQLiteDLL)
-        File.Copy(RootDirectory & EVEIPHEXE, FinalFolder & EVEIPHEXE)
-        File.Copy(RootDirectory & EVEIPHUpdater, FinalFolder & EVEIPHUpdater)
-        File.Copy(DataDumpWorking & EVEIPHDB, FinalFolder & EVEIPHDB)
-        File.Copy(RootDirectory & UpdaterManifest, FinalFolder & UpdaterManifest)
-        File.Copy(RootDirectory & EXEManifest, FinalFolder & EXEManifest)
-        File.Copy(RootDirectory & LatestVersionXML, FinalFolder & LatestVersionXML)
-
-        If TestBuild Then
-            ' Copy the test.txt to the binary
-            File.Copy("C:\Users\Brian\EVE Stuff\EVE IPH Project\BinaryBuilder\Test.txt", FinalFolder & "Test.txt")
+        If MD5CalcFile(RootDirectory & SQLiteDLL) <> MD5CalcFile(MediaFireDirectory & SQLiteDLL) Then
+            File.Copy(RootDirectory & SQLiteDLL, MediaFireDirectory & SQLiteDLL, True)
+            NewFilesAdded = True
         End If
 
-        ' IPH images
-        My.Computer.FileSystem.CopyDirectory(DataDumpWorking & ImageFolder, FinalFolder & ImageFolder, True)
-
-        ' Zip the whole folder up for download
-        ' Create an instance of the ZipForge class
-        Dim archiver As New ZipForge()
-
-        If File.Exists(FinalZip) Then
-            File.Delete(FinalZip)
+        If MD5CalcFile(RootDirectory & EVEIPHEXE) <> MD5CalcFile(MediaFireDirectory & EVEIPHEXE) Then
+            File.Copy(RootDirectory & EVEIPHEXE, MediaFireDirectory & EVEIPHEXE, True)
+            NewFilesAdded = True
         End If
 
-        ' Set the name of the archive file we want to create
-        archiver.FileName = FinalZip
-        ' Because we create a new archive, 
-        ' we set fileMode to System.IO.FileMode.Create
-        archiver.OpenArchive(System.IO.FileMode.Create)
-        ' Set base (default) directory for all archive operations
-        archiver.BaseDir = FinalFolder
-        ' Add files to the archive by mask
-        archiver.AddFiles("*.*")
-        archiver.CloseArchive()
+        If MD5CalcFile(RootDirectory & EVEIPHUpdater) <> MD5CalcFile(MediaFireDirectory & EVEIPHUpdater) Then
+            File.Copy(RootDirectory & EVEIPHUpdater, MediaFireDirectory & EVEIPHUpdater, True)
+            NewFilesAdded = True
+        End If
 
-        Application.UseWaitCursor = False
+        If MD5CalcFile(WorkingDirectory & EVEIPHDB) <> MD5CalcFile(MediaFireDirectory & EVEIPHDB) Then
+            File.Copy(WorkingDirectory & EVEIPHDB, MediaFireDirectory & EVEIPHDB, True)
+            NewFilesAdded = True
+        End If
+
+        If MD5CalcFile(WorkingDirectory & ImageZipFile) <> MD5CalcFile(MediaFireDirectory & ImageZipFile) Then
+            File.Copy(WorkingDirectory & ImageZipFile, MediaFireDirectory & ImageZipFile, True)
+            NewFilesAdded = True
+        End If
+
+        If MD5CalcFile(RootDirectory & UpdaterManifest) <> MD5CalcFile(MediaFireDirectory & UpdaterManifest) Then
+            File.Copy(RootDirectory & UpdaterManifest, MediaFireDirectory & UpdaterManifest, True)
+            NewFilesAdded = True
+        End If
+
+        If MD5CalcFile(RootDirectory & EXEManifest) <> MD5CalcFile(MediaFireDirectory & EXEManifest) Then
+            File.Copy(RootDirectory & EXEManifest, MediaFireDirectory & EXEManifest, True)
+            NewFilesAdded = True
+        End If
+
+        On Error GoTo 0
+
+        ' Output the Latest XML File if we have updates
+        If NewFilesAdded Then
+            Call WriteLatestXMLFile()
+
+            ' Copy the new XML file into the root directory - so I don't get updates
+            File.Copy(MediaFireDirectory & LatestVersionXML, RootDirectory & LatestVersionXML, True)
+
+        End If
+
+        ' Refresh the grid
+        Call LoadFileGrid()
+
+        Me.Cursor = Cursors.Default
         Application.DoEvents()
 
-        MsgBox("Binary Built")
-        btnBuildBinary.Enabled = True
+        MsgBox("Files Deployed", vbInformation, "Complete")
 
     End Sub
+
+    ' Writes the sent settings to the sent file name
+    Private Sub WriteLatestXMLFile()
+
+        ' Create XmlWriterSettings.
+        Dim XMLSettings As XmlWriterSettings = New XmlWriterSettings()
+        XMLSettings.Indent = True
+
+        ' Delete and make a fresh copy
+        If File.Exists(LatestVersionXML) Then
+            File.Delete(LatestVersionXML)
+        End If
+
+        ' Loop through the settings sent and output each name and value
+        Using writer As XmlWriter = XmlWriter.Create(MediaFireDirectory & LatestVersionXML, XMLSettings)
+            writer.WriteStartDocument()
+            writer.WriteStartElement("EVEIPH") ' Root.
+            writer.WriteAttributeString("Version", VersionNumber)
+            writer.WriteStartElement("LastUpdated")
+            writer.WriteString(CStr(Now))
+            writer.WriteEndElement()
+
+            writer.WriteStartElement("result")
+            writer.WriteStartElement("rowset")
+            writer.WriteAttributeString("name", "filelist")
+            writer.WriteAttributeString("key", "version")
+            writer.WriteAttributeString("columns", "Name,Version,MD5,URL")
+
+            ' Add each file 
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", EVEIPHEXE)
+            writer.WriteAttributeString("Version", VersionNumber)
+            writer.WriteAttributeString("MD5", MD5CalcFile(MediaFireDirectory & EVEIPHEXE))
+            writer.WriteAttributeString("URL", EVEIPHEXEURL)
+            writer.WriteEndElement()
+
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", EVEIPHUpdater)
+            writer.WriteAttributeString("Version", "2.0")
+            writer.WriteAttributeString("MD5", MD5CalcFile(MediaFireDirectory & EVEIPHUpdater))
+            writer.WriteAttributeString("URL", EVEIPHUpdaterURL)
+            writer.WriteEndElement()
+
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", EVEIPHDB)
+            writer.WriteAttributeString("Version", DatabaseName)
+            writer.WriteAttributeString("MD5", MD5CalcFile(MediaFireDirectory & EVEIPHDB))
+            writer.WriteAttributeString("URL", EVEIPHDBURL)
+            writer.WriteEndElement()
+
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", ImageZipFile)
+            writer.WriteAttributeString("Version", ImagesVersion)
+            writer.WriteAttributeString("MD5", MD5CalcFile(MediaFireDirectory & ImageZipFile))
+            writer.WriteAttributeString("URL", ImageZipFileURL)
+            writer.WriteEndElement()
+
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", ZipForgeDLL)
+            writer.WriteAttributeString("Version", "3.00")
+            writer.WriteAttributeString("MD5", MD5CalcFile(MediaFireDirectory & ZipForgeDLL))
+            writer.WriteAttributeString("URL", ZipForgeDLLURL)
+            writer.WriteEndElement()
+
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", JSONDLL)
+            writer.WriteAttributeString("Version", "6.03")
+            writer.WriteAttributeString("MD5", MD5CalcFile(MediaFireDirectory & JSONDLL))
+            writer.WriteAttributeString("URL", JSONDLLURL)
+            writer.WriteEndElement()
+
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", SQLiteDLL)
+            writer.WriteAttributeString("Version", "1.07.9.0")
+            writer.WriteAttributeString("MD5", MD5CalcFile(MediaFireDirectory & SQLiteDLL))
+            writer.WriteAttributeString("URL", SQLiteDLLURL)
+            writer.WriteEndElement()
+
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", UpdaterManifest)
+            writer.WriteAttributeString("Version", "1.0")
+            writer.WriteAttributeString("MD5", MD5CalcFile(MediaFireDirectory & UpdaterManifest))
+            writer.WriteAttributeString("URL", UpdaterManifestURL)
+            writer.WriteEndElement()
+
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", EXEManifest)
+            writer.WriteAttributeString("Version", "1.0")
+            writer.WriteAttributeString("MD5", MD5CalcFile(MediaFireDirectory & EXEManifest))
+            writer.WriteAttributeString("URL", EXEManifestURL)
+            writer.WriteEndElement()
+
+            ' End document.
+            writer.WriteEndDocument()
+        End Using
+
+    End Sub
+
+#End Region
 
 End Class
