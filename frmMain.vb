@@ -70,8 +70,13 @@ Public Class frmMain
     Private Const YAMLGraphicIDs As String = "graphicIDs.yaml"
     Private Const YAMLiconIDs As String = "iconIDs.yaml" ' Old eveIcons
     Private Const YAMLtypeIDs As String = "typeIDs.yaml"
+    Private Const YAMLgroupIDs As String = "groupIDs.yaml"
+    Private Const YAMLcategoryIDs As String = "categoryIDs.yaml"
 
     Private Const SequenceLabel As String = "Sequence"
+    Private Const Null As String = "null"
+    Private Const ANY_NUMBER As String = "ANY_NUMBER"
+    Private ParentNode As String = ""
 
     Private Const AssemblyArraysTable As String = "ASSEMBLY_ARRAYS"
     Private Const StationFacilitiesTable As String = "STATION_FACILITIES"
@@ -85,9 +90,14 @@ Public Class frmMain
     Private SQLiteDB As New SQLiteConnection
     Private UniverseDB As New SQLiteConnection
 
-    Const INDENT As String = "    "
-    Const COLON As String = ":"
-    Const BLOCK_SEQUENCE As String = "-   "
+    Private INDENT As String = ""
+    Private Const COLON As String = ":"
+    Private Const COLON_SPACE As String = ": "
+    Private Const BLOCK_2SEQUENCE As String = "- "
+    Private Const BLOCK_4SEQUENCE As String = "-   "
+
+    Private Const ASCII_Quote_Code As Integer = 39
+    Private Const ASCII_DoubleQuote_Code As Integer = 34
 
     Private TestBuild As Boolean
     Private FileList As List(Of FileNameDate)
@@ -98,6 +108,17 @@ Public Class frmMain
         Dim FileName As String
         Dim FileDate As DateTime
     End Structure
+
+    Private Class Mapping
+        Public MappingName As String
+        Public MappingList As List(Of Mapping)
+
+        Public Sub New()
+            MappingName = ""
+            MappingList = New List(Of Mapping)
+        End Sub
+    End Class
+
 
     Public Sub New()
         MyBase.New()
@@ -6222,9 +6243,13 @@ Public Class frmMain
 
         ' First load the YMAL tables and data (need to add all ymal's to keep db updated to current)
         Call Load_YMAL_Blueprints()
+        Call Load_YMAL_invTypes()
+        Call Load_YMAL_invGroups()
+        Call Load_YMAL_invCategories()
+
         'Call Load_YMAL_Icons() ' not currently using
 
-        ' Do all random updates here first
+        'Do all random updates here first
         Call RandomSDEUpdates()
 
         ' Build all the universe tables from SQLite 
@@ -6288,57 +6313,166 @@ Public Class frmMain
 
 #Region "YMAL"
 
-    ' Takes a file and parses the file into a tree for searching
+    ' Determines length of spaces (indent) in string sent
+    Private Function GetNumSpaces(inString As String) As Integer
+        Dim SpaceCount As Integer = 0
+
+        For Each c In inString
+            If c <> " " Then
+                Exit For
+            End If
+            SpaceCount += 1
+        Next
+
+        Return SpaceCount
+
+    End Function
+
+    ' Returns a boolean if there is a quote beginning the string sent - used for multi-line scalars
+    Private Function StartQuotation(CheckString As String) As Boolean
+
+        ' Find the first instance of the colon
+        Dim firstColon As Integer = InStr(CheckString, COLON)
+
+        ' If the first instance is at the end of the string, we can't search it
+        If firstColon = Len(CheckString) Then
+            Return False
+        End If
+
+        ' Get the first char after the colon and space of the header - will always be after the colon
+        Dim firstChar As Char = CheckString.Substring(InStr(CheckString, COLON) + 1, 1)
+
+        ' Look for single or double quotes
+        If firstChar = Chr(ASCII_Quote_Code) Or firstChar = Chr(ASCII_DoubleQuote_Code) Then
+            Return True
+        Else
+            Return False
+        End If
+
+    End Function
+
+    ' Returns a boolean if there is a quote ending the string sent - used for multi-line scalars
+    Private Function EndQuotation(CheckString As String) As Boolean
+
+        ' Get the last char
+        Dim lastChar As Char = CheckString.Substring(Len(CheckString) - 1, 1)
+
+        ' Look for single or double quotes
+        If lastChar = Chr(ASCII_Quote_Code) Or lastChar = Chr(ASCII_DoubleQuote_Code) Then
+            Return True
+        Else
+            Return False
+        End If
+
+    End Function
+
+    Private Function CompareIndentSizes(FirstLine As String, SecondLine As String) As Boolean
+        Dim FirstIndentCount As Integer = 0
+        Dim SecondIndentCount As Integer = 0
+
+        For Each c In FirstLine
+            If c = " " Then
+                FirstIndentCount += 1
+            Else
+                Exit For
+            End If
+        Next
+
+        For Each c In SecondLine
+            If c = " " Then
+                SecondIndentCount += 1
+            Else
+                Exit For
+            End If
+        Next
+
+        If FirstIndentCount = SecondIndentCount Then
+            Return True
+        Else
+            Return False
+        End If
+
+    End Function
+
+    ' Takes a file and parses the file into a tree for searching - This is completely hacked. I hate YAML and I really don't give a shit if it doesn't work for all files
     Private Function ParseYMALFile(FileName As String) As TreeNode
         ' Use the tree node object with vb, Name is the node name, text is the value of the node - all we need to use here
         Dim CurrentNode As New TreeNode
         Dim BaseNode As New TreeNode
         Dim AnchorNode As New TreeNode
 
-        Dim TreeLevel As Integer ' Records what tree level we are on
-        Dim PreviousLevel As Integer ' Save the previous tree level
-        Dim NodeName As String
+        Dim TreeLevel As Integer = 0 ' Records what tree level we are on
+        Dim PreviousLevel As Integer = 0 ' Save the previous tree level
+        Dim NodeName As String = ""
+        Dim ActiveQuote As Boolean = False
 
         Dim k As Integer = 0 ' For tracking sequence items
 
         Dim Sequence As Boolean = False
         Dim SequenceName As String = ""
 
-        AnchorNode = TreeView.Nodes.Add("BP List")
+        TreeView.Nodes.Clear()
+        AnchorNode = TreeView.Nodes.Add("Root Node")
 
         ' Load the yaml file into a string array for easier processing
         Dim Lines As String() = IO.File.ReadAllLines(FileName)
 
         ' Set the block and index values
-        ' TO DO - reset these values and not const since CCP seems to change the values
+        Dim SpaceCount As Integer = GetNumSpaces(Lines(1))
+        INDENT = ""
+        For i = 0 To SpaceCount - 1
+            ' Build the indent variable
+            INDENT = INDENT & " "
+        Next
 
         ' Base loop to read the file
         For i = 0 To Lines.Count - 1
-            ' TO DO - read if there is quotes around text
-            'If Lines(i).Contains("34416") Then
-            '    Application.DoEvents()
-            'End If
-
-            ' Get the next lines till a value is found and add it to this item then clear
-            If i <> Lines.Count - 1 Then
-                For j = i + 1 To Lines.Count - 1
-                    ' No colon means a multi-line
-                    If Not Lines(j).Contains(COLON) Then
-                        ' Reset the original
-                        Lines(i) = Lines(i) & " " & Trim(Lines(j))
-                        ' Reset next
-                        Lines(j) = ""
-                    Else
-                        Exit For
-                    End If
-                Next
-            End If
-
+            Application.DoEvents()
             If Lines(i) <> "" Then
+
+                ' Get the next lines till a value is found and add it to this item then clear
+                If i <> Lines.Count - 1 Then
+                    For j = i + 1 To Lines.Count - 1
+
+                        ' See if this line(i) starts a multi-line quote if it ends it, then set it to false
+                        If StartQuotation(Lines(i)) And Not EndQuotation(Lines(i)) Then
+                            ActiveQuote = True
+                        Else
+                            ActiveQuote = False
+                        End If
+
+                        Dim LastChar As String = ""
+                        If Lines(j) <> "" Then
+                            LastChar = Lines(j).Substring(Len(Lines(j)) - 1, 1)
+                        End If
+
+                        ' Check indents, if not the same then potential multi-line
+                        Dim SameIndentSize As Boolean = CompareIndentSizes(Lines(i), Lines(j))
+
+                        ' If the next line is part of a quote, or doesn't have a colon space, or ends with a colon or contains a block sequence at the begining, then it's multi-line
+                        If Not (Lines(j).Contains(COLON_SPACE) Or LastChar = COLON Or SameIndentSize) Or ActiveQuote Then
+
+                            ' Reset the original
+                            Dim Tempstring As String = Lines(i) & " " & Trim(Lines(j))
+                            Lines(i) = Tempstring
+
+                            ' Reset next
+                            Lines(j) = ""
+                        Else
+                            Exit For
+                        End If
+                    Next
+                End If
+
                 ' Get the name of the node without the colon
-                If Trim(Lines(i)).Substring(0, Len(BLOCK_SEQUENCE)) = BLOCK_SEQUENCE Then
+                If TextContains(Trim(Lines(i)), BLOCK_4SEQUENCE) Then
                     ' Trim the dash from the front
-                    NodeName = Trim(Lines(i).Substring(InStr(Lines(i), BLOCK_SEQUENCE) + 1))
+                    NodeName = Trim(Lines(i).Substring(InStr(Lines(i), BLOCK_4SEQUENCE) + 1))
+                    Sequence = True
+                    k += 1 ' increment each sequence
+                ElseIf TextContains(Trim(Lines(i)), BLOCK_2SEQUENCE) Then
+                    ' Trim the dash from the front
+                    NodeName = Trim(Lines(i).Substring(InStr(Lines(i), BLOCK_2SEQUENCE) + 1))
                     Sequence = True
                     k += 1 ' increment each sequence
                 Else
@@ -6347,10 +6481,12 @@ Public Class frmMain
                 End If
 
                 ' Delete everything after the colon for the name
-                NodeName = Trim(NodeName.Substring(0, InStr(NodeName, COLON) - 1))
+                If NodeName.Contains(COLON) Then
+                    NodeName = Trim(NodeName.Substring(0, InStr(NodeName, COLON) - 1))
+                End If
 
                 ' See if we are at the beginning of a block
-                If Lines(i).Substring(0, Len(INDENT)) = INDENT Then
+                If TextContains(Lines(i), INDENT) Then
                     ' We have an indent, so save the tree level of the indent (for assigning nodes to the correct tree)
                     TreeLevel = GetTreeLevel(Lines(i))
 
@@ -6378,7 +6514,7 @@ Public Class frmMain
 
                     ' If the value has a colon at the end or a dash, then it is a tree node
                     ' if not, it is a key value pair, or the end node in that branch
-                    If Lines(i).Substring(Len(Lines(i)) - 1, 1) = COLON Then
+                    If TextContains(Lines(i).Substring(Len(Lines(i)) - 1, 1), COLON) Then
 
                         ' Add a new node to this branch with this name
                         If TreeLevel = 1 Then
@@ -6397,9 +6533,21 @@ Public Class frmMain
                     Else ' Must be a value here now
                         ' Add a node to the branch
                         If IsNothing(CurrentNode) Then
-                            CurrentNode = BaseNode.Nodes.Add(Trim(Lines(i).Substring(InStr(Lines(i), COLON)))) ' Save the value
+                            If Lines(i).Contains(COLON) Then
+                                CurrentNode = BaseNode.Nodes.Add(Trim(Lines(i).Substring(InStr(Lines(i), COLON)))) ' Save the value
+                            ElseIf Lines(i).Contains(BLOCK_2SEQUENCE) Then
+                                CurrentNode = BaseNode.Nodes.Add(Trim(Lines(i).Substring(InStr(Lines(i), BLOCK_2SEQUENCE)))) ' Save the value
+                            ElseIf Lines(i).Contains(BLOCK_4SEQUENCE) Then
+                                CurrentNode = BaseNode.Nodes.Add(Trim(Lines(i).Substring(InStr(Lines(i), BLOCK_4SEQUENCE)))) ' Save the value
+                            End If
                         Else
-                            CurrentNode = CurrentNode.Nodes.Add(Trim(Lines(i).Substring(InStr(Lines(i), COLON)))) ' Save the value
+                            If Lines(i).Contains(COLON) Then
+                                CurrentNode = CurrentNode.Nodes.Add(Trim(Lines(i).Substring(InStr(Lines(i), COLON)))) ' Save the value
+                            ElseIf Lines(i).Contains(BLOCK_2SEQUENCE) Then
+                                CurrentNode = CurrentNode.Nodes.Add(Trim(Lines(i).Substring(InStr(Lines(i), BLOCK_2SEQUENCE)))) ' Save the value
+                            ElseIf Lines(i).Contains(BLOCK_4SEQUENCE) Then
+                                CurrentNode = CurrentNode.Nodes.Add(Trim(Lines(i).Substring(InStr(Lines(i), BLOCK_4SEQUENCE)))) ' Save the value
+                            End If
                         End If
 
                         CurrentNode.Name = NodeName
@@ -6417,7 +6565,7 @@ Public Class frmMain
                         AnchorNode.Nodes.Add(CType(BaseNode, TreeNode))
                     End If
 
-                    ' Add this BP as a base node
+                    ' Add this as a base node
                     CurrentNode = Nothing ' Clean out
                     BaseNode = New TreeNode(NodeName)
                     BaseNode.Name = NodeName
@@ -6425,7 +6573,6 @@ Public Class frmMain
 
                 End If
             End If
-
         Next
 
         ' Add the last node processed
@@ -6439,6 +6586,21 @@ Public Class frmMain
         End If
 
         Return AnchorNode
+
+    End Function
+
+    ' Gets the true or false of the text searched in the sent string
+    Private Function TextContains(BaseText As String, SearchText As String) As Boolean
+
+        If Len(BaseText) >= Len(SearchText) Then
+            If BaseText.Substring(0, Len(SearchText)) = SearchText Then
+                Return True
+            Else
+                Return False
+            End If
+        Else
+            Return False
+        End If
 
     End Function
 
@@ -6715,7 +6877,7 @@ Public Class frmMain
     ' Loads the eveIcons table from the YMAL file
     Private Sub Load_YMAL_Icons()
         ' Use the tree node object with vb, Name is the node name, text is the value of the node - all we need to use here
-        Dim BlueprintsTree As New TreeNode
+        Dim IconsTree As New TreeNode
         Dim BaseNode As New TreeNode
         Dim FindNodes() As TreeNode
 
@@ -6738,14 +6900,14 @@ Public Class frmMain
         Call Execute_msSQL(SQL)
 
         ' Get the data from the YAML file
-        BlueprintsTree = ParseYMALFile(DatabasePath & "\" & YAMLiconIDs)
+        IconsTree = ParseYMALFile(DatabasePath & "\" & YAMLiconIDs)
 
         Count = 0
         pgMain.Minimum = Count
-        pgMain.Maximum = BlueprintsTree.GetNodeCount(False)
+        pgMain.Maximum = IconsTree.GetNodeCount(False)
         pgMain.Visible = True
 
-        For Each BaseNode In BlueprintsTree.Nodes
+        For Each BaseNode In IconsTree.Nodes
 
             ' Update form
             lblTableName.Text = "Saving Icon Data: " & BaseNode.Name
@@ -6785,6 +6947,702 @@ Public Class frmMain
         Application.DoEvents()
 
     End Sub
+
+    ' Loads the invTypes table (and invTypesMasteries, invTypesTraits) from the YMAL file
+    Private Sub Load_YMAL_invTypes()
+        ' Use the tree node object with vb, Name is the node name, text is the value of the node - all we need to use here
+        Dim InventoryTypes As New TreeNode
+        Dim BaseNode As New TreeNode
+        Dim DescriptionNode As TreeNode
+        Dim MasteryNode As TreeNode
+        Dim TraitNode As TreeNode
+        Dim NameNode As TreeNode
+        Dim LanguageName As String
+        Dim SQL As String
+        Dim Count As Integer
+        Dim InsertSQL As String
+        Dim FoundValue As Boolean = False
+
+        Dim CurrentTypeID As TypeIDRecord
+
+        Application.UseWaitCursor = True
+        Application.DoEvents()
+        ' First set up the database
+
+        ' inventoryTypes
+        Call ResetTable("invTypes")
+        ' Build table
+        SQL = "CREATE TABLE [invTypes] ("
+        SQL = SQL & "[typeID] [int] NOT NULL,"
+        SQL = SQL & "[groupID] [int] NULL,"
+        SQL = SQL & "[typeName] [nvarchar](100) NULL,"
+        SQL = SQL & "[description] [nvarchar](4000) NULL,"
+        SQL = SQL & "[mass] [float] NULL,"
+        SQL = SQL & "[volume] [float] NULL,"
+        SQL = SQL & "[capacity] [float] NULL,"
+        SQL = SQL & "[portionSize] [int] NULL,"
+        SQL = SQL & "[factionID] [int] NULL,"
+        SQL = SQL & "[raceID] [tinyint] NULL,"
+        SQL = SQL & "[basePrice] [money] NULL,"
+        SQL = SQL & "[published] [bit] NULL,"
+        SQL = SQL & "[marketGroupID] [int] NULL,"
+        SQL = SQL & "[chanceOfDuplicating] [float] NULL,"
+        SQL = SQL & "[graphicID] [int] NULL,"
+        SQL = SQL & "[radius] [float] NULL,"
+        SQL = SQL & "[iconID] [int] NULL,"
+        SQL = SQL & "[soundID] [int] NULL,"
+        SQL = SQL & "[sofFactionName] [nvarchar](100) NULL,"
+        SQL = SQL & "[sofDnaAddition] [nvarchar](100) NULL,"
+        SQL = SQL & "CONSTRAINT [invTypes_PK] PRIMARY KEY CLUSTERED ([typeID] ASC) "
+        SQL = SQL & "WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]) ON [PRIMARY]"
+        Call Execute_msSQL(SQL)
+        ' Create index
+        SQL = "CREATE NONCLUSTERED INDEX [invTypes_IX_Group] ON [dbo].[invTypes] ([groupID] ASC)"
+        SQL = SQL & "WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)"
+        Call Execute_msSQL(SQL)
+
+        Call ResetTable("invTypesTraits")
+        ' Build table
+        SQL = "CREATE TABLE [invTypesTraits] ("
+        SQL = SQL & "[typeID] [int] NOT NULL,"
+        SQL = SQL & "[skilltypeID] [int] NULL,"
+        SQL = SQL & "[bonusID] [int] NULL,"
+        SQL = SQL & "[bonus] [float] NULL,"
+        SQL = SQL & "[bonusText] [nvarchar](4000) NULL,"
+        SQL = SQL & "[unitID] [int] NULL)"
+        Call Execute_msSQL(SQL)
+        ' Create index
+        SQL = "CREATE NONCLUSTERED INDEX [invTypesTraits_typeID] ON [dbo].[invTypesTraits] ([typeID] ASC)"
+        SQL = SQL & "WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)"
+        Call Execute_msSQL(SQL)
+
+        Call ResetTable("invTypesMasteries")
+        ' Build table
+        SQL = "CREATE TABLE [invTypesMasteries] ("
+        SQL = SQL & "[typeID] [int] NOT NULL,"
+        SQL = SQL & "[masteryLevel] [int] NULL,"
+        SQL = SQL & "[masteryID] [int] NULL)"
+        Call Execute_msSQL(SQL)
+        ' Create index
+        SQL = "CREATE NONCLUSTERED INDEX [invTypesMasteries_typeID] ON [dbo].[invTypesMasteries] ([typeID] ASC)"
+        SQL = SQL & "WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)"
+        Call Execute_msSQL(SQL)
+
+        ' Get the data from the YAML file
+        InventoryTypes = ParseYMALFile(DatabasePath & "\" & YAMLtypeIDs)
+
+        Count = 0
+        pgMain.Minimum = Count
+        pgMain.Maximum = InventoryTypes.GetNodeCount(False)
+        pgMain.Visible = True
+
+        For Each BaseNode In InventoryTypes.Nodes
+
+            ' Update form
+            lblTableName.Text = "Saving invTypes Data: " & BaseNode.Name
+            pgMain.Value = Count
+            Application.DoEvents()
+
+            CurrentTypeID = New TypeIDRecord
+            InsertSQL = ""
+
+            With CurrentTypeID
+                InsertSQL = "INSERT INTO invTypes VALUES ("
+
+                .typeID = BaseNode.Name ' PK so will always be her
+                InsertSQL = InsertSQL & .typeID & ","
+
+                If BaseNode.Nodes.Find("groupID", True).Length <> 0 Then
+                    .groupID = BaseNode.Nodes.Find("groupID", True)(0).Text
+                    InsertSQL = InsertSQL & .groupID & ","
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                ' Get the name nodes to find the english description for typeName
+                If BaseNode.Nodes.Find("name", True).Length <> 0 Then
+                    NameNode = BaseNode.Nodes.Find("name", True)(0)
+                    FoundValue = False
+                    For Each Language In NameNode.Nodes
+                        LanguageName = Language.Name
+                        ' Set the activity
+                        If LanguageName = "en" Then
+                            .typeName = Language.Text
+                            InsertSQL = InsertSQL & "'" & FormatDBString(.typeName) & "',"
+                            FoundValue = True
+                            Exit For
+                        End If
+                    Next
+                    ' If it doesn't find the english version, mark as null
+                    If Not FoundValue Then
+                        InsertSQL = InsertSQL & "null,"
+                    End If
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                ' Get the description nodes to find the english description
+                If BaseNode.Nodes.Find("description", True).Length <> 0 Then
+                    DescriptionNode = BaseNode.Nodes.Find("description", True)(0)
+                    FoundValue = False
+                    For Each Language In DescriptionNode.Nodes
+                        LanguageName = Language.Name
+                        ' Set the activity
+                        If LanguageName = "en" Then
+                            .description = Language.Text
+                            ' Strip off quotes if they exist at beginning and end
+                            If .description.Substring(0, 1) = Chr(ASCII_DoubleQuote_Code) Or .description.Substring(0, 1) = Chr(ASCII_Quote_Code) Then
+                                .description = .description.Substring(1)
+                            End If
+                            If .description.Substring(Len(.description) - 1, 1) = Chr(ASCII_DoubleQuote_Code) Or .description.Substring(Len(.description) - 1, 1) = Chr(ASCII_Quote_Code) Then
+                                .description = .description.Substring(0, Len(.description) - 1)
+                            End If
+
+                            InsertSQL = InsertSQL & "'" & FormatDBString(.description) & "',"
+                            FoundValue = True
+                            Exit For
+                        End If
+                    Next
+                    ' If it doesn't find the english version, mark as null
+                    If Not FoundValue Then
+                        InsertSQL = InsertSQL & "null,"
+                    End If
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                If BaseNode.Nodes.Find("mass", True).Length <> 0 Then
+                    .mass = BaseNode.Nodes.Find("mass", True)(0).Text
+                    InsertSQL = InsertSQL & .mass & ","
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                If BaseNode.Nodes.Find("volume", True).Length <> 0 Then
+                    .volume = BaseNode.Nodes.Find("volume", True)(0).Text
+                    InsertSQL = InsertSQL & .volume & ","
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                If BaseNode.Nodes.Find("capacity", True).Length <> 0 Then
+                    .capacity = BaseNode.Nodes.Find("capacity", True)(0).Text
+                    InsertSQL = InsertSQL & .capacity & ","
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                If BaseNode.Nodes.Find("portionSize", True).Length <> 0 Then
+                    .portionSize = BaseNode.Nodes.Find("portionSize", True)(0).Text
+                    InsertSQL = InsertSQL & .portionSize & ","
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                If BaseNode.Nodes.Find("factionID", True).Length <> 0 Then
+                    .factionID = BaseNode.Nodes.Find("factionID", True)(0).Text
+                    InsertSQL = InsertSQL & .factionID & ","
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                If BaseNode.Nodes.Find("raceID", True).Length <> 0 Then
+                    .raceID = BaseNode.Nodes.Find("raceID", True)(0).Text
+                    InsertSQL = InsertSQL & .raceID & ","
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                If BaseNode.Nodes.Find("basePrice", True).Length <> 0 Then
+                    .basePrice = BaseNode.Nodes.Find("basePrice", True)(0).Text
+                    InsertSQL = InsertSQL & .basePrice & ","
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                If BaseNode.Nodes.Find("published", True).Length <> 0 Then
+                    .published = CInt(CBool(BaseNode.Nodes.Find("published", True)(0).Text))
+                    InsertSQL = InsertSQL & .published & ","
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                If BaseNode.Nodes.Find("marketGroupID", True).Length <> 0 Then
+                    .marketGroupID = BaseNode.Nodes.Find("marketGroupID", True)(0).Text
+                    InsertSQL = InsertSQL & .marketGroupID & ","
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                If BaseNode.Nodes.Find("chanceOfDuplicating", True).Length <> 0 Then
+                    .chanceOfDuplicating = BaseNode.Nodes.Find("chanceOfDuplicating", True)(0).Text
+                    InsertSQL = InsertSQL & .chanceOfDuplicating & ","
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                If BaseNode.Nodes.Find("graphicID", True).Length <> 0 Then
+                    .graphicID = BaseNode.Nodes.Find("graphicID", True)(0).Text
+                    InsertSQL = InsertSQL & .graphicID & ","
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                If BaseNode.Nodes.Find("radius", True).Length <> 0 Then
+                    .radius = BaseNode.Nodes.Find("radius", True)(0).Text
+                    InsertSQL = InsertSQL & .radius & ","
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                If BaseNode.Nodes.Find("iconID", True).Length <> 0 Then
+                    .iconID = BaseNode.Nodes.Find("iconID", True)(0).Text
+                    InsertSQL = InsertSQL & .iconID & ","
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                If BaseNode.Nodes.Find("soundID", True).Length <> 0 Then
+                    .soundID = BaseNode.Nodes.Find("soundID", True)(0).Text
+                    InsertSQL = InsertSQL & .soundID & ","
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                If BaseNode.Nodes.Find("sofFactionName", True).Length <> 0 Then
+                    .sofFactionName = BaseNode.Nodes.Find("sofFactionName", True)(0).Text
+                    InsertSQL = InsertSQL & "'" & FormatDBString(.sofFactionName) & "',"
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                If BaseNode.Nodes.Find("sofDnaAddition", True).Length <> 0 Then
+                    .sofDnaAddition = BaseNode.Nodes.Find("sofDnaAddition", True)(0).Text
+                    InsertSQL = InsertSQL & "'" & FormatDBString(.sofDnaAddition) & "'"
+                Else
+                    InsertSQL = InsertSQL & "null"
+                End If
+
+                InsertSQL = InsertSQL & ")"
+
+                ' Insert this invTypes record
+                Call Execute_msSQL(InsertSQL)
+
+                ' Insert the mastery
+                If BaseNode.Nodes.Find("masteries", True).Length <> 0 Then
+                    MasteryNode = BaseNode.Nodes.Find("masteries", True)(0)
+                    Dim masteryLevel As Integer
+                    Dim masteryID As Integer
+
+                    For Each mastery In MasteryNode.Nodes
+                        masteryLevel = mastery.Name
+
+                        For Each sequence In mastery.nodes
+                            masteryLevel = mastery.Name
+                            For Each ID In sequence.nodes
+                                masteryID = ID.name
+                                ' Insert the record (typeID, masteryLevel, masteryID)
+                                InsertSQL = "INSERT INTO invTypesMasteries VALUES (" & CStr(.typeID) & "," & CStr(masteryLevel) & "," & CStr(masteryID) & ")"
+                                ' Insert this record
+                                Call Execute_msSQL(InsertSQL)
+                            Next
+                        Next
+                    Next
+                End If
+
+                ' Insert the Trait
+                If BaseNode.Nodes.Find("traits", True).Length <> 0 Then
+                    TraitNode = BaseNode.Nodes.Find("traits", True)(0)
+                    Dim skillID As Integer = 0
+                    Dim bonusID As Integer = 0
+                    Dim bonus As Double = 0
+                    Dim bonusText As String = Nothing
+                    Dim unitID As Integer = 0
+
+                    For Each trait In TraitNode.Nodes
+                        skillID = trait.Name
+
+                        For Each bonusIDLabel In trait.nodes
+                            bonusID = bonusIDLabel.Name
+                            For Each field In bonusIDLabel.nodes
+                                If field.name = "bonus" Then
+                                    bonus = CDbl(field.text)
+                                End If
+                                If field.name = "unitID" Then
+                                    unitID = CInt(field.text)
+                                End If
+                                If field.Nodes.Find("en", True).Length <> 0 Then
+                                    bonusText = field.nodes.find("en", True)(0).text
+                                End If
+                            Next
+                            ' Form the SQL insert
+                            InsertSQL = "INSERT INTO invTypesTraits VALUES (" & CStr(.typeID) & ","
+                            If skillID = 0 Then
+                                InsertSQL = InsertSQL & "null,"
+                            Else
+                                InsertSQL = InsertSQL & CStr(skillID) & ","
+                            End If
+
+                            If bonusID = 0 Then
+                                InsertSQL = InsertSQL & "null,"
+                            Else
+                                InsertSQL = InsertSQL & CStr(bonusID) & ","
+                            End If
+
+                            If bonus = 0 Then
+                                InsertSQL = InsertSQL & "null,"
+                            Else
+                                InsertSQL = InsertSQL & CStr(bonus) & ","
+                            End If
+
+                            If IsNothing(bonusText) Then
+                                InsertSQL = InsertSQL & "null,"
+                            Else
+                                InsertSQL = InsertSQL & "'" & FormatDBString(bonusText) & "',"
+                            End If
+
+                            If unitID = 0 Then
+                                InsertSQL = InsertSQL & "null"
+                            Else
+                                InsertSQL = InsertSQL & CStr(unitID)
+                            End If
+
+                            InsertSQL = InsertSQL & ")"
+
+                            ' Insert this record
+                            Call Execute_msSQL(InsertSQL)
+                        Next
+                    Next
+                End If
+
+            End With
+            Count += 1
+        Next
+
+        lblTableName.Text = ""
+        pgMain.Visible = False
+        Application.UseWaitCursor = True
+        Application.DoEvents()
+
+    End Sub
+
+    ' Loads the invGroups table from the YMAL file
+    Private Sub Load_YMAL_invGroups()
+        ' Use the tree node object with vb, Name is the node name, text is the value of the node - all we need to use here
+        Dim InventoryGroups As New TreeNode
+        Dim BaseNode As New TreeNode
+        Dim NameNode As TreeNode
+        Dim LanguageName As String
+        Dim SQL As String
+        Dim Count As Integer
+        Dim InsertSQL As String
+        Dim FoundValue As Boolean = False
+
+        Dim CurrentGroupID As GroupIDRecord
+
+        Application.UseWaitCursor = True
+        Application.DoEvents()
+
+        ' invGroups
+        Call ResetTable("invGroups")
+        ' Build table
+        SQL = "CREATE TABLE [dbo].[invGroups](
+        SQL = SQL & "[groupID] [int] NOT NULL,"
+        SQL = SQL & "[categoryID] [int] NULL,"
+        SQL = SQL & "[groupName] [nvarchar](100) NULL,"
+        SQL = SQL & "[iconID] [int] NULL,"
+        SQL = SQL & "[useBasePrice] [bit] NULL,"
+        SQL = SQL & "[anchored] [bit] NULL,"
+        SQL = SQL & "[anchorable] [bit] NULL,"
+        SQL = SQL & "[fittableNonSingleton] [bit] NULL,"
+        SQL = SQL & "[published] [bit] NULL,"
+        SQL = SQL & "CONSTRAINT [invGroups_PK] PRIMARY KEY CLUSTERED ([groupID] ASC) "
+        SQL = SQL & "WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]) ON [PRIMARY]"
+        Call Execute_msSQL(SQL)
+
+        ' Get the data from the YAML file
+        InventoryGroups = ParseYMALFile(DatabasePath & "\" & YAMLgroupIDs)
+
+        Count = 0
+        pgMain.Minimum = Count
+        pgMain.Maximum = InventoryGroups.GetNodeCount(False)
+        pgMain.Visible = True
+
+        For Each BaseNode In InventoryGroups.Nodes
+
+            ' Update form
+            lblTableName.Text = "Saving invGroups Data: " & BaseNode.Name
+            pgMain.Value = Count
+            Application.DoEvents()
+
+            CurrentGroupID = New GroupIDRecord
+            InsertSQL = ""
+
+            With CurrentGroupID
+                InsertSQL = "INSERT INTO invGroups VALUES ("
+
+                .groupID = BaseNode.Name ' PK so will always be here
+                InsertSQL = InsertSQL & .groupID & ","
+
+                If BaseNode.Nodes.Find("categoryID", True).Length <> 0 Then
+                    .categoryID = BaseNode.Nodes.Find("categoryID", True)(0).Text
+                    InsertSQL = InsertSQL & .categoryID & ","
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                ' Get the name nodes to find the english description for typeName
+                If BaseNode.Nodes.Find("name", True).Length <> 0 Then
+                    NameNode = BaseNode.Nodes.Find("name", True)(0)
+                    FoundValue = False
+                    For Each Language In NameNode.Nodes
+                        LanguageName = Language.Name
+                        ' Set the activity
+                        If LanguageName = "en" Then
+                            .groupName = Language.Text
+                            InsertSQL = InsertSQL & "'" & FormatDBString(.groupName) & "',"
+                            FoundValue = True
+                            Exit For
+                        End If
+                    Next
+                    ' If it doesn't find the english version, mark as null
+                    If Not FoundValue Then
+                        InsertSQL = InsertSQL & "null,"
+                    End If
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                If BaseNode.Nodes.Find("iconID", True).Length <> 0 Then
+                    .iconID = BaseNode.Nodes.Find("iconID", True)(0).Text
+                    InsertSQL = InsertSQL & .iconID & ","
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                If BaseNode.Nodes.Find("useBasePrice", True).Length <> 0 Then
+                    .useBasePrice = BaseNode.Nodes.Find("useBasePrice", True)(0).Text
+                    InsertSQL = InsertSQL & CInt(CBool(.useBasePrice)) & ","
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                If BaseNode.Nodes.Find("anchored", True).Length <> 0 Then
+                    .anchored = BaseNode.Nodes.Find("anchored", True)(0).Text
+                    InsertSQL = InsertSQL & CInt(CBool(.anchored)) & ","
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                If BaseNode.Nodes.Find("anchorable", True).Length <> 0 Then
+                    .anchorable = BaseNode.Nodes.Find("anchorable", True)(0).Text
+                    InsertSQL = InsertSQL & CInt(CBool(.anchorable)) & ","
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                If BaseNode.Nodes.Find("fittableNonSingleton", True).Length <> 0 Then
+                    .fittableNonSingleton = BaseNode.Nodes.Find("fittableNonSingleton", True)(0).Text
+                    InsertSQL = InsertSQL & CInt(CBool(.fittableNonSingleton)) & ","
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                If BaseNode.Nodes.Find("published", True).Length <> 0 Then
+                    .published = BaseNode.Nodes.Find("published", True)(0).Text
+                    InsertSQL = InsertSQL & CInt(CBool(.published))
+                Else
+                    InsertSQL = InsertSQL & "null"
+                End If
+
+                InsertSQL = InsertSQL & ")"
+
+                ' Insert this invGroups record
+                Call Execute_msSQL(InsertSQL)
+
+            End With
+            Count += 1
+        Next
+
+        lblTableName.Text = ""
+        pgMain.Visible = False
+        Application.UseWaitCursor = True
+        Application.DoEvents()
+
+    End Sub
+
+    ' Loads the invCategories table from the YMAL file
+    Private Sub Load_YMAL_invCategories()
+        ' Use the tree node object with vb, Name is the node name, text is the value of the node - all we need to use here
+        Dim InventoryCategories As New TreeNode
+        Dim BaseNode As New TreeNode
+        Dim NameNode As TreeNode
+        Dim LanguageName As String
+        Dim SQL As String
+        Dim Count As Integer
+        Dim InsertSQL As String
+        Dim FoundValue As Boolean = False
+
+        Dim CurrentCategoryID As CategoryIDRecord
+
+        Application.UseWaitCursor = True
+        Application.DoEvents()
+
+        ' invCategories
+        Call ResetTable("invCategories")
+        ' Build table
+        SQL = "CREATE TABLE [dbo].[invCategories]("
+        SQL = SQL & "[categoryID] [int] NOT NULL,"
+        SQL = SQL & "[categoryName] [nvarchar](100) NULL,"
+        SQL = SQL & "[published] [bit] NULL,"
+        SQL = SQL & "CONSTRAINT [invCategories_PK] PRIMARY KEY CLUSTERED ([categoryID] ASC) "
+        SQL = SQL & "WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]) ON [PRIMARY]"
+        Call Execute_msSQL(SQL)
+
+        ' Get the data from the YAML file
+        InventoryCategories = ParseYMALFile(DatabasePath & "\" & YAMLcategoryIDs)
+
+        Count = 0
+        pgMain.Minimum = Count
+        pgMain.Maximum = InventoryCategories.GetNodeCount(False)
+        pgMain.Visible = True
+
+        For Each BaseNode In InventoryCategories.Nodes
+
+            ' Update form
+            lblTableName.Text = "Saving invCategories Data: " & BaseNode.Name
+            pgMain.Value = Count
+            Application.DoEvents()
+
+            CurrentCategoryID = New CategoryIDRecord
+            InsertSQL = ""
+
+            With CurrentCategoryID
+                InsertSQL = "INSERT INTO invCategories VALUES ("
+
+                .categoryID = BaseNode.Name ' PK so will always be here
+                InsertSQL = InsertSQL & .categoryID & ","
+
+                ' Get the name nodes to find the english description for typeName
+                If BaseNode.Nodes.Find("name", True).Length <> 0 Then
+                    NameNode = BaseNode.Nodes.Find("name", True)(0)
+                    FoundValue = False
+                    For Each Language In NameNode.Nodes
+                        LanguageName = Language.Name
+                        ' Set the activity
+                        If LanguageName = "en" Then
+                            .categoryName = Language.Text
+                            InsertSQL = InsertSQL & "'" & FormatDBString(.categoryName) & "',"
+                            FoundValue = True
+                            Exit For
+                        End If
+                    Next
+                    ' If it doesn't find the english version, mark as null
+                    If Not FoundValue Then
+                        InsertSQL = InsertSQL & "null,"
+                    End If
+                Else
+                    InsertSQL = InsertSQL & "null,"
+                End If
+
+                If BaseNode.Nodes.Find("published", True).Length <> 0 Then
+                    .published = BaseNode.Nodes.Find("published", True)(0).Text
+                    InsertSQL = InsertSQL & CInt(CBool(.published))
+                Else
+                    InsertSQL = InsertSQL & "null"
+                End If
+
+                InsertSQL = InsertSQL & ")"
+
+                ' Insert this invCategories record
+                Call Execute_msSQL(InsertSQL)
+
+            End With
+            Count += 1
+        Next
+
+        lblTableName.Text = ""
+        pgMain.Visible = False
+        Application.UseWaitCursor = True
+        Application.DoEvents()
+
+    End Sub
+
+    Private Class TypeIDRecord
+        Public typeID As Integer
+        Public groupID As Integer
+        Public typeName As String
+        Public description As String
+        Public mass As Double
+        Public volume As Double
+        Public capacity As Double
+        Public portionSize As Integer
+        Public factionID As Integer
+        Public raceID As Integer
+        Public basePrice As Double
+        Public published As Integer
+        Public marketGroupID As Integer
+        Public chanceOfDuplicating As Double
+        Public graphicID As Long
+        Public radius As Double
+        Public iconID As Long
+        Public soundID As Long
+        Public sofFactionName As String
+        Public sofDnaAddition As String
+
+        Public Sub New()
+            typeID = 0
+            groupID = 0
+            typeName = ""
+            description = ""
+            mass = 0
+            volume = 0
+            capacity = 0
+            portionSize = 0
+            raceID = 0
+            basePrice = 0
+            published = 0
+            marketGroupID = 0
+            chanceOfDuplicating = 0
+        End Sub
+
+    End Class
+
+    Private Class GroupIDRecord
+        Public groupID As Integer
+        Public groupName As String
+        Public anchorable As Boolean
+        Public anchored As Boolean
+        Public categoryID As Integer
+        Public fittableNonSingleton As Boolean
+        Public iconID As Long
+        Public published As Boolean
+        Public useBasePrice As Boolean
+
+        Public Sub New()
+            groupID = 0
+            groupName = ""
+            anchorable = False
+            anchored = False
+            categoryID = 0
+            fittableNonSingleton = False
+            iconID = 0
+            published = False
+            useBasePrice = False
+        End Sub
+    End Class
+
+    Private Class CategoryIDRecord
+        Public categoryID As Integer
+        Public categoryName As String
+        Public published As Boolean
+
+        Public Sub New()
+            categoryID = 0
+            categoryName = ""
+            published = False
+        End Sub
+    End Class
 
 #End Region
 

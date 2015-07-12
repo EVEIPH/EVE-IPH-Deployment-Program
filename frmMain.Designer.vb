@@ -28,6 +28,7 @@ Partial Class frmMain
         Me.ToolTip = New System.Windows.Forms.ToolTip(Me.components)
         Me.TabControl1 = New System.Windows.Forms.TabControl()
         Me.TabPage1 = New System.Windows.Forms.TabPage()
+        Me.btnRefreshList = New System.Windows.Forms.Button()
         Me.lblDBNameDisplay1 = New System.Windows.Forms.Label()
         Me.lblDBNameDisplay = New System.Windows.Forms.Label()
         Me.btnCopyFilesBuildXML = New System.Windows.Forms.Button()
@@ -44,7 +45,6 @@ Partial Class frmMain
         Me.TabPage2 = New System.Windows.Forms.TabPage()
         Me.lblImageVersion = New System.Windows.Forms.Label()
         Me.txtImageVersion = New System.Windows.Forms.TextBox()
-        Me.TreeView = New System.Windows.Forms.TreeView()
         Me.Label1 = New System.Windows.Forms.Label()
         Me.txtVersionNumber = New System.Windows.Forms.TextBox()
         Me.lblDBName = New System.Windows.Forms.Label()
@@ -59,15 +59,19 @@ Partial Class frmMain
         Me.lblWorkingFolderPath = New System.Windows.Forms.Label()
         Me.btnSelectDBImagesPath = New System.Windows.Forms.Button()
         Me.lblWorkingFolder = New System.Windows.Forms.Label()
+        Me.TabPage3 = New System.Windows.Forms.TabPage()
+        Me.TreeView = New System.Windows.Forms.TreeView()
         Me.TabControl1.SuspendLayout()
         Me.TabPage1.SuspendLayout()
         Me.TabPage2.SuspendLayout()
+        Me.TabPage3.SuspendLayout()
         Me.SuspendLayout()
         '
         'TabControl1
         '
         Me.TabControl1.Controls.Add(Me.TabPage1)
         Me.TabControl1.Controls.Add(Me.TabPage2)
+        Me.TabControl1.Controls.Add(Me.TabPage3)
         Me.TabControl1.Location = New System.Drawing.Point(1, 2)
         Me.TabControl1.Name = "TabControl1"
         Me.TabControl1.SelectedIndex = 0
@@ -76,6 +80,7 @@ Partial Class frmMain
         '
         'TabPage1
         '
+        Me.TabPage1.Controls.Add(Me.btnRefreshList)
         Me.TabPage1.Controls.Add(Me.lblDBNameDisplay1)
         Me.TabPage1.Controls.Add(Me.lblDBNameDisplay)
         Me.TabPage1.Controls.Add(Me.btnCopyFilesBuildXML)
@@ -95,6 +100,15 @@ Partial Class frmMain
         Me.TabPage1.TabIndex = 0
         Me.TabPage1.Text = "DB Updater & Deployment"
         Me.TabPage1.UseVisualStyleBackColor = True
+        '
+        'btnRefreshList
+        '
+        Me.btnRefreshList.Location = New System.Drawing.Point(236, 157)
+        Me.btnRefreshList.Name = "btnRefreshList"
+        Me.btnRefreshList.Size = New System.Drawing.Size(97, 40)
+        Me.btnRefreshList.TabIndex = 12
+        Me.btnRefreshList.Text = "Refresh List"
+        Me.btnRefreshList.UseVisualStyleBackColor = True
         '
         'lblDBNameDisplay1
         '
@@ -218,7 +232,6 @@ Partial Class frmMain
         '
         Me.TabPage2.Controls.Add(Me.lblImageVersion)
         Me.TabPage2.Controls.Add(Me.txtImageVersion)
-        Me.TabPage2.Controls.Add(Me.TreeView)
         Me.TabPage2.Controls.Add(Me.Label1)
         Me.TabPage2.Controls.Add(Me.txtVersionNumber)
         Me.TabPage2.Controls.Add(Me.lblDBName)
@@ -256,14 +269,6 @@ Partial Class frmMain
         Me.txtImageVersion.Name = "txtImageVersion"
         Me.txtImageVersion.Size = New System.Drawing.Size(122, 20)
         Me.txtImageVersion.TabIndex = 3
-        '
-        'TreeView
-        '
-        Me.TreeView.Location = New System.Drawing.Point(428, 320)
-        Me.TreeView.Name = "TreeView"
-        Me.TreeView.Size = New System.Drawing.Size(29, 25)
-        Me.TreeView.TabIndex = 16
-        Me.TreeView.Visible = False
         '
         'Label1
         '
@@ -387,6 +392,23 @@ Partial Class frmMain
         Me.lblWorkingFolder.TabIndex = 9
         Me.lblWorkingFolder.Text = "Working Folder:"
         '
+        'TabPage3
+        '
+        Me.TabPage3.Controls.Add(Me.TreeView)
+        Me.TabPage3.Location = New System.Drawing.Point(4, 22)
+        Me.TabPage3.Name = "TabPage3"
+        Me.TabPage3.Size = New System.Drawing.Size(463, 352)
+        Me.TabPage3.TabIndex = 2
+        Me.TabPage3.Text = "Misc"
+        Me.TabPage3.UseVisualStyleBackColor = True
+        '
+        'TreeView
+        '
+        Me.TreeView.Location = New System.Drawing.Point(5, 3)
+        Me.TreeView.Name = "TreeView"
+        Me.TreeView.Size = New System.Drawing.Size(453, 346)
+        Me.TreeView.TabIndex = 17
+        '
         'frmMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -402,6 +424,7 @@ Partial Class frmMain
         Me.TabPage1.PerformLayout()
         Me.TabPage2.ResumeLayout(False)
         Me.TabPage2.PerformLayout()
+        Me.TabPage3.ResumeLayout(False)
         Me.ResumeLayout(False)
 
     End Sub
@@ -415,7 +438,6 @@ Partial Class frmMain
     Friend WithEvents btnBuildDatabase As System.Windows.Forms.Button
     Friend WithEvents btnImageCopy As System.Windows.Forms.Button
     Friend WithEvents TabPage2 As System.Windows.Forms.TabPage
-    Friend WithEvents TreeView As System.Windows.Forms.TreeView
     Friend WithEvents btnExit As System.Windows.Forms.Button
     Friend WithEvents lblRootDebugFolderPath As System.Windows.Forms.Label
     Friend WithEvents btnSelectRootDebugPath As System.Windows.Forms.Button
@@ -440,5 +462,8 @@ Partial Class frmMain
     Friend WithEvents txtDBName As System.Windows.Forms.TextBox
     Friend WithEvents lblImageVersion As System.Windows.Forms.Label
     Friend WithEvents txtImageVersion As System.Windows.Forms.TextBox
+    Friend WithEvents btnRefreshList As System.Windows.Forms.Button
+    Friend WithEvents TabPage3 As System.Windows.Forms.TabPage
+    Friend WithEvents TreeView As System.Windows.Forms.TreeView
 
 End Class
