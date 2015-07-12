@@ -9033,10 +9033,6 @@ Public Class frmMain
         ' Output the Latest XML File if we have updates
         If NewFilesAdded Then
             Call WriteLatestXMLFile()
-
-            ' Copy the new XML file into the root directory - so I don't get updates
-            File.Copy(MediaFireDirectory & LatestVersionXML, RootDirectory & LatestVersionXML, True)
-
         End If
 
         ' Refresh the grid
@@ -9062,7 +9058,8 @@ Public Class frmMain
         End If
 
         ' Loop through the settings sent and output each name and value
-        Using writer As XmlWriter = XmlWriter.Create(MediaFireDirectory & LatestVersionXML, XMLSettings)
+        ' Copy the new XML file into the root directory - so I don't get updates and then manually upload this to media fire so people don't get crazy updates
+        Using writer As XmlWriter = XmlWriter.Create(RootDirectory & LatestVersionXML, XMLSettings)
             writer.WriteStartDocument()
             writer.WriteStartElement("EVEIPH") ' Root.
             writer.WriteAttributeString("Version", VersionNumber)
