@@ -955,6 +955,15 @@ Public Class frmMain
 
         Call UpdateramAssemblyLineTypeDetailPerCategory()
 
+        lblTableName.Text = "Building: INVENTORY_TYPES"
+        Call Build_INVENTORY_TYPES()
+
+        lblTableName.Text = "Building: INVENTORY_GROUPS"
+        Call Build_INVENTORY_GROUPS()
+
+        lblTableName.Text = "Building: INVENTORY_CATEGORIES"
+        Call Build_INVENTORY_CATEGORIES()
+
         lblTableName.Text = "Building: ALL_BLUEPRINTS"
         Call Build_ALL_BLUEPRINTS()
 
@@ -987,15 +996,6 @@ Public Class frmMain
 
         lblTableName.Text = "Building: MARKET_HISTORY_UPDATE_CACHE"
         Call Build_MARKET_HISTORY_UPDATE_CACHE()
-
-        lblTableName.Text = "Building: INVENTORY_TYPES"
-        Call Build_INVENTORY_TYPES()
-
-        lblTableName.Text = "Building: INVENTORY_GROUPS"
-        Call Build_INVENTORY_GROUPS()
-
-        lblTableName.Text = "Building: INVENTORY_CATEGORIES"
-        Call Build_INVENTORY_CATEGORIES()
 
         lblTableName.Text = "Building: INVENTORY_FLAGS"
         Call Build_Inventory_Flags()
@@ -5087,21 +5087,24 @@ Public Class frmMain
         SQL = "CREATE TABLE INVENTORY_TYPES ("
         SQL = SQL & "typeID INTEGER PRIMARY KEY,"
         SQL = SQL & "groupID INTEGER,"
-        SQL = SQL & "typeName VARCHAR(" & GetLenSQLExpField("typeName", "invTypes") & ") NOT NULL,"
+        SQL = SQL & "typeName VARCHAR(" & GetLenSQLExpField("typeName", "invTypes") & "),"
         SQL = SQL & "description VARCHAR(" & GetLenSQLExpField("description", "invTypes") & "),"
-        'SQL = SQL & "graphicID INTEGER,"
-        'SQL = SQL & "radius REAL,"
         SQL = SQL & "mass REAL,"
         SQL = SQL & "volume REAL,"
         SQL = SQL & "capacity REAL,"
         SQL = SQL & "portionSize INTEGER,"
+        SQL = SQL & "factionID INTEGER,"
         SQL = SQL & "raceID INTEGER,"
         SQL = SQL & "basePrice REAL,"
         SQL = SQL & "published INTEGER,"
         SQL = SQL & "marketGroupID INTEGER,"
-        SQL = SQL & "chanceOfDuplicating REAL"
-        'SQL = SQL & "itemType INTEGER"
-        'SQL = SQL & "iconID INTEGER"
+        SQL = SQL & "chanceOfDuplicating REAL,"
+        SQL = SQL & "graphicID INTEGER,"
+        SQL = SQL & "radius REAL,"
+        SQL = SQL & "iconID INTEGER,"
+        SQL = SQL & "soundID INTEGER,"
+        SQL = SQL & "sofFactionName INTEGER,"
+        SQL = SQL & "sofDnaAddition INTEGER"
         SQL = SQL & ")"
 
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
@@ -5128,17 +5131,18 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(5)) & "," ' Volume
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(6)) & "," ' Capacity
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(7)) & "," ' PortionSize
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(8)) & "," ' RaceID
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(9)) & "," ' BasePrice
-            SQL = SQL & BuildInsertFieldString(CInt(msSQLReader.GetValue(10))) & "," ' Published
-            If Not IsDBNull(msSQLReader.GetValue(11)) Then ' MarketGroupID
-                SQL = SQL & CInt(msSQLReader.GetValue(11)) & ","
-            Else
-                SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(11)) & ","
-            End If
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(12)) & ")" ' ChanceofDuplicating
-            'sQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(13)) & "0" ' itemType
-            'SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(13)) & ")" ' IconID
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(8)) & "," ' FactionID
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(9)) & "," ' RaceID
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(10)) & "," ' BasePrice
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(11)) & "," ' published
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(12)) & "," ' marketGroupID
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(13)) & "," ' chanceofDuplicating
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(14)) & "," ' graphicID
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(15)) & "," ' radius
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(16)) & "," ' iconID
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(17)) & "," ' soundID
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(18)) & "," ' sofFactionName
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(19)) & ")" ' sofDnaAddition
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
@@ -5179,11 +5183,8 @@ Public Class frmMain
         SQL = SQL & "groupID INTEGER PRIMARY KEY,"
         SQL = SQL & "categoryID INTEGER,"
         SQL = SQL & "groupName VARCHAR(" & GetLenSQLExpField("groupName", "invGroups") & "),"
-        SQL = SQL & "description VARCHAR(" & GetLenSQLExpField("description", "invGroups") & "),"
         SQL = SQL & "iconID INTEGER,"
         SQL = SQL & "useBasePrice INTEGER,"
-        SQL = SQL & "allowManufacture INTEGER,"
-        SQL = SQL & "allowRecycler INTEGER,"
         SQL = SQL & "anchored INTEGER,"
         SQL = SQL & "anchorable INTEGER,"
         SQL = SQL & "fittableNonSingleton INTEGER,"
@@ -5206,18 +5207,15 @@ Public Class frmMain
             Application.DoEvents()
 
             SQL = "INSERT INTO INVENTORY_GROUPS VALUES ("
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(0)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(3)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(4)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(5)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(6)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(7)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(8)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(9)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(10)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(11)) & ")"
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(0)) & "," ' groupID
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & "," ' categoryID
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & "," ' groupName
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(3)) & "," ' iconID
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(4)) & "," ' useBasePrice
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(5)) & "," ' anchored
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(6)) & "," ' anchorable
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(7)) & "," ' fittableNonSingleton
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(8)) & ")" ' published
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
@@ -5253,7 +5251,6 @@ Public Class frmMain
 
         SQL = "CREATE TABLE INVENTORY_CATEGORIES ("
         SQL = SQL & "categoryID INTEGER PRIMARY KEY,"
-        SQL = SQL & "description VARCHAR(" & GetLenSQLExpField("description", "invCategories") & "),"
         SQL = SQL & "categoryName VARCHAR(" & GetLenSQLExpField("categoryName", "invCategories") & "),"
         SQL = SQL & "published INTEGER"
         SQL = SQL & ")"
@@ -5263,7 +5260,7 @@ Public Class frmMain
         Call SetProgressBarValues("invCategories")
 
         ' Pull new data and insert
-        msSQL = "SELECT categoryID, description, categoryName, published FROM invCategories"
+        msSQL = "SELECT categoryID, categoryName, published FROM invCategories"
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
@@ -5276,8 +5273,7 @@ Public Class frmMain
             SQL = "INSERT INTO INVENTORY_CATEGORIES VALUES ("
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(0)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ","
-            SQL = SQL & BuildInsertFieldString(CInt(msSQLReader.GetValue(3))) & ")" ' A bit value, but reads as a boolean for some reason
+            SQL = SQL & BuildInsertFieldString(CInt(msSQLReader.GetValue(2))) & ")" ' A bit value, but reads as a boolean for some reason
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
