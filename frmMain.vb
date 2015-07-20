@@ -470,7 +470,6 @@ Public Class frmMain
     ' Copies just the bp images that I use for EVE IPH from the latest dump into a new folder and zips them up for deployment
     Private Sub btnImageCopy_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnImageCopy.Click
         Dim ReaderCount As Long
-        Dim i As Long
         Dim SQL As String
         Dim readerBPs As SQLite.SQLiteDataReader
         Dim DBCommand As SQLiteCommand
@@ -541,8 +540,7 @@ Public Class frmMain
         DBCommand = New SQLiteCommand(SQL, SQLiteDB)
         readerBPs = DBCommand.ExecuteReader
 
-        i = 0
-        pgMain.Value = i
+        pgMain.Value = 0
         pgMain.Maximum = ReaderCount
         pgMain.Visible = True
 
@@ -561,8 +559,11 @@ Public Class frmMain
                 OutputFile.WriteLine(readerBPs(0).ToString & " - " & readerBPs(1).ToString)
                 MissingImages = True
             End Try
-            i += 1
-            pgMain.Value = i
+
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
+
         End While
 
         ' Final images
@@ -817,6 +818,13 @@ Public Class frmMain
         Return sb.ToString().ToLower
 
     End Function
+
+    ' Updates the value in the progressbar for a smooth progress - total hack from this: http://stackoverflow.com/questions/977278/how-can-i-make-the-progress-bar-update-fast-enough/1214147#1214147
+    Public Sub IncrementProgressBar(ByRef PG As ProgressBar)
+        PG.Value = PG.Value + 1
+        PG.Value = PG.Value - 1
+        PG.Value = PG.Value + 1
+    End Sub
 
 #End Region
 
@@ -1239,8 +1247,6 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim i As Long
-
         ' See if the table exists and delete if so
         SQL = "SELECT COUNT(*) FROM sys.tables where name = 'ALL_BLUEPRINTS'"
         msSQLQuery = New SqlCommand(SQL, SQLExpressConnection)
@@ -1503,8 +1509,9 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -1538,8 +1545,6 @@ Public Class frmMain
         Dim msSQLQuery As SqlCommand
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
-
-        Dim i As Long
 
         Application.DoEvents()
 
@@ -1623,8 +1628,10 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
+
         End While
 
         Call CommitSQLiteTransaction(SQLiteDB)
@@ -1654,8 +1661,6 @@ Public Class frmMain
         Dim msSQLQuery As New SqlCommand
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
-
-        Dim i As Integer
 
         SQL = "CREATE TABLE ASSEMBLY_ARRAYS ("
         SQL = SQL & "ARRAY_TYPE_ID INTEGER NOT NULL,"
@@ -1730,8 +1735,9 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -1862,8 +1868,9 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -1971,8 +1978,6 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim i As Integer
-
         SQL = "CREATE TABLE STATIONS ("
         SQL = SQL & "STATION_ID INTEGER PRIMARY KEY,"
         SQL = SQL & "STATION_NAME VARCHAR(100) NOT NULL,"
@@ -2007,8 +2012,9 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -2482,8 +2488,6 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim i As Integer
-
         SQL = "CREATE TABLE RAM_ACTIVITIES ("
         SQL = SQL & "activityID INTEGER NOT NULL,"
         SQL = SQL & "activityName VARCHAR(100),"
@@ -2516,8 +2520,9 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -2538,8 +2543,6 @@ Public Class frmMain
         Dim msSQLQuery As New SqlCommand
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
-
-        Dim i As Integer
 
         SQL = "CREATE TABLE RAM_ASSEMBLY_LINE_STATIONS ("
         SQL = SQL & "stationID INTEGER NOT NULL,"
@@ -2577,8 +2580,9 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -2606,8 +2610,6 @@ Public Class frmMain
         Dim msSQLQuery As New SqlCommand
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
-
-        Dim i As Integer
 
         SQL = "CREATE TABLE RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_CATEGORY ("
         SQL = SQL & "assemblyLineTypeID INTEGER NOT NULL,"
@@ -2641,8 +2643,9 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -2667,8 +2670,6 @@ Public Class frmMain
         Dim msSQLQuery As New SqlCommand
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
-
-        Dim i As Integer
 
         SQL = "CREATE TABLE RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_GROUP ("
         SQL = SQL & "assemblyLineTypeID INTEGER NOT NULL,"
@@ -2702,8 +2703,9 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -2728,8 +2730,6 @@ Public Class frmMain
         Dim msSQLQuery As New SqlCommand
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
-
-        Dim i As Integer
 
         SQL = "CREATE TABLE RAM_ASSEMBLY_LINE_TYPES ("
         SQL = SQL & "assemblyLineTypeID INTEGER NOT NULL,"
@@ -2771,8 +2771,9 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -2797,8 +2798,6 @@ Public Class frmMain
         Dim msSQLQuery As New SqlCommand
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
-
-        Dim i As Integer
 
         SQL = "CREATE TABLE RAM_INSTALLATION_TYPE_CONTENTS ("
         SQL = SQL & "installationTypeID INTEGER NOT NULL,"
@@ -2828,8 +2827,9 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -2907,8 +2907,6 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim i As Integer
-
         SQL = "CREATE TABLE FACTIONS ("
         SQL = SQL & "factionID INTEGER PRIMARY KEY,"
         SQL = SQL & "factionName VARCHAR(" & GetLenSQLExpField("factionName", "chrFactions") & ") NOT NULL,"
@@ -2938,8 +2936,9 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -2963,8 +2962,6 @@ Public Class frmMain
         Dim msSQLQuery As New SqlCommand
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
-
-        Dim i As Integer
 
         SQL = "CREATE TABLE META_TYPES ("
         SQL = SQL & "typeID INTEGER PRIMARY KEY,"
@@ -2994,8 +2991,9 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -3015,8 +3013,6 @@ Public Class frmMain
         Dim msSQLQuery As New SqlCommand
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
-
-        Dim i As Integer
 
         SQL = "CREATE TABLE CONTROL_TOWER_RESOURCES ("
         SQL = SQL & "controlTowerTypeID INTEGER NOT NULL,"
@@ -3052,8 +3048,9 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -3128,8 +3125,6 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim i As Integer
-
         SQL = "CREATE TABLE ATTRIBUTE_TYPES ("
         SQL = SQL & "attributeID INTEGER PRIMARY KEY,"
         SQL = SQL & "attributeName VARCHAR(" & GetLenSQLExpField("attributeName", "dgmAttributeTypes") & "),"
@@ -3158,8 +3153,9 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -3179,8 +3175,6 @@ Public Class frmMain
         Dim msSQLQuery As New SqlCommand
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
-
-        Dim i As Integer
 
         SQL = "CREATE TABLE TYPE_ATTRIBUTES ("
         SQL = SQL & "typeID INTEGER NOT NULL,"
@@ -3212,8 +3206,9 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -4360,8 +4355,9 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -4458,8 +4454,9 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -4552,8 +4549,9 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -4661,8 +4659,9 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -4952,8 +4951,6 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim i As Integer
-
         SQL = "CREATE TABLE INVENTORY_TYPES ("
         SQL = SQL & "typeID INTEGER PRIMARY KEY,"
         SQL = SQL & "groupID INTEGER,"
@@ -5016,8 +5013,9 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -5046,8 +5044,6 @@ Public Class frmMain
         Dim msSQLQuery As New SqlCommand
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
-
-        Dim i As Integer
 
         SQL = "CREATE TABLE INVENTORY_GROUPS ("
         SQL = SQL & "groupID INTEGER PRIMARY KEY,"
@@ -5089,8 +5085,9 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -5116,8 +5113,6 @@ Public Class frmMain
         Dim msSQLQuery As New SqlCommand
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
-
-        Dim i As Integer
 
         SQL = "CREATE TABLE INVENTORY_CATEGORIES ("
         SQL = SQL & "categoryID INTEGER PRIMARY KEY,"
@@ -5147,8 +5142,9 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -5172,8 +5168,6 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
         Dim Temp As String
-
-        Dim i As Integer
 
         SQL = "CREATE TABLE INVENTORY_FLAGS ("
         SQL = SQL & "FlagID INTEGER NOT NULL,"
@@ -5219,8 +5213,9 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -5250,8 +5245,6 @@ Public Class frmMain
         Dim msSQLQuery As New SqlCommand
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
-
-        Dim i As Long
 
         Application.DoEvents()
 
@@ -5423,8 +5416,10 @@ Public Class frmMain
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
+
         End While
 
         Call CommitSQLiteTransaction(SQLiteDB)
@@ -7791,8 +7786,9 @@ Public Class frmMain
 
             Call Execute_msSQL(msSQL) ' add to msSQL Server
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
         On Error GoTo 0
@@ -7809,7 +7805,6 @@ Public Class frmMain
     ' mapConstellationJumps
     Private Sub Build_mapConstellationJumps()
         Dim SQL As String
-        Dim i As Long
 
         ' SQLite variables
         Dim SQLiteDBCommand As New SQLiteCommand
@@ -7870,8 +7865,9 @@ Public Class frmMain
 
             Call Execute_msSQL(msSQL) ' add to msSQL Server
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -7890,7 +7886,6 @@ Public Class frmMain
     ' mapConstellations
     Private Sub Build_mapConstellations()
         Dim SQL As String
-        Dim i As Long
 
         ' SQLite variables
         Dim SQLiteDBCommand As New SQLiteCommand
@@ -7957,8 +7952,9 @@ Public Class frmMain
 
             Call Execute_msSQL(msSQL) ' add to msSQL Server
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -8061,8 +8057,9 @@ Public Class frmMain
 
             Call Execute_msSQL(msSQL) ' add to msSQL Server
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -8081,7 +8078,6 @@ Public Class frmMain
     ' mapJumps
     Private Sub Build_mapJumps()
         Dim SQL As String
-        Dim i As Long
 
         ' SQLite variables
         Dim SQLiteDBCommand As New SQLiteCommand
@@ -8136,8 +8132,9 @@ Public Class frmMain
 
             Call Execute_msSQL(msSQL) ' add to msSQL Server
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -8156,7 +8153,6 @@ Public Class frmMain
     ' mapLandmarks
     Private Sub Build_mapLandmarks()
         Dim SQL As String
-        Dim i As Long
 
         ' SQLite variables
         Dim SQLiteDBCommand As New SQLiteCommand
@@ -8217,8 +8213,9 @@ Public Class frmMain
 
             Call Execute_msSQL(msSQL) ' add to msSQL Server
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -8237,7 +8234,6 @@ Public Class frmMain
     ' mapLocationScenes
     Private Sub Build_mapLocationScenes()
         Dim SQL As String
-        Dim i As Long
 
         ' SQLite variables
         Dim SQLiteDBCommand As New SQLiteCommand
@@ -8292,8 +8288,9 @@ Public Class frmMain
 
             Call Execute_msSQL(msSQL) ' add to msSQL Server
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -8367,8 +8364,9 @@ Public Class frmMain
 
             Call Execute_msSQL(msSQL) ' add to msSQL Server
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -8386,7 +8384,6 @@ Public Class frmMain
 
     ' mapRegionJumps
     Private Sub Build_mapRegionJumps()
-        Dim i As Long
 
         ' SQLite variables
         Dim SQLiteDBCommand As New SQLiteCommand
@@ -8428,8 +8425,9 @@ Public Class frmMain
 
             Call Execute_msSQL(msSQL) ' add to msSQL Server
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -8448,7 +8446,6 @@ Public Class frmMain
     ' mapRegions
     Private Sub Build_mapRegions()
         Dim SQL As String
-        Dim i As Long
 
         ' SQLite variables
         Dim SQLiteDBCommand As New SQLiteCommand
@@ -8514,8 +8511,9 @@ Public Class frmMain
 
             Call Execute_msSQL(msSQL) ' add to msSQL Server
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -8534,7 +8532,6 @@ Public Class frmMain
     ' mapSolarSystemJumps
     Private Sub Build_mapSolarSystemJumps()
         Dim SQL As String
-        Dim i As Long
 
         ' SQLite variables
         Dim SQLiteDBCommand As New SQLiteCommand
@@ -8593,8 +8590,9 @@ Public Class frmMain
 
             Call Execute_msSQL(msSQL) ' add to msSQL Server
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
@@ -8613,7 +8611,6 @@ Public Class frmMain
     ' mapSolarSystems
     Private Sub Build_mapSolarSystems()
         Dim SQL As String
-        Dim i As Long
 
         ' SQLite variables
         Dim SQLiteDBCommand As New SQLiteCommand
@@ -8692,8 +8689,9 @@ Public Class frmMain
 
             Call Execute_msSQL(msSQL) ' add to msSQL Server
 
-            i += 1
-            pgMain.Value = i
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
 
         End While
 
