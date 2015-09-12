@@ -119,7 +119,6 @@ Public Class frmMain
         End Sub
     End Class
 
-
     Public Sub New()
         MyBase.New()
 
@@ -491,9 +490,7 @@ Public Class frmMain
         End If
 
         Me.Cursor = Cursors.WaitCursor
-        btnBuildDatabase.Enabled = False
-        btnBuildSQLServerDB.Enabled = False
-        btnImageCopy.Enabled = False
+        Call EnableButtons(False)
 
         If Not ConnectToDBs() Then
             Me.Cursor = Cursors.Default
@@ -546,14 +543,14 @@ Public Class frmMain
 
         Application.DoEvents()
 
-        ' Loop through and copy all the images to the new folder
+        ' Loop through and copy all the images to the new folder - use absolute value for stuff I use negative typeIDs for (outpost stuff)
         While readerBPs.Read
             Application.DoEvents()
             Try
                 ' For zip use
-                File.Copy(IECFOlder & "\" & readerBPs(0).ToString & "_64.png", EVEIPHImageFolder & "\" & CStr(readerBPs.GetValue(0)) & "_64.png")
+                File.Copy(IECFOlder & "\" & CStr(Math.Abs(readerBPs.GetValue(0))) & "_64.png", EVEIPHImageFolder & "\" & CStr(Math.Abs(readerBPs.GetValue(0))) & "_64.png")
                 ' To root Working Directory
-                File.Copy(IECFOlder & "\" & readerBPs(0).ToString & "_64.png", WorkingImageFolder & "\" & CStr(readerBPs.GetValue(0)) & "_64.png")
+                File.Copy(IECFOlder & "\" & CStr(Math.Abs(readerBPs.GetValue(0))) & "_64.png", WorkingImageFolder & "\" & CStr(Math.Abs(readerBPs.GetValue(0))) & "_64.png")
             Catch
                 ' Build a file with the BP ID's and Names that do not have a image
                 OutputFile.WriteLine(readerBPs(0).ToString & " - " & readerBPs(1).ToString)
@@ -628,9 +625,7 @@ Public Class frmMain
         Call CloseDBs()
 
         Me.Cursor = Cursors.Default
-        btnBuildDatabase.Enabled = True
-        btnBuildSQLServerDB.Enabled = True
-        btnImageCopy.Enabled = True
+        Call EnableButtons(True)
 
         MsgBox("Images Copied Successfully", vbInformation, "Complete")
 
@@ -648,6 +643,7 @@ Public Class frmMain
         btnBuildBinary.Enabled = False
         Application.UseWaitCursor = True
         Application.DoEvents()
+        Call EnableButtons(False)
 
         ' Make folder to put files in and zip
         If Directory.Exists(FinalBinaryFolderPath) Then
@@ -713,9 +709,10 @@ Public Class frmMain
 
         ' Refresh this file in the list
         Call LoadFileGrid()
+        Call EnableButtons(True)
+        Application.DoEvents()
 
         MsgBox("Binary Build", vbInformation, "Complete")
-        btnBuildBinary.Enabled = True
 
     End Sub
 
@@ -735,6 +732,15 @@ Public Class frmMain
         End Sub
 
     End Structure
+
+    Public Sub EnableButtons(EnableValue As Boolean)
+        btnBuildDatabase.Enabled = EnableValue
+        btnBuildSQLServerDB.Enabled = EnableValue
+        btnImageCopy.Enabled = EnableValue
+        btnCopyFilesBuildXML.Enabled = EnableValue
+        btnBuildBinary.Enabled = EnableValue
+        btnRefreshList.Enabled = EnableValue
+    End Sub
 
     ' Sorts the material list by quantity
     Private Sub SortListDesc(ByVal Sentlist As List(Of FileNameDate), ByVal First As Integer, ByVal Last As Integer)
@@ -840,9 +846,7 @@ Public Class frmMain
             Exit Sub
         End If
 
-        btnBuildDatabase.Enabled = False
-        btnBuildSQLServerDB.Enabled = False
-        btnImageCopy.Enabled = False
+        Call EnableButtons(False)
 
         ' Build DB's and open connections
         Call BuildDB()
@@ -867,9 +871,8 @@ Public Class frmMain
 
         lblTableName.Text = ""
         Me.Cursor = Cursors.Default
-        btnBuildDatabase.Enabled = True
-        btnBuildSQLServerDB.Enabled = True
-        btnImageCopy.Enabled = True
+
+        Call EnableButtons(True)
 
         Call CloseDBs()
 
@@ -1307,7 +1310,8 @@ Public Class frmMain
         SQL = SQL & "AND invGroups.categoryID = invCategories.categoryID "
         SQL = SQL & "AND industryBlueprints.blueprintTypeID = industryActivities.blueprintTypeID "
         SQL = SQL & "AND industryActivities.activityID = 1 " ' -- Production Time 
-        SQL = SQL & "AND invTypes1.published <> 0 AND invTypes.published <> 0 AND invGroups1.published <> 0 AND invGroups.published <> 0 AND invCategories.published <> 0" ' -- 2830 bps
+        SQL = SQL & "AND (invTypes1.published <> 0 AND invTypes.published <> 0 AND invGroups1.published <> 0 AND invGroups.published <> 0 AND invCategories.published <> 0" ' -- 2830 bps
+        SQL = SQL & "OR industryBlueprints.blueprintTypeID < 0)" ' For all outpost "blueprints"
 
         ' Build table
         Call Execute_msSQL(SQL)
@@ -1579,10 +1583,28 @@ Public Class frmMain
         SQL = SQL & "AND matGroups.categoryID = matCategories.categoryID "
         SQL = SQL & "AND invTypes.groupID = invGroups.groupID "
         SQL = SQL & "AND invGroups.categoryID = invCategories.categoryID "
-        SQL = SQL & "AND invTypes.published <> 0 AND invGroups.published <> 0 AND invCategories.published <> 0 "
+        SQL = SQL & "AND (invTypes.published <> 0 AND invGroups.published <> 0 AND invCategories.published <> 0 "
+        SQL = SQL & "OR industryBlueprints.blueprintTypeID < 0) " ' For all outpost "blueprints"
         SQL = SQL & "ORDER BY BLUEPRINT_ID, PRODUCT_ID "
 
         Call Execute_msSQL(SQL)
+
+        ' Update all the materials that are blueprints - add copy to the name to reduce confusion, only materials required are BPCs
+        Call Execute_msSQL("UPDATE ALL_BLUEPRINT_MATERIALS SET MATERIAL = MATERIAL + ' Copy' WHERE MATERIAL_CATEGORY = 'Blueprint'")
+
+        ' Also, find any bp that has the product the same as a material id, this will cause an infinite loop
+        SQL = "SELECT BLUEPRINT_ID FROM ALL_BLUEPRINT_MATERIALS where PRODUCT_ID = MATERIAL_ID"
+        msSQLQuery = New SqlCommand(SQL, SQLExpressConnection)
+        msSQLReader = msSQLQuery.ExecuteReader()
+
+        ' Delete these BPs from the materials and all_blueprints tables before building the final in SQLite
+        While msSQLReader.Read
+            Call Execute_msSQL("DELETE FROM ALL_BLUEPRINT_MATERIALS WHERE BLUEPRINT_ID = " & CStr(msSQLReader.GetInt64(0)))
+            ' This table is already built in sqlite, so delete from there
+            Call Execute_SQLiteSQL("DELETE FROM ALL_BLUEPRINTS WHERE BLUEPRINT_ID = " & CStr(msSQLReader.GetInt64(0)), SQLiteDB)
+        End While
+
+        msSQLReader.Close()
 
         ' Create SQLite table
         SQL = "CREATE TABLE ALL_BLUEPRINT_MATERIALS ("
@@ -2093,115 +2115,115 @@ Public Class frmMain
 
         ' Since this is all data I created, just do inserts here 
         ' Data from: https://forums.eveonline.com/default.aspx?g=posts&t=418719
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60800,'Colossal','Arkonor',2,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60800,'Colossal','Crimson Arkonor',2,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60800,'Colossal','Prime Arkonor',2,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (114300,'Colossal','Bistot',2,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (114300,'Colossal','Monoclinic Bistot',2,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (114300,'Colossal','Triclinic Bistot',2,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (225200,'Colossal','Crokite',1,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (225200,'Colossal','Sharp Crokite',1,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (225200,'Colossal','Crystalline Crokite',1,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (115000,'Colossal','Dark Ochre',1,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (115000,'Colossal','Obsidian Ochre',1,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (115000,'Colossal','Onyx Ochre',1,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (630000,'Colossal','Gneiss',1,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (630000,'Colossal','Prismatic Gneiss',1,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (630000,'Colossal','Iridescent Gneiss',1,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (736200,'Colossal','Spodumain',1,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (736200,'Colossal','Gleaming Spodumain',1,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (736200,'Colossal','Bright Spodumain',1,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (7000,'Colossal','Mercoxit',2,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (7000,'Colossal','Magma Mercoxit',2,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (7000,'Colossal','Vitreous Mercoxit',2,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60800,'Colossal','Arkonor',4,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60800,'Colossal','Crimson Arkonor',4,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60800,'Colossal','Prime Arkonor',4,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (114300,'Colossal','Bistot',7,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (114300,'Colossal','Triclinic Bistot',7,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (114300,'Colossal','Monoclinic Bistot',7,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (225200,'Colossal','Crokite',9,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (225200,'Colossal','Sharp Crokite',9,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (225200,'Colossal','Crystalline Crokite',9,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (115000,'Colossal','Dark Ochre',6,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (115000,'Colossal','Onyx Ochre',6,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (115000,'Colossal','Obsidian Ochre',6,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (630000,'Colossal','Gneiss',13,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (630000,'Colossal','Iridescent Gneiss',13,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (630000,'Colossal','Prismatic Gneiss',13,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (736200,'Colossal','Spodumain',14,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (736200,'Colossal','Bright Spodumain',14,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (736200,'Colossal','Gleaming Spodumain',14,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (7000,'Colossal','Mercoxit',5,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (7000,'Colossal','Magma Mercoxit',5,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (7000,'Colossal','Vitreous Mercoxit',5,10)", SQLiteDB)
 
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (58000,'Enormous','Arkonor',2,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (58000,'Enormous','Crimson Arkonor',2,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (58000,'Enormous','Prime Arkonor',2,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (86000,'Enormous','Bistot',2,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (86000,'Enormous','Monoclinic Bistot',2,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (86000,'Enormous','Triclinic Bistot',2,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (169000,'Enormous','Crokite',1,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (169000,'Enormous','Sharp Crokite',1,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (169000,'Enormous','Crystalline Crokite',1,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (50000,'Enormous','Dark Ochre',1,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (50000,'Enormous','Obsidian Ochre',1,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (50000,'Enormous','Onyx Ochre',1,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (540000,'Enormous','Gneiss',1,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (540000,'Enormous','Prismatic Gneiss',1,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (540000,'Enormous','Iridescent Gneiss',1,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (542000,'Enormous','Spodumain',1,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (542000,'Enormous','Gleaming Spodumain',1,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (542000,'Enormous','Bright Spodumain',1,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (5200,'Enormous','Mercoxit',2,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (5200,'Enormous','Magma Mercoxit',2,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (5200,'Enormous','Vitreous Mercoxit',2,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (58000,'Enormous','Arkonor',4,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (58000,'Enormous','Crimson Arkonor',4,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (58000,'Enormous','Prime Arkonor',4,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (86000,'Enormous','Bistot',5,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (86000,'Enormous','Monoclinic Bistot',5,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (86000,'Enormous','Triclinic Bistot',5,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (169000,'Enormous','Crokite',7,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (169000,'Enormous','Sharp Crokite',7,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (169000,'Enormous','Crystalline Crokite',7,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (500000,'Enormous','Dark Ochre',10,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (500000,'Enormous','Obsidian Ochre',10,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (500000,'Enormous','Onyx Ochre',10,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (540000,'Enormous','Gneiss',10,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (540000,'Enormous','Prismatic Gneiss',10,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (540000,'Enormous','Iridescent Gneiss',10,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (578000,'Enormous','Spodumain',10,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (578000,'Enormous','Gleaming Spodumain',10,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (578000,'Enormous','Bright Spodumain',10,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (5200,'Enormous','Mercoxit',4,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (5200,'Enormous','Magma Mercoxit',4,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (5200,'Enormous','Vitreous Mercoxit',4,10)", SQLiteDB)
 
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (29900,'Large','Arkonor',2,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (29900,'Large','Crimson Arkonor',2,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (29900,'Large','Prime Arkonor',2,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (57000,'Large','Bistot',2,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (57000,'Large','Monoclinic Bistot',2,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (57000,'Large','Triclinic Bistot',2,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (124000,'Large','Crokite',1,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (124000,'Large','Sharp Crokite',1,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (124000,'Large','Crystalline Crokite',1,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60000,'Large','Dark Ochre',1,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60000,'Large','Obsidian Ochre',1,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60000,'Large','Onyx Ochre',1,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (313500,'Large','Gneiss',1,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (313500,'Large','Prismatic Gneiss',1,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (313500,'Large','Iridescent Gneiss',1,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (368100,'Large','Spodumain',1,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (368100,'Large','Gleaming Spodumain',1,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (368100,'Large','Bright Spodumain',1,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (3500,'Large','Mercoxit',2,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (3500,'Large','Magma Mercoxit',2,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (3500,'Large','Vitreous Mercoxit',2,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (29900,'Large','Arkonor',3,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (29900,'Large','Crimson Arkonor',3,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (29900,'Large','Prime Arkonor',3,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (57000,'Large','Bistot',5,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (57000,'Large','Monoclinic Bistot',5,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (57000,'Large','Triclinic Bistot',5,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (124000,'Large','Crokite',6,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (124000,'Large','Sharp Crokite',6,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (124000,'Large','Crystalline Crokite',6,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60000,'Large','Dark Ochre',4,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60000,'Large','Obsidian Ochre',4,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60000,'Large','Onyx Ochre',4,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (313500,'Large','Gneiss',9,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (313500,'Large','Prismatic Gneiss',9,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (313500,'Large','Iridescent Gneiss',9,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (368100,'Large','Spodumain',9,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (368100,'Large','Gleaming Spodumain',9,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (368100,'Large','Bright Spodumain',9,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (3500,'Large','Mercoxit',3,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (3500,'Large','Magma Mercoxit',3,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (3500,'Large','Vitreous Mercoxit',3,10)", SQLiteDB)
 
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (28000,'Medium','Arkonor',2,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (28000,'Medium','Crimson Arkonor',2,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (28000,'Medium','Prime Arkonor',2,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (38700,'Medium','Bistot',2,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (38700,'Medium','Monoclinic Bistot',2,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (38700,'Medium','Triclinic Bistot',2,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (84700,'Medium','Crokite',1,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (84700,'Medium','Sharp Crokite',1,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (84700,'Medium','Crystalline Crokite',1,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (31000,'Medium','Dark Ochre',1,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (31000,'Medium','Obsidian Ochre',1,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (31000,'Medium','Onyx Ochre',1,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (340000,'Medium','Gneiss',1,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (340000,'Medium','Prismatic Gneiss',1,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (340000,'Medium','Iridescent Gneiss',1,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (270000,'Medium','Spodumain',1,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (270000,'Medium','Gleaming Spodumain',1,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (270000,'Medium','Bright Spodumain',1,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (28000,'Medium','Arkonor',3,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (28000,'Medium','Crimson Arkonor',3,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (28000,'Medium','Prime Arkonor',3,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (38700,'Medium','Bistot',4,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (38700,'Medium','Monoclinic Bistot',4,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (38700,'Medium','Triclinic Bistot',4,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (84700,'Medium','Crokite',5,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (84700,'Medium','Sharp Crokite',5,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (84700,'Medium','Crystalline Crokite',5,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (31000,'Medium','Dark Ochre',3,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (31000,'Medium','Obsidian Ochre',3,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (31000,'Medium','Onyx Ochre',3,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (340000,'Medium','Gneiss',8,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (340000,'Medium','Prismatic Gneiss',8,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (340000,'Medium','Iridescent Gneiss',8,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (270000,'Medium','Spodumain',8,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (270000,'Medium','Gleaming Spodumain',8,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (270000,'Medium','Bright Spodumain',8,5)", SQLiteDB)
         Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (2600,'Medium','Mercoxit',2,0)", SQLiteDB)
         Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (2600,'Medium','Magma Mercoxit',2,5)", SQLiteDB)
         Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (2600,'Medium','Vitreous Mercoxit',2,10)", SQLiteDB)
 
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (9600,'Small','Arkonor',2,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (9600,'Small','Crimson Arkonor',2,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (9600,'Small','Prime Arkonor',2,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (12800,'Small','Bistot',2,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (12800,'Small','Monoclinic Bistot',2,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (12800,'Small','Triclinic Bistot',2,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (30000,'Small','Crokite',1,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (30000,'Small','Sharp Crokite',1,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (30000,'Small','Crystalline Crokite',1,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (16000,'Small','Dark Ochre',1,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (16000,'Small','Obsidian Ochre',1,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (16000,'Small','Onyx Ochre',1,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (170000,'Small','Gneiss',1,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (170000,'Small','Prismatic Gneiss',1,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (170000,'Small','Iridescent Gneiss',1,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (300000,'Small','Spodumain',1,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (300000,'Small','Gleaming Spodumain',1,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (300000,'Small','Bright Spodumain',1,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (0,'Small','Mercoxit',2,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (0,'Small','Magma Mercoxit',2,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (0,'Small','Vitreous Mercoxit',2,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (9700,'Small','Arkonor',3,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (9700,'Small','Crimson Arkonor',3,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (9700,'Small','Prime Arkonor',3,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (12800,'Small','Bistot',3,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (12800,'Small','Monoclinic Bistot',3,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (12800,'Small','Triclinic Bistot',3,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (30000,'Small','Crokite',5,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (30000,'Small','Sharp Crokite',5,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (30000,'Small','Crystalline Crokite',5,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (16000,'Small','Dark Ochre',4,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (16000,'Small','Obsidian Ochre',4,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (16000,'Small','Onyx Ochre',4,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (170000,'Small','Gneiss',6,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (170000,'Small','Prismatic Gneiss',6,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (170000,'Small','Iridescent Gneiss',6,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (300000,'Small','Spodumain',7,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (300000,'Small','Gleaming Spodumain',7,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (300000,'Small','Bright Spodumain',7,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (0,'Small','Mercoxit',0,0)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (0,'Small','Magma Mercoxit',0,5)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (0,'Small','Vitreous Mercoxit',0,10)", SQLiteDB)
 
         Call CommitSQLiteTransaction(SQLiteDB)
 
@@ -5293,67 +5315,25 @@ Public Class frmMain
         End If
 
         msSQL = "CREATE VIEW PRICES_NOBUILD AS "
-        msSQL = msSQL & "SELECT invTypes.typeID AS ITEM_ID, "
-        msSQL = msSQL & "invTypes.typeName AS ITEM_NAME, "
-        msSQL = msSQL & "0 AS TECH_LEVEL, 0 AS PRICE, "
-        msSQL = msSQL & "invCategories.categoryName AS ITEM_CATEGORY, "
-        msSQL = msSQL & "invGroups.groupName AS ITEM_GROUP, "
-        msSQL = msSQL & "0 AS MANUFACTURE, "
-        msSQL = msSQL & "0 AS ITEM_TYPE, "
-        msSQL = msSQL & "'None' AS PRICE_TYPE "
-        msSQL = msSQL & "FROM (invTypes INNER JOIN invGroups ON invTypes.groupID = invGroups.groupID) "
-        msSQL = msSQL & "INNER JOIN invCategories ON invGroups.categoryID = invCategories.categoryID "
-        msSQL = msSQL & "WHERE ((invTypes.typeID Not In (SELECT ITEM_ID FROM ALL_BLUEPRINTS)) "
-        msSQL = msSQL & "AND invCategories.categoryName Not In ('Module','Charge','Ship') "
-        msSQL = msSQL & "AND invTypes.published <> 0 AND invGroups.published <> 0 and invCategories.published <> 0 "
-        msSQL = msSQL & "AND invTypes.marketGroupID Is Not Null) "
-        msSQL = msSQL & "AND ((invCategories.categoryID Not In (2,5,9,16,17,20,23,24,30,39,41)) "
-        msSQL = msSQL & "OR (invCategories.categoryID=2 AND invGroups.groupID=711) "
-        msSQL = msSQL & "OR (invCategories.categoryID=17 AND invGroups.groupID IN (333,528,530,716,732,733,734,735)) " '700's are storyline decryptors
-        msSQL = msSQL & "OR (invTypes.typeID IN (3685, 3683, 3645, 9850, 41, 3773, 3687, 3727, 9826, 13267, 3721, 3699))) "
-        ' Oxygen (3683), Water (3645), Garbage (41), Spirits (9850), Hydrogen Batteries (3685), Electronic Parts (3687), Hydrochloric Acid (3773)
-        ' Plutonium (3727), Carbon (9826), Janitor (13267), Slaves (3721), Quafe (3699), 
-        msSQL = msSQL & "OR invTypes.typeID IN (21815, 33195, 33539, 33577) " ' Spatial Attunement (33195), Shattered Villard Wheel (33539), 21815 - Elite Drone AI, (33577) Covert Research Tools
-        msSQL = msSQL & "OR invTypes.typeID IN (3583,3584) " ' 3583	Badly Mangled Components, 3584	True Slave Decryption Node
-        msSQL = msSQL & "OR invTypes.typeID IN (3812,3814) " ' 3812 Data Sheets, 3814 Reports
-        msSQL = msSQL & "OR invTypes.typeID IN (27274,29203) " ' 27274 Villard Wheel, 29203 Minmatar DNA
-        msSQL = msSQL & "OR invTypes.typeID IN (34575) " ' 34575 Antikythera Element
-
-        Execute_msSQL(msSQL)
-
-        ' See if the view exists and delete if so
-        SQL = "SELECT COUNT(*) FROM sys.all_views where name = 'PRICES_META'"
-        msSQLQuery = New SqlCommand(SQL, SQLExpressConnection)
-        msSQLReader = msSQLQuery.ExecuteReader()
-        msSQLReader.Read()
-
-        If CInt(msSQLReader.GetValue(0)) = 1 Then
-            SQL = "DROP VIEW PRICES_META"
-            msSQLReader.Close()
-            Execute_msSQL(SQL)
-        Else
-            msSQLReader.Close()
-        End If
-
-        msSQL = "CREATE VIEW PRICES_META AS "
-        msSQL = msSQL & "SELECT invTypes.typeID AS ITEM_ID, "
-        msSQL = msSQL & "invTypes.typeName AS ITEM_NAME, "
-        msSQL = msSQL & "1 AS TECH_LEVEL, "
-        msSQL = msSQL & "0 AS PRICE, "
-        msSQL = msSQL & "invCategories.categoryName AS ITEM_CATEGORY, "
-        msSQL = msSQL & "invGroups.groupName AS ITEM_GROUP, "
-        msSQL = msSQL & "0 AS MANUFACTURE, "
-        msSQL = msSQL & "IsNull(dgmTypeAttributes.valueInt, dgmTypeAttributes.valueFloat)+20 AS ITEM_TYPE, "
-        msSQL = msSQL & "'None' AS PRICE_TYPE "
-        msSQL = msSQL & "FROM invCategories "
-        msSQL = msSQL & "INNER JOIN ((invTypes "
-        msSQL = msSQL & "INNER JOIN dgmTypeAttributes ON invTypes.typeID = dgmTypeAttributes.typeID) "
-        msSQL = msSQL & "INNER JOIN invGroups ON invTypes.groupID = invGroups.groupID) ON invCategories.categoryID = invGroups.categoryID "
-        msSQL = msSQL & "WHERE (IsNull(dgmTypeAttributes.valueInt,dgmTypeAttributes.valueFloat) + 20 >20) "
-        msSQL = msSQL & "AND (IsNull(dgmTypeAttributes.valueInt,dgmTypeAttributes.valueFloat) + 20 < 25) "
-        msSQL = msSQL & "AND dgmTypeAttributes.attributeID = 633 "
-        msSQL = msSQL & "AND (invTypes.published<>0 AND invCategories.published<>0 AND invGroups.published<>0) "
-        msSQL = msSQL & "AND invTypes.typeID NOT IN (SELECT ITEM_ID FROM PRICES_BUILD) AND invTypes.typeID NOT IN (SELECT ITEM_ID FROM PRICES_NOBUILD)"
+        ' Get all the materials used to build stuff
+        msSQL = msSQL & "SELECT DISTINCT MATERIAL_ID, MATERIAL, 0 AS TECH_LEVEL, 0 AS PRICE, MATERIAL_CATEGORY, MATERIAL_GROUP, 0 AS MANUFACTURE, "
+        msSQL = msSQL & "0 AS ITEM_TYPE, 'None' AS PRICE_TYPE "
+        msSQL = msSQL & "FROM ALL_BLUEPRINT_MATERIALS "
+        msSQL = msSQL & "WHERE MATERIAL_ID NOT IN (SELECT ITEM_ID FROM ALL_BLUEPRINTS) "
+        msSQL = msSQL & "AND MATERIAL_CATEGORY <> 'Skill' "
+        msSQL = msSQL & "UNION "
+        ' Get specific materials for later use or other areas in IPH (ie asteroids)
+        msSQL = msSQL & "SELECT DISTINCT typeID AS MATERIAL_ID, typeName AS MATERIAL, 0 AS TECH_LEVEL, 0 AS PRICE, categoryName AS MATERIAL_CATEGORY, "
+        msSQL = msSQL & "groupName AS MATERIAL_GROUP, 0 AS MANUFACTURE, 0 AS ITEM_TYPE, 'None' AS PRICE_TYPE "
+        msSQL = msSQL & "FROM invTypes, invGroups, invCategories "
+        msSQL = msSQL & "WHERE invTypes.groupID = invGroups.groupID "
+        msSQL = msSQL & "AND invGroups.categoryID = invCategories.categoryID "
+        msSQL = msSQL & "AND invTypes.published <> 0 AND invGroups.published <> 0 AND invCategories.published <> 0 "
+        msSQL = msSQL & "AND invTypes.marketGroupID IS NOT NULL "
+        msSQL = msSQL & "AND (categoryName IN ('Asteroid','Decryptors','Planetary Commodities','Planetary Resources') "
+        msSQL = msSQL & "OR groupName in ('Moon Materials','Ice Product','Harvestable Cloud','Intermediate Materials') "
+        ' The last four are random items that come out of booster production or needed in station building (Quafe)
+        msSQL = msSQL & "OR typeID in (41, 3699, 3773, 9850, 33195))" ' Garbage, Quafe, Hydrochloric Acid, Spirits, Spatial Attunment
 
         Execute_msSQL(msSQL)
 
@@ -5371,7 +5351,7 @@ Public Class frmMain
             msSQLReader.Close()
         End If
 
-        SQL = "CREATE VIEW ITEM_PRICES_UNION AS SELECT * FROM PRICES_BUILD UNION SELECT * FROM PRICES_NOBUILD UNION SELECT * FROM PRICES_META"
+        SQL = "CREATE VIEW ITEM_PRICES_UNION AS SELECT * FROM PRICES_BUILD UNION SELECT * FROM PRICES_NOBUILD"
         Execute_msSQL(SQL)
 
         ' Create SQLite table
@@ -6090,9 +6070,7 @@ Public Class frmMain
         End If
 
         Me.Cursor = Cursors.WaitCursor
-        btnBuildDatabase.Enabled = False
-        btnBuildSQLServerDB.Enabled = False
-        btnImageCopy.Enabled = False
+Call EnableButtons(False)
 
         If Not ConnectToDBs() Then
             Me.Cursor = Cursors.Default
@@ -6112,6 +6090,9 @@ Public Class frmMain
 
         'Do all random updates here first
         Call RandomSDEUpdates()
+
+        ' Insert all the data for outpost upgrades, and eggs here
+        Call UploadOutpostItems()
 
         ' Build all the universe tables from SQLite 
         lblTableName.Text = "Building: mapCelestialStatistics"
@@ -6164,9 +6145,7 @@ Public Class frmMain
 
         Me.Cursor = Cursors.Default
         Application.UseWaitCursor = False
-        btnBuildDatabase.Enabled = True
-        btnBuildSQLServerDB.Enabled = True
-        btnImageCopy.Enabled = True
+        Call EnableButtons(True)
 
         Application.DoEvents()
 
@@ -6692,6 +6671,9 @@ Public Class frmMain
             Count += 1
         Next
 
+        ' Fix a few YAML data issues
+        Call Execute_msSQL("UPDATE industryActivityMaterials SET materialTypeID = 11467 WHERE blueprintTypeID = 12613 AND activityID = 5 AND materialTypeID = 11879")
+
         ' Now that this is all imported, check the industryActivityMaterials table for activites that aren't in industryActivityProducts and insert
         ' setting the productID = blueprintID. This is so we can get materials for ME/TE and copying - ie, skills are needed to do ME/TE and copying, no mats then no activity possible
         Dim msSQLQuery As New SqlCommand
@@ -6722,6 +6704,22 @@ Public Class frmMain
             mySQLReader2.Close()
             mySQLReader2 = Nothing
             mySQLQuery2 = Nothing
+        End While
+
+        msSQLReader.Close()
+        msSQLReader = Nothing
+        msSQLQuery = Nothing
+
+        ' For all invention jobs, we need a BPC or Relic BPC to invent the blueprint so add the BPC to the list of materials
+        msSQL = "SELECT blueprintTypeID FROM industryActivityMaterials WHERE activityID = 8 GROUP BY blueprintTypeID"
+        msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
+        msSQLReader = msSQLQuery.ExecuteReader()
+
+        While msSQLReader.Read
+            ' Insert each record as a consumable with the same material type id as the bptypeid
+            SQL = "INSERT INTO industryActivityMaterials VALUES (" & msSQLReader.GetInt64(0) & ",8,"
+            SQL = SQL & msSQLReader.GetInt64(0) & ",1,1)"
+            Call Execute_msSQL(SQL)
         End While
 
         msSQLReader.Close()
@@ -7207,7 +7205,7 @@ Public Class frmMain
         ' invGroups
         Call ResetTable("invGroups")
         ' Build table
-        SQL = "CREATE TABLE [dbo].[invGroups](
+        SQL = "CREATE TABLE [dbo].[invGroups]("
         SQL = SQL & "[groupID] [int] NOT NULL,"
         SQL = SQL & "[categoryID] [int] NULL,"
         SQL = SQL & "[groupName] [nvarchar](100) NULL,"
@@ -7554,6 +7552,2322 @@ Public Class frmMain
 
     End Sub
 
+    ' Inserts all the items for building outpost upgrades and platforms
+    Private Sub UploadOutpostItems()
+        Dim msSQL As String = ""
+
+        ' Insert all the "blueprints" into the industry tables manually - these are just the typeID's for the items but negate them and add records for invTypes
+
+        ' Add Upgrade Platforms (Three Tiers)
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27656,1)") ' Foundation - Tier 1
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27656,1,3600)") ' Build time is anchoring time
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27656,1,100027656,1,1)")
+        ' Add all the mats we put in the egg after it's anchored to build the outpost item
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,34,86767990,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,35,7230666,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,36,1355750,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,37,271150,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,38,56490,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,39,12105,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,40,2648,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,44,275,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,3683,5975,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,3685,5621,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,3687,4245,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,3689,3968,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,3691,3468,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,3697,4539,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,3727,213,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,3828,32200,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,9826,1964,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,9828,3368,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,9832,2561,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,9838,262,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,9842,1718,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,9848,506,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,13267,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,3400,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,27656,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27656)
+
+        ' Special insert for the product, which will be 1000 added to the current type id
+        msSQL = "INSERT INTO invTypes SELECT 100027656 AS typeID, groupID, 'Foundation Upgrade', description, mass, volume, capacity, portionSize, factionID, raceID, "
+        msSQL = msSQL & "basePrice, published, marketGroupID, chanceOfDuplicating, graphicID, radius, iconID, soundID, sofFactionName, sofDnaAddition "
+        msSQL = msSQL & "FROM invTypes WHERE typeID = 27656"
+        Call Execute_msSQL(msSQL)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27658,1)") ' Pedestal - Tier 2
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27658,1,3600)") ' Build time is anchoring time
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27658,1,100027658,1,1)")
+        ' Add all the mats we put in the egg after it's anchored to build the outpost item
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,34,347071960,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,35,28922663,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,36,5422999,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,37,1084599,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,38,225958,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,39,48419,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,40,10591,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,44,1099,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,3683,23897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,3685,22484,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,3687,16980,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,3689,15872,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,3691,13870,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,3697,18156,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,3727,851,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,3828,128798,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,9826,7855,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,9828,13469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,9832,10242,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,9838,1048,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,9842,6871,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,9848,2024,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,13267,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,3400,5,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,27658,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27658)
+
+        ' Special insert for the product, which will be 1000 added to the current type id
+        msSQL = "INSERT INTO invTypes SELECT 100027658 AS typeID, groupID, 'Foundation Upgrade', description, mass, volume, capacity, portionSize, factionID, raceID, "
+        msSQL = msSQL & "basePrice, published, marketGroupID, chanceOfDuplicating, graphicID, radius, iconID, soundID, sofFactionName, sofDnaAddition "
+        msSQL = msSQL & "FROM invTypes WHERE typeID = 27658"
+        Call Execute_msSQL(msSQL)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27660,1)") ' Monument - Tier 3
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27660,1,3600)") ' Build time is anchoring time
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27660,1,100027660,1,1)")
+        ' Add all the mats we put in the egg after it's anchored to build the outpost item
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,34,173535980,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,35,14461332,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,36,2711500,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,37,542300,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,38,112979,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,39,24210,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,40,5296,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,44,550,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,3683,11949,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,3685,11242,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,3687,8490,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,3689,7936,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,3691,6935,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,3697,9078,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,3727,426,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,3828,64399,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,9826,3928,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,9828,6735,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,9832,5121,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,9838,524,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,9842,3436,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,9848,1012,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,13267,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,3400,3,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,27660,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27660)
+
+        ' Special insert for the product, which will be 1000 added to the current type id
+        msSQL = "INSERT INTO invTypes SELECT 100027660 AS typeID, groupID, 'Foundation Upgrade', description, mass, volume, capacity, portionSize, factionID, raceID, "
+        msSQL = msSQL & "basePrice, published, marketGroupID, chanceOfDuplicating, graphicID, radius, iconID, soundID, sofFactionName, sofDnaAddition "
+        msSQL = msSQL & "FROM invTypes WHERE typeID = 27660"
+        Call Execute_msSQL(msSQL)
+
+        ' Add the stations
+
+        ' Amarr Factory Outpost
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-21644,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-21644,1,3600)") ' Build time is anchoring time
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-21644,1,21644,1,1)")
+        ' Add all the mats we put in the egg after it's anchored to build the outpost item
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,34,347071960,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,35,28922663,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,36,5422999,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,37,1084599,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,38,225958,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,39,48419,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,40,10591,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,44,1099,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,3683,23897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,3685,22484,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,3687,16980,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,3689,15872,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,3691,13870,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,3697,18156,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,3721,7500,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,3727,851,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,3828,128798,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,9826,7855,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,9828,13469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,9832,10242,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,9838,1048,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,9842,6871,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,9848,2024,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,13267,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,10260,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,3400,1,0)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(21644)
+
+        ' Caldari Research Outpost
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-21642,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-21642,1,3600)") ' Build time is anchoring time
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-21642,1,21642,1,1)")
+        ' Add all the mats we put in the egg after it's anchored to build the outpost item
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,34,293190294,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,35,24432524,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,36,4581098,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,37,916219,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,38,190879,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,39,40902,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,40,8947,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,44,5404,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,3683,29897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,3685,35489,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,3687,38724,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,3689,19546,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,3691,11654,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,3697,38465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,3727,3549,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,3828,74897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,9826,17984,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,9828,18465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,9832,8465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,9838,12111,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,9842,12441,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,9848,25987,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,13267,50,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,19758,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,3400,1,0)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(21642)
+
+        ' Gallente Administrative Outpost
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-21645,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-21645,1,3600)") ' Build time is anchoring time
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-21645,1,21645,1,1)")
+        ' Add all the mats we put in the egg after it's anchored to build the outpost item
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,34,257702131,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,35,21475177,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,36,4026595,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,37,805319,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,38,167774,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,39,35951,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,40,7864,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,3683,55489,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,3685,31546,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,3687,66849,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,3689,17654,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,3691,5449,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,3697,26546,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,3699,100,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,3828,89846,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,9826,9875,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,9828,15555,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,9832,15465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,9838,6874,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,9842,9874,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,9848,14419,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,13267,100,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,10257,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,3400,1,0)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(21645)
+
+        ' Minmatar Service Outpost
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-21646,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-21646,1,3600)") ' Build time is anchoring time
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-21646,1,21646,1,1)")
+        ' Add all the mats we put in the egg after it's anchored to build the outpost item
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,34,387522911,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,35,32293575,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,36,6055045,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,37,1211009,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,38,252293,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,39,54062,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,40,11826,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,44,3511,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,3683,25468,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,3685,23574,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,3687,19871,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,3689,16876,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,3691,17874,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,3697,8846,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,3727,1844,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,3828,155649,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,9826,5587,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,9828,5489,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,9832,12489,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,9838,897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,9842,7465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,9848,12499,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,10258,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,3400,1,0)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(21646)
+
+        ' Add the Improvement Platforms
+
+        ' Amarr - Tier 1
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27662,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27662,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27662,1,28081,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,34,86767990,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,35,7230666,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,36,1355750,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,37,271150,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,38,56490,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,39,12105,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,40,2648,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,44,275,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,3683,5975,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,3685,5621,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,3687,4245,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,3689,3968,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,3691,3468,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,3697,4539,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,3721,1875,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,3727,213,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,3828,32200,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,9826,1964,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,9828,3368,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,9832,2561,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,9838,262,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,9842,1718,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,9848,506,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,13267,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,27662,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,3400,1,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,27656,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27662)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27961,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27961,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27961,1,28082,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,34,86767990,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,35,7230666,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,36,1355750,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,37,271150,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,38,56490,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,39,12105,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,40,2648,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,44,275,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,3683,5975,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,3685,5621,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,3687,4245,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,3689,3968,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,3691,3468,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,3697,4539,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,3721,1875,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,3727,213,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,3828,32200,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,9826,1964,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,9828,3368,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,9832,2561,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,9838,262,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,9842,1718,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,9848,506,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,13267,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,27961,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,3400,1,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,27656,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27961)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27987,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27987,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27987,1,28083,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,34,86767990,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,35,7230666,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,36,1355750,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,37,271150,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,38,56490,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,39,12105,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,40,2648,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,44,275,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,3683,5975,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,3685,5621,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,3687,4245,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,3689,3968,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,3691,3468,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,3697,4539,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,3721,1875,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,3727,213,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,3828,32200,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,9826,1964,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,9828,3368,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,9832,2561,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,9838,262,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,9842,1718,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,9848,506,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,13267,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,27987,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,3400,1,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,27656,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27987)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28017,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28017,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28017,1,28084,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,34,86767990,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,35,7230666,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,36,1355750,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,37,271150,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,38,56490,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,39,12105,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,40,2648,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,44,275,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,3683,5975,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,3685,5621,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,3687,4245,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,3689,3968,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,3691,3468,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,3697,4539,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,3721,1875,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,3727,213,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,3828,32200,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,9826,1964,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,9828,3368,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,9832,2561,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,9838,262,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,9842,1718,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,9848,506,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,13267,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,28017,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,3400,1,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,27656,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28017)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28041,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28041,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28041,1,28085,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,34,86767990,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,35,7230666,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,36,1355750,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,37,271150,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,38,56490,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,39,12105,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,40,2648,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,44,275,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,3683,5975,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,3685,5621,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,3687,4245,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,3689,3968,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,3691,3468,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,3697,4539,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,3721,1875,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,3727,213,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,3828,32200,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,9826,1964,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,9828,3368,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,9832,2561,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,9838,262,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,9842,1718,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,9848,506,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,13267,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,28041,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,3400,1,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,27656,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28041)
+
+        ' Amarr - Tier 2
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27666,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27666,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27666,1,28086,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,34,173535980,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,35,14461332,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,36,2711500,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,37,542300,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,38,112979,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,39,24210,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,40,5296,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,44,550,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,3683,11949,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,3685,11242,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,3687,8490,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,3689,7936,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,3691,6935,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,3697,9078,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,3721,3750,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,3727,426,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,3828,64399,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,9826,3928,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,9828,6735,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,9832,5121,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,9838,524,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,9842,3436,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,9848,1012,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,13267,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,27666,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,3400,3,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,27660,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27666)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27963,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27963,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27963,1,28087,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,34,173535980,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,35,14461332,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,36,2711500,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,37,542300,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,38,112979,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,39,24210,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,40,5296,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,44,550,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,3683,11949,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,3685,11242,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,3687,8490,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,3689,7936,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,3691,6935,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,3697,9078,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,3721,3750,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,3727,426,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,3828,64399,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,9826,3928,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,9828,6735,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,9832,5121,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,9838,524,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,9842,3436,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,9848,1012,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,13267,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,27963,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,3400,3,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,27660,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27963)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27989,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27989,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27989,1,28088,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,34,173535980,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,35,14461332,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,36,2711500,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,37,542300,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,38,112979,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,39,24210,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,40,5296,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,44,550,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,3683,11949,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,3685,11242,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,3687,8490,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,3689,7936,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,3691,6935,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,3697,9078,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,3721,3750,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,3727,426,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,3828,64399,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,9826,3928,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,9828,6735,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,9832,5121,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,9838,524,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,9842,3436,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,9848,1012,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,13267,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,27989,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,3400,3,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,27660,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27989)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28019,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28019,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28019,1,28089,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,34,173535980,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,35,14461332,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,36,2711500,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,37,542300,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,38,112979,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,39,24210,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,40,5296,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,44,550,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,3683,11949,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,3685,11242,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,3687,8490,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,3689,7936,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,3691,6935,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,3697,9078,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,3721,3750,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,3727,426,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,3828,64399,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,9826,3928,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,9828,6735,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,9832,5121,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,9838,524,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,9842,3436,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,9848,1012,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,13267,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,28019,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,3400,3,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,27660,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28019)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28043,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28043,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28043,1,28090,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,34,173535980,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,35,14461332,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,36,2711500,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,37,542300,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,38,112979,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,39,24210,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,40,5296,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,44,550,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,3683,11949,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,3685,11242,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,3687,8490,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,3689,7936,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,3691,6935,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,3697,9078,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,3721,3750,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,3727,426,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,3828,64399,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,9826,3928,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,9828,6735,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,9832,5121,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,9838,524,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,9842,3436,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,9848,1012,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,13267,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,28043,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,3400,3,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,27660,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28043)
+
+        ' Amarr - Tier 3
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27664,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27664,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27664,1,28076,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,34,347071960,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,35,28922663,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,36,5422999,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,37,1084599,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,38,225958,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,39,48419,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,40,10591,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,44,1099,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,3683,23897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,3685,22484,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,3687,16980,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,3689,15872,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,3691,13870,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,3697,18156,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,3721,7500,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,3727,851,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,3828,128798,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,9826,7855,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,9828,13469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,9832,10242,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,9838,1048,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,9842,6871,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,9848,2024,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,13267,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,27664,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,3400,5,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,27658,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27664)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27965,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27965,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27965,1,28077,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,34,347071960,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,35,28922663,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,36,5422999,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,37,1084599,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,38,225958,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,39,48419,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,40,10591,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,44,1099,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,3683,23897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,3685,22484,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,3687,16980,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,3689,15872,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,3691,13870,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,3697,18156,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,3721,7500,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,3727,851,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,3828,128798,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,9826,7855,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,9828,13469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,9832,10242,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,9838,1048,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,9842,6871,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,9848,2024,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,13267,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,27965,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,3400,5,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,27658,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27965)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27991,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27991,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27991,1,28078,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,34,347071960,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,35,28922663,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,36,5422999,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,37,1084599,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,38,225958,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,39,48419,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,40,10591,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,44,1099,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,3683,23897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,3685,22484,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,3687,16980,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,3689,15872,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,3691,13870,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,3697,18156,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,3721,7500,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,3727,851,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,3828,128798,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,9826,7855,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,9828,13469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,9832,10242,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,9838,1048,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,9842,6871,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,9848,2024,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,13267,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,27991,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,3400,5,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,27658,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27991)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28021,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28021,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28021,1,28079,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,34,347071960,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,35,28922663,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,36,5422999,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,37,1084599,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,38,225958,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,39,48419,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,40,10591,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,44,1099,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,3683,23897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,3685,22484,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,3687,16980,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,3689,15872,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,3691,13870,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,3697,18156,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,3721,7500,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,3727,851,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,3828,128798,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,9826,7855,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,9828,13469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,9832,10242,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,9838,1048,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,9842,6871,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,9848,2024,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,13267,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,28021,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,3400,5,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,27658,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28021)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28045,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28045,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28045,1,28080,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,34,347071960,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,35,28922663,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,36,5422999,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,37,1084599,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,38,225958,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,39,48419,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,40,10591,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,44,1099,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,3683,23897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,3685,22484,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,3687,16980,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,3689,15872,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,3691,13870,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,3697,18156,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,3721,7500,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,3727,851,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,3828,128798,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,9826,7855,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,9828,13469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,9832,10242,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,9838,1048,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,9842,6871,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,9848,2024,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,13267,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,28045,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,3400,5,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,27658,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28045)
+
+        ' Caldari - Tier 1
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27937,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27937,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27937,1,28096,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,34,73297574,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,35,6108131,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,36,1145275,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,37,229055,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,38,47720,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,39,10226,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,40,2237,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,44,1351,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,3683,7475,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,3685,8873,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,3687,9681,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,3689,4887,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,3691,2914,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,3697,9617,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,3727,888,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,3828,18725,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,9826,4496,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,9828,4617,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,9832,2117,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,9838,3028,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,9842,3111,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,9848,6497,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,13267,13,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,27937,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,3400,1,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,27656,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27937)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27993,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27993,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27993,1,28097,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,34,73297574,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,35,6108131,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,36,1145275,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,37,229055,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,38,47720,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,39,10226,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,40,2237,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,44,1351,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,3683,7475,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,3685,8873,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,3687,9681,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,3689,4887,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,3691,2914,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,3697,9617,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,3727,888,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,3828,18725,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,9826,4496,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,9828,4617,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,9832,2117,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,9838,3028,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,9842,3111,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,9848,6497,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,13267,13,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,27993,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,3400,1,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,27656,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27993)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27999,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27999,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27999,1,28098,1,1)")
+
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,34,73297574,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,35,6108131,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,36,1145275,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,37,229055,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,38,47720,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,39,10226,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,40,2237,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,44,1351,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,3683,7475,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,3685,8873,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,3687,9681,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,3689,4887,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,3691,2914,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,3697,9617,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,3727,888,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,3828,18725,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,9826,4496,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,9828,4617,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,9832,2117,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,9838,3028,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,9842,3111,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,9848,6497,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,13267,13,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,27999,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,3400,1,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,27656,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27999)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28023,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28023,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28023,1,28099,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,34,73297574,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,35,6108131,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,36,1145275,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,37,229055,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,38,47720,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,39,10226,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,40,2237,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,44,1351,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,3683,7475,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,3685,8873,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,3687,9681,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,3689,4887,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,3691,2914,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,3697,9617,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,3727,888,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,3828,18725,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,9826,4496,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,9828,4617,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,9832,2117,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,9838,3028,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,9842,3111,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,9848,6497,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,13267,13,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,28023,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,3400,1,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,27656,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28023)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28047,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28047,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28047,1,28100,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,34,73297574,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,35,6108131,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,36,1145275,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,37,229055,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,38,47720,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,39,10226,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,40,2237,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,44,1351,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,3683,7475,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,3685,8873,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,3687,9681,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,3689,4887,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,3691,2914,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,3697,9617,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,3727,888,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,3828,18725,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,9826,4496,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,9828,4617,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,9832,2117,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,9838,3028,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,9842,3111,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,9848,6497,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,13267,13,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,28047,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,3400,1,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,27656,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(20847)
+
+        ' Caldari Tier 2
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27957,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27957,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27957,1,28101,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,34,146595148,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,35,12216262,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,36,2290550,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,37,458110,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,38,95440,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,39,20452,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,40,4474,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,44,2702,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,3683,14950,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,3685,17746,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,3687,19362,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,3689,9774,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,3691,5828,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,3697,19234,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,3727,1776,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,3828,37450,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,9826,8992,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,9828,9234,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,9832,4234,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,9838,6056,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,9842,6222,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,9848,12994,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,13267,26,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,27957,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,3400,3,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,27660,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27957)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27995,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27995,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27995,1,28102,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,34,146595148,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,35,12216262,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,36,2290550,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,37,458110,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,38,95440,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,39,20452,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,40,4474,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,44,2702,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,3683,14950,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,3685,17746,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,3687,19362,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,3689,9774,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,3691,5828,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,3697,19234,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,3727,1776,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,3828,37450,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,9826,8992,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,9828,9234,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,9832,4234,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,9838,6056,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,9842,6222,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,9848,12994,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,13267,26,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,27995,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,3400,3,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,27660,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27995)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28001,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28001,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28001,1,28103,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,34,146595148,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,35,12216262,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,36,2290550,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,37,458110,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,38,95440,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,39,20452,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,40,4474,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,44,2702,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,3683,14950,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,3685,17746,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,3687,19362,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,3689,9774,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,3691,5828,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,3697,19234,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,3727,1776,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,3828,37450,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,9826,8992,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,9828,9234,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,9832,4234,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,9838,6056,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,9842,6222,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,9848,12994,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,13267,26,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,28001,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,3400,3,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,27660,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28001)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28025,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28025,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28025,1,28104,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,34,146595148,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,35,12216262,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,36,2290550,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,37,458110,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,38,95440,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,39,20452,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,40,4474,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,44,2702,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,3683,14950,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,3685,17746,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,3687,19362,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,3689,9774,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,3691,5828,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,3697,19234,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,3727,1776,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,3828,37450,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,9826,8992,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,9828,9234,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,9832,4234,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,9838,6056,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,9842,6222,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,9848,12994,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,13267,26,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,28025,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,3400,3,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,27660,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28025)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28049,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28049,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28049,1,28105,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,34,146595148,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,35,12216262,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,36,2290550,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,37,458110,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,38,95440,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,39,20452,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,40,4474,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,44,2702,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,3683,14950,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,3685,17746,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,3687,19362,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,3689,9774,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,3691,5828,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,3697,19234,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,3727,1776,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,3828,37450,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,9826,8992,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,9828,9234,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,9832,4234,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,9838,6056,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,9842,6222,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,9848,12994,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,13267,26,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,28049,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,3400,3,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,27660,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28049)
+
+        ' Caldari - Tier 3
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27959,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27959,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27959,1,28091,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,34,293190294,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,35,24432524,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,36,4581098,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,37,916219,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,38,190879,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,39,40902,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,40,8947,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,44,5404,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,3683,29897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,3685,35489,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,3687,38724,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,3689,19546,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,3691,11654,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,3697,38465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,3727,3549,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,3828,74897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,9826,17984,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,9828,18465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,9832,8465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,9838,12111,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,9842,12441,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,9848,25987,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,13267,50,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,27959,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,3400,5,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,27658,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27959)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27997,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27997,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27997,1,28092,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,34,293190294,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,35,24432524,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,36,4581098,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,37,916219,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,38,190879,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,39,40902,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,40,8947,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,44,5404,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,3683,29897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,3685,35489,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,3687,38724,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,3689,19546,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,3691,11654,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,3697,38465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,3727,3549,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,3828,74897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,9826,17984,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,9828,18465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,9832,8465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,9838,12111,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,9842,12441,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,9848,25987,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,13267,50,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,27997,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,3400,5,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,27658,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27997)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28003,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28003,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28003,1,28093,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,34,293190294,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,35,24432524,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,36,4581098,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,37,916219,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,38,190879,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,39,40902,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,40,8947,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,44,5404,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,3683,29897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,3685,35489,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,3687,38724,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,3689,19546,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,3691,11654,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,3697,38465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,3727,3549,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,3828,74897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,9826,17984,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,9828,18465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,9832,8465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,9838,12111,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,9842,12441,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,9848,25987,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,13267,50,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,28003,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,3400,5,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,27658,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28003)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28027,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28027,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28027,1,28094,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,34,293190294,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,35,24432524,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,36,4581098,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,37,916219,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,38,190879,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,39,40902,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,40,8947,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,44,5404,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,3683,29897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,3685,35489,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,3687,38724,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,3689,19546,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,3691,11654,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,3697,38465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,3727,3549,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,3828,74897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,9826,17984,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,9828,18465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,9832,8465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,9838,12111,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,9842,12441,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,9848,25987,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,13267,50,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,28027,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,3400,5,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,27658,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28027)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28051,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28051,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28051,1,28095,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,34,293190294,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,35,24432524,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,36,4581098,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,37,916219,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,38,190879,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,39,40902,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,40,8947,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,44,5404,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,3683,29897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,3685,35489,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,3687,38724,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,3689,19546,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,3691,11654,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,3697,38465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,3727,3549,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,3828,74897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,9826,17984,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,9828,18465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,9832,8465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,9838,12111,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,9842,12441,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,9848,25987,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,13267,50,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,28051,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,3400,5,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,27658,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28051)
+
+        ' Gallente - Tier 1
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27939,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27939,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27939,1,28111,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,34,64425533,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,35,5368795,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,36,1006649,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,37,201330,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,38,41944,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,39,8988,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,40,1966,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,3683,13873,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,3685,7887,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,3687,16713,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,3689,4414,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,3691,1363,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,3697,6637,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,3699,25,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,3828,22462,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,9826,2469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,9828,3889,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,9832,3867,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,9838,1719,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,9842,2469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,9848,3605,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,13267,25,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,27939,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,3400,1,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,27656,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27939)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27983,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27983,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27983,1,28112,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,34,64425533,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,35,5368795,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,36,1006649,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,37,201330,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,38,41944,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,39,8988,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,40,1966,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,3683,13873,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,3685,7887,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,3687,16713,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,3689,4414,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,3691,1363,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,3697,6637,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,3699,25,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,3828,22462,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,9826,2469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,9828,3889,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,9832,3867,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,9838,1719,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,9842,2469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,9848,3605,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,13267,25,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,27983,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,3400,1,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,27656,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27983)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28005,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28005,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28005,1,28113,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,34,64425533,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,35,5368795,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,36,1006649,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,37,201330,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,38,41944,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,39,8988,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,40,1966,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,3683,13873,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,3685,7887,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,3687,16713,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,3689,4414,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,3691,1363,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,3697,6637,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,3699,25,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,3828,22462,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,9826,2469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,9828,3889,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,9832,3867,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,9838,1719,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,9842,2469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,9848,3605,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,13267,25,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,28005,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,3400,1,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,27656,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28005)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28029,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28029,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28029,1,28114,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,34,64425533,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,35,5368795,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,36,1006649,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,37,201330,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,38,41944,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,39,8988,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,40,1966,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,3683,13873,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,3685,7887,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,3687,16713,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,3689,4414,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,3691,1363,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,3697,6637,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,3699,25,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,3828,22462,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,9826,2469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,9828,3889,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,9832,3867,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,9838,1719,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,9842,2469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,9848,3605,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,13267,25,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,28029,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,3400,1,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,27656,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28029)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28053,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28053,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28053,1,28115,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,34,64425533,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,35,5368795,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,36,1006649,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,37,201330,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,38,41944,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,39,8988,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,40,1966,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,3683,13873,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,3685,7887,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,3687,16713,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,3689,4414,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,3691,1363,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,3697,6637,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,3699,25,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,3828,22462,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,9826,2469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,9828,3889,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,9832,3867,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,9838,1719,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,9842,2469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,9848,3605,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,13267,25,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,28053,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,3400,1,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,27656,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28053)
+
+        ' Gallente - Tier 2
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27967,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27967,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27967,1,28116,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,34,64425533,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,35,5368795,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,36,1006649,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,37,201330,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,38,41944,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,39,8988,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,40,1966,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,3683,13873,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,3685,7887,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,3687,16713,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,3689,4414,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,3691,1363,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,3697,6637,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,3699,25,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,3828,22462,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,9826,2469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,9828,3889,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,9832,3867,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,9838,1719,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,9842,2469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,9848,3605,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,13267,25,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,27967,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,3400,3,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,27660,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27967)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27975,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27975,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27975,1,28117,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,34,64425533,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,35,5368795,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,36,1006649,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,37,201330,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,38,41944,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,39,8988,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,40,1966,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,3683,13873,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,3685,7887,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,3687,16713,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,3689,4414,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,3691,1363,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,3697,6637,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,3699,25,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,3828,22462,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,9826,2469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,9828,3889,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,9832,3867,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,9838,1719,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,9842,2469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,9848,3605,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,13267,25,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,27975,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,3400,3,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,27660,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27975)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28007,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28007,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28007,1,28118,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,34,64425533,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,35,5368795,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,36,1006649,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,37,201330,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,38,41944,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,39,8988,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,40,1966,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,3683,13873,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,3685,7887,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,3687,16713,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,3689,4414,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,3691,1363,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,3697,6637,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,3699,25,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,3828,22462,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,9826,2469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,9828,3889,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,9832,3867,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,9838,1719,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,9842,2469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,9848,3605,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,13267,25,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,28007,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,3400,3,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,27660,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28007)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28031,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28031,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28031,1,28119,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,34,64425533,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,35,5368795,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,36,1006649,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,37,201330,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,38,41944,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,39,8988,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,40,1966,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,3683,13873,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,3685,7887,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,3687,16713,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,3689,4414,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,3691,1363,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,3697,6637,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,3699,25,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,3828,22462,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,9826,2469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,9828,3889,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,9832,3867,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,9838,1719,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,9842,2469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,9848,3605,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,13267,25,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,28031,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,3400,3,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,27660,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28031)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28055,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28055,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28055,1,28120,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,34,64425533,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,35,5368795,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,36,1006649,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,37,201330,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,38,41944,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,39,8988,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,40,1966,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,3683,13873,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,3685,7887,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,3687,16713,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,3689,4414,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,3691,1363,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,3697,6637,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,3699,25,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,3828,22462,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,9826,2469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,9828,3889,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,9832,3867,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,9838,1719,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,9842,2469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,9848,3605,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,13267,25,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,28055,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,3400,3,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,27660,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28055)
+
+        ' Gallente - Tier 3
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27969,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27969,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27969,1,28106,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,34,257702131,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,35,21475177,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,36,4026595,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,37,805319,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,38,167774,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,39,35951,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,40,7864,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,3683,55489,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,3685,31546,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,3687,66849,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,3689,17654,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,3691,5449,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,3697,26546,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,3699,100,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,3828,89846,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,9826,9875,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,9828,15555,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,9832,15465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,9838,6874,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,9842,9874,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,9848,14419,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,13267,100,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,27969,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,3400,5,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,27658,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27969)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27977,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27977,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27977,1,28107,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,34,257702131,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,35,21475177,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,36,4026595,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,37,805319,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,38,167774,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,39,35951,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,40,7864,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,3683,55489,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,3685,31546,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,3687,66849,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,3689,17654,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,3691,5449,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,3697,26546,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,3699,100,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,3828,89846,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,9826,9875,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,9828,15555,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,9832,15465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,9838,6874,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,9842,9874,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,9848,14419,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,13267,100,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,27977,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,3400,5,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,27658,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27977)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28009,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28009,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28009,1,28108,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,34,257702131,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,35,21475177,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,36,4026595,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,37,805319,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,38,167774,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,39,35951,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,40,7864,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,3683,55489,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,3685,31546,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,3687,66849,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,3689,17654,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,3691,5449,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,3697,26546,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,3699,100,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,3828,89846,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,9826,9875,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,9828,15555,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,9832,15465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,9838,6874,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,9842,9874,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,9848,14419,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,13267,100,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,28009,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,3400,5,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,27658,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28009)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28033,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28033,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28033,1,28109,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,34,257702131,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,35,21475177,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,36,4026595,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,37,805319,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,38,167774,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,39,35951,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,40,7864,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,3683,55489,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,3685,31546,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,3687,66849,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,3689,17654,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,3691,5449,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,3697,26546,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,3699,100,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,3828,89846,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,9826,9875,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,9828,15555,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,9832,15465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,9838,6874,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,9842,9874,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,9848,14419,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,13267,100,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,28033,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,3400,5,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,27658,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28033)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28057,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28057,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28057,1,28110,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,34,257702131,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,35,21475177,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,36,4026595,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,37,805319,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,38,167774,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,39,35951,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,40,7864,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,3683,55489,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,3685,31546,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,3687,66849,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,3689,17654,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,3691,5449,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,3697,26546,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,3699,100,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,3828,89846,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,9826,9875,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,9828,15555,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,9832,15465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,9838,6874,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,9842,9874,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,9848,14419,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,13267,100,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,28057,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,3400,5,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,27658,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28057)
+
+        ' Minmatar - Tier 1
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27941,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27941,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27941,1,28126,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,34,96880728,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,35,8073394,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,36,1513762,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,37,302753,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,38,63074,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,39,13516,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,40,2957,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,44,878,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,3683,6367,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,3685,5894,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,3687,4968,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,3689,4219,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,3691,4469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,3697,2212,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,3727,461,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,3828,38913,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,9826,1397,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,9828,1373,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,9832,3123,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,9838,225,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,9842,1867,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,9848,3125,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,27941,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,3400,1,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,27656,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27941)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27985,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27985,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27985,1,28127,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,34,96880728,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,35,8073394,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,36,1513762,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,37,302753,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,38,63074,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,39,13516,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,40,2957,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,44,878,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,3683,6367,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,3685,5894,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,3687,4968,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,3689,4219,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,3691,4469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,3697,2212,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,3727,461,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,3828,38913,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,9826,1397,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,9828,1373,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,9832,3123,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,9838,225,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,9842,1867,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,9848,3125,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,27985,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,3400,1,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,27656,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27985)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28011,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28011,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28011,1,28128,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,34,96880728,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,35,8073394,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,36,1513762,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,37,302753,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,38,63074,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,39,13516,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,40,2957,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,44,878,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,3683,6367,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,3685,5894,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,3687,4968,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,3689,4219,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,3691,4469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,3697,2212,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,3727,461,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,3828,38913,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,9826,1397,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,9828,1373,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,9832,3123,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,9838,225,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,9842,1867,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,9848,3125,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,28011,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,3400,1,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,27656,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28011)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28035,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28035,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28035,1,28129,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,34,96880728,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,35,8073394,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,36,1513762,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,37,302753,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,38,63074,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,39,13516,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,40,2957,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,44,878,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,3683,6367,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,3685,5894,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,3687,4968,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,3689,4219,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,3691,4469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,3697,2212,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,3727,461,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,3828,38913,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,9826,1397,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,9828,1373,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,9832,3123,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,9838,225,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,9842,1867,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,9848,3125,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,28035,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,3400,1,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,27656,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28035)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28059,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28059,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28059,1,28130,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,34,96880728,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,35,8073394,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,36,1513762,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,37,302753,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,38,63074,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,39,13516,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,40,2957,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,44,878,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,3683,6367,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,3685,5894,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,3687,4968,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,3689,4219,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,3691,4469,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,3697,2212,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,3727,461,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,3828,38913,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,9826,1397,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,9828,1373,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,9832,3123,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,9838,225,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,9842,1867,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,9848,3125,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,28059,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,3400,1,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,27656,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28059)
+
+        ' Minmatar - Tier 2
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27971,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27971,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27971,1,28131,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,34,193761456,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,35,16146788,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,36,3027523,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,37,605505,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,38,126147,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,39,27031,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,40,5913,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,44,1756,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,3683,12734,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,3685,11787,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,3687,9936,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,3689,8438,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,3691,8937,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,3697,4423,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,3727,922,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,3828,77825,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,9826,2794,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,9828,2745,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,9832,6245,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,9838,449,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,9842,3733,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,9848,6250,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,27971,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,3400,3,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,27660,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27971)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27979,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27979,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27979,1,28132,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,34,193761456,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,35,16146788,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,36,3027523,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,37,605505,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,38,126147,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,39,27031,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,40,5913,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,44,1756,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,3683,12734,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,3685,11787,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,3687,9936,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,3689,8438,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,3691,8937,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,3697,4423,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,3727,922,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,3828,77825,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,9826,2794,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,9828,2745,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,9832,6245,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,9838,449,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,9842,3733,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,9848,6250,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,27979,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,3400,3,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,27660,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27979)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28013,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28013,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28013,1,28133,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,34,193761456,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,35,16146788,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,36,3027523,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,37,605505,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,38,126147,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,39,27031,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,40,5913,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,44,1756,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,3683,12734,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,3685,11787,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,3687,9936,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,3689,8438,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,3691,8937,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,3697,4423,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,3727,922,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,3828,77825,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,9826,2794,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,9828,2745,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,9832,6245,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,9838,449,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,9842,3733,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,9848,6250,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,28013,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,3400,3,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,27660,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28013)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28037,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28037,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28037,1,28134,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,34,193761456,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,35,16146788,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,36,3027523,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,37,605505,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,38,126147,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,39,27031,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,40,5913,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,44,1756,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,3683,12734,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,3685,11787,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,3687,9936,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,3689,8438,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,3691,8937,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,3697,4423,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,3727,922,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,3828,77825,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,9826,2794,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,9828,2745,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,9832,6245,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,9838,449,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,9842,3733,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,9848,6250,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,28037,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,3400,3,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,27660,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28037)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28061,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28061,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28061,1,28135,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,34,193761456,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,35,16146788,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,36,3027523,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,37,605505,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,38,126147,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,39,27031,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,40,5913,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,44,1756,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,3683,12734,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,3685,11787,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,3687,9936,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,3689,8438,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,3691,8937,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,3697,4423,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,3727,922,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,3828,77825,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,9826,2794,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,9828,2745,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,9832,6245,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,9838,449,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,9842,3733,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,9848,6250,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,28061,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,3400,3,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,27660,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28061)
+
+        ' Minmatar - Tier 3
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27973,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27973,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27973,1,28121,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,34,387522911,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,35,32293575,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,36,6055045,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,37,1211009,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,38,252293,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,39,54062,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,40,11826,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,44,3511,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,3683,25468,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,3685,23574,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,3687,19871,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,3689,16876,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,3691,17874,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,3697,8846,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,3727,1844,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,3828,155649,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,9826,5587,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,9828,5489,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,9832,12489,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,9838,897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,9842,7465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,9848,12499,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,27973,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,3400,5,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,27658,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27973)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-27981,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-27981,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-27981,1,28122,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,34,387522911,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,35,32293575,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,36,6055045,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,37,1211009,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,38,252293,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,39,54062,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,40,11826,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,44,3511,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,3683,25468,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,3685,23574,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,3687,19871,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,3689,16876,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,3691,17874,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,3697,8846,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,3727,1844,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,3828,155649,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,9826,5587,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,9828,5489,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,9832,12489,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,9838,897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,9842,7465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,9848,12499,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,27981,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,3400,5,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,27658,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(27981)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28015,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28015,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28015,1,28123,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,34,387522911,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,35,32293575,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,36,6055045,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,37,1211009,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,38,252293,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,39,54062,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,40,11826,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,44,3511,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,3683,25468,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,3685,23574,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,3687,19871,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,3689,16876,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,3691,17874,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,3697,8846,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,3727,1844,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,3828,155649,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,9826,5587,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,9828,5489,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,9832,12489,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,9838,897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,9842,7465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,9848,12499,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,28015,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,3400,5,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,27658,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28015)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28039,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28039,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28039,1,28124,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,34,387522911,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,35,32293575,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,36,6055045,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,37,1211009,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,38,252293,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,39,54062,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,40,11826,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,44,3511,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,3683,25468,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,3685,23574,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,3687,19871,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,3689,16876,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,3691,17874,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,3697,8846,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,3727,1844,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,3828,155649,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,9826,5587,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,9828,5489,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,9832,12489,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,9838,897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,9842,7465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,9848,12499,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,28039,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,3400,5,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,27658,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28039)
+
+        Execute_msSQL("INSERT INTO industryBlueprints VALUES (-28063,1)")
+        Execute_msSQL("INSERT INTO industryActivities VALUES (-28063,1,3600)")
+        Execute_msSQL("INSERT INTO industryActivityProducts VALUES (-28063,1,28125,1,1)")
+
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,34,387522911,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,35,32293575,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,36,6055045,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,37,1211009,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,38,252293,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,39,54062,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,40,11826,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,44,3511,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,3683,25468,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,3685,23574,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,3687,19871,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,3689,16876,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,3691,17874,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,3697,8846,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,3727,1844,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,3828,155649,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,9826,5587,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,9828,5489,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,9832,12489,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,9838,897,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,9842,7465,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,9848,12499,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,28063,1,1)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,3400,5,0)")
+        Execute_msSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,27658,1,1)")
+
+        ' Insert the "blueprint" into inventory types
+        Call InsertNegativeBPTypeIDRecord(28063)
+
+    End Sub
+
+    ' InsertNegativeBPTypeIDRecord
+    Private Sub InsertNegativeBPTypeIDRecord(BPID As Long)
+        Dim msSQL As String
+
+        ' Look up the current record and add the negative type id so we don't get into a recursive loop for outposts
+        msSQL = "INSERT INTO invTypes SELECT typeID * -1 AS typeID, groupID, typeName, description, mass, volume, capacity, portionSize, factionID, raceID, "
+        msSQL = msSQL & "basePrice, published, marketGroupID, chanceOfDuplicating, graphicID, radius, iconID, soundID, sofFactionName, sofDnaAddition "
+        msSQL = msSQL & "FROM invTypes WHERE typeID = " & BPID
+
+        Call Execute_msSQL(msSQL)
+
+    End Sub
+
     ' PACKAGED_CONTAINER_VOLUMES
     Private Sub Build_PACKAGED_CONTAINER_VOLUMES()
         Dim SQL As String
@@ -7750,6 +10064,7 @@ Public Class frmMain
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         pgMain.Minimum = 0
+        pgMain.Value = 0
         pgMain.Maximum = SQLiteReader.GetValue(0)
         pgMain.Visible = True
 
@@ -7844,6 +10159,7 @@ Public Class frmMain
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         pgMain.Minimum = 0
+        pgMain.Value = 0
         pgMain.Maximum = SQLiteReader.GetValue(0)
         pgMain.Visible = True
 
@@ -7921,6 +10237,7 @@ Public Class frmMain
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         pgMain.Minimum = 0
+        pgMain.Value = 0
         pgMain.Maximum = SQLiteReader.GetValue(0)
         pgMain.Visible = True
 
@@ -8025,6 +10342,7 @@ Public Class frmMain
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         pgMain.Minimum = 0
+        pgMain.Value = 0
         pgMain.Maximum = SQLiteReader.GetValue(0)
         pgMain.Visible = True
 
@@ -8113,6 +10431,7 @@ Public Class frmMain
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         pgMain.Minimum = 0
+        pgMain.Value = 0
         pgMain.Maximum = SQLiteReader.GetValue(0)
         pgMain.Visible = True
 
@@ -8188,6 +10507,7 @@ Public Class frmMain
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         pgMain.Minimum = 0
+        pgMain.Value = 0
         pgMain.Maximum = SQLiteReader.GetValue(0)
         pgMain.Visible = True
 
@@ -8269,6 +10589,7 @@ Public Class frmMain
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         pgMain.Minimum = 0
+        pgMain.Value = 0
         pgMain.Maximum = SQLiteReader.GetValue(0)
         pgMain.Visible = True
 
@@ -8345,6 +10666,7 @@ Public Class frmMain
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         pgMain.Minimum = 0
+        pgMain.Value = 0
         pgMain.Maximum = SQLiteReader.GetValue(0)
         pgMain.Visible = True
 
@@ -8371,7 +10693,6 @@ Public Class frmMain
         End While
 
         Call CommitSQLiteTransaction(UniverseDB)
-
 
         SQLiteReader.Close()
         SQLiteReader = Nothing
@@ -8406,6 +10727,7 @@ Public Class frmMain
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         pgMain.Minimum = 0
+        pgMain.Value = 0
         pgMain.Maximum = SQLiteReader.GetValue(0)
         pgMain.Visible = True
 
@@ -8432,7 +10754,6 @@ Public Class frmMain
         End While
 
         Call CommitSQLiteTransaction(UniverseDB)
-
 
         SQLiteReader.Close()
         SQLiteReader = Nothing
@@ -8481,6 +10802,7 @@ Public Class frmMain
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         pgMain.Minimum = 0
+        pgMain.Value = 0
         pgMain.Maximum = SQLiteReader.GetValue(0)
         pgMain.Visible = True
 
@@ -8518,7 +10840,6 @@ Public Class frmMain
         End While
 
         Call CommitSQLiteTransaction(UniverseDB)
-
 
         SQLiteReader.Close()
         SQLiteReader = Nothing
@@ -8567,6 +10888,7 @@ Public Class frmMain
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         pgMain.Minimum = 0
+        pgMain.Value = 0
         pgMain.Maximum = SQLiteReader.GetValue(0)
         pgMain.Visible = True
 
@@ -8597,7 +10919,6 @@ Public Class frmMain
         End While
 
         Call CommitSQLiteTransaction(UniverseDB)
-
 
         SQLiteReader.Close()
         SQLiteReader = Nothing
@@ -8646,6 +10967,7 @@ Public Class frmMain
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         pgMain.Minimum = 0
+        pgMain.Value = 0
         pgMain.Maximum = SQLiteReader.GetValue(0)
         pgMain.Visible = True
 
@@ -8696,7 +11018,6 @@ Public Class frmMain
         End While
 
         Call CommitSQLiteTransaction(UniverseDB)
-
 
         SQLiteReader.Close()
         SQLiteReader = Nothing
@@ -8849,6 +11170,7 @@ Public Class frmMain
         On Error Resume Next
         Me.Cursor = Cursors.WaitCursor
         Application.DoEvents()
+        Call EnableButtons(False)
 
         ' Copy the files over to the latest directory, overwrite if needed - check the hash first 
         If MD5CalcFile(RootDirectory & ZipForgeDLL) <> MD5CalcFile(MediaFireDirectory & ZipForgeDLL) Then
@@ -8908,6 +11230,7 @@ Public Class frmMain
 
         Me.Cursor = Cursors.Default
         Application.DoEvents()
+        Call EnableButtons(True)
 
         MsgBox("Files Deployed", vbInformation, "Complete")
 
@@ -9009,6 +11332,11 @@ Public Class frmMain
             writer.WriteEndDocument()
         End Using
 
+    End Sub
+
+    Private Sub btnRefreshList_Click(sender As System.Object, e As System.EventArgs) Handles btnRefreshList.Click
+        ' Refresh the grid
+        Call LoadFileGrid()
     End Sub
 
 #End Region
