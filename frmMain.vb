@@ -4429,20 +4429,18 @@ Public Class frmMain
         msSQL = msSQL & "CASE WHEN invTypeReactions.input = 0 THEN 'Output' ELSE 'Input' END, "
         msSQL = msSQL & "invTypeReactions.typeID, invTypes_1.typeName, "
         msSQL = msSQL & "invGroups_1.groupName, "
-        msSQL = msSQL & "invCategories_1.categoryName, "
-        msSQL = msSQL & "CASE WHEN dgmTypeAttributes.valueFloat IS NULL THEN "
-        msSQL = msSQL & "CASE WHEN dgmTypeAttributes.valueInt IS NULL THEN invTypeReactions.quantity ELSE (dgmTypeAttributes.valueInt * invTypeReactions.quantity) END "
-        msSQL = msSQL & "ELSE dgmTypeAttributes.valueFloat END as quantity, "
+        msSQL = msSQL & "invCategories.categoryName, "
+        msSQL = msSQL & "CASE WHEN COALESCE(valueInt, valueFloat) IS NULL THEN invTypeReactions.quantity ELSE COALESCE(valueInt, valueFloat) * invTypeReactions.quantity END AS Quantity, "
         msSQL = msSQL & "invTypes_1.volume "
 
-        msSQL2 = "FROM (((((invTypeReactions "
-        msSQL2 = msSQL2 & "INNER JOIN invTypes ON invTypeReactions.reactionTypeID = invTypes.typeID) "
-        msSQL2 = msSQL2 & "INNER JOIN invTypes AS invTypes_1 ON invTypeReactions.typeID = invTypes_1.typeID) "
-        msSQL2 = msSQL2 & "INNER JOIN invGroups ON invTypes.groupID = invGroups.groupID) "
-        msSQL2 = msSQL2 & "INNER JOIN invGroups AS invGroups_1 ON invTypes_1.groupID = invGroups_1.groupID) "
-        msSQL2 = msSQL2 & "INNER JOIN invCategories AS invCategories_1 ON invGroups_1.categoryID = invCategories_1.categoryID) "
-        msSQL2 = msSQL2 & "LEFT JOIN dgmTypeAttributes ON invTypeReactions.typeID = dgmTypeAttributes.typeID "
-        msSQL2 = msSQL2 & "WHERE invTypes.published <> 0 AND invTypes_1.published <> 0 AND invCategories_1.published <> 0 AND invGroups.published <> 0 AND invGroups_1.published <> 0 "
+        msSQL2 = "FROM invTypeReactions LEFT JOIN dgmTypeAttributes ON invTypeReactions.typeID = dgmTypeAttributes.typeID AND dgmTypeAttributes.attributeID =726,"
+        msSQL2 = msSQL2 & "invTypes, invTypes AS invTypes_1, invGroups, invGroups AS invGroups_1, invCategories "
+        msSQL2 = msSQL2 & "WHERE invTypeReactions.reactionTypeID = invTypes.typeID "
+        msSQL2 = msSQL2 & "AND invTypeReactions.typeID = invTypes_1.typeID "
+        msSQL2 = msSQL2 & "AND invTypes.groupID = invGroups.groupID "
+        msSQL2 = msSQL2 & "AND invTypes_1.groupID = invGroups_1.groupID "
+        msSQL2 = msSQL2 & "AND invGroups_1.categoryID = invCategories.categoryID "
+        msSQL2 = msSQL2 & "AND invTypes.published <> 0 AND invTypes_1.published <> 0 AND invCategories.published <> 0 AND invGroups.published <> 0 AND invGroups_1.published <> 0 "
 
         msSQLQuery = New SqlCommand("SELECT COUNT(*) " & msSQL2, SQLExpressConnection)
         mySQLReader2 = msSQLQuery.ExecuteReader()
@@ -4764,7 +4762,7 @@ Public Class frmMain
         SQL = "CREATE INDEX IDX_ITEM_ASSET_LOC ON ASSETS (LocationID)"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-        SQL = "CREATE INDEX IDX_ITEM_TYPEID ON ASSETS (TypeID)"
+        SQL = "CREATE INDEX IDX_ITEM_TYPEID_ID ON ASSETS (TypeID, ID)"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
     End Sub
@@ -6927,6 +6925,15 @@ Call EnableButtons(False)
                         ' Set the activity
                         If LanguageName = "en" Then
                             .typeName = Language.Text
+                            ' If the name has quotes in it, remove the yaml formatting for quotes here, find any with quotes around and then replace
+                            If .typeName.Substring(Len(.typeName) - 1, 1) = "'" Then
+                                ' Remove the front and end apostrophe, then replace the doubles with a single
+                                .typeName = .typeName.Substring(1)
+                                .typeName = .typeName.Substring(0, Len(.typeName) - 1)
+                                .typeName = .typeName.Replace("''", "'")
+                                Application.DoEvents()
+                            End If
+
                             InsertSQL = InsertSQL & "'" & FormatDBString(.typeName) & "',"
                             FoundValue = True
                             Exit For
