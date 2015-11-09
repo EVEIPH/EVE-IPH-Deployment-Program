@@ -712,7 +712,7 @@ Public Class frmMain
         Call EnableButtons(True)
         Application.DoEvents()
 
-        MsgBox("Binary Build", vbInformation, "Complete")
+        MsgBox("Binary Built", vbInformation, "Complete")
 
     End Sub
 
@@ -1130,6 +1130,18 @@ Public Class frmMain
 
         lblTableName.Text = "Building: PLANET_RESOURCES"
         Call Build_PLANET_RESOURCES()
+
+        lblTableName.Text = "Building: LP_OFFER_REQUIREMENTS"
+        Call Build_LP_OFFER_REQUIREMENTS()
+
+        lblTableName.Text = "Building: LP_OFFERS"
+        Call Build_LP_OFFERS()
+
+        lblTableName.Text = "Building: LP_STORE"
+        Call Build_LP_STORE()
+
+        lblTableName.Text = "Building: LP_VERIFIED"
+        Call Build_LP_VERIFIED()
 
         ' After we are done with everything, use the following tables to update the RACE ID value in the ALL_BLUEPRINTS table
         lblTableName.Text = "Updating the Race ID's"
@@ -5948,6 +5960,224 @@ Public Class frmMain
 
 #End Region
 
+#Region "LP Store Tables"
+
+    ' LP_OFFER_REQUIREMENTS
+    Private Sub Build_LP_OFFER_REQUIREMENTS()
+        Dim SQL As String
+
+        ' MS SQL variables
+        Dim msSQLQuery As New SqlCommand
+        Dim msSQLReader As SqlDataReader
+        Dim msSQL As String
+
+        SQL = "CREATE TABLE LP_OFFER_REQUIREMENTS ("
+        SQL = SQL & "offerID INTEGER NOT NULL,"
+        SQL = SQL & "typeID INTEGER NOT NULL,"
+        SQL = SQL & "quantity INTEGER NOT NULL"
+        SQL = SQL & ")"
+
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        ' Now select the count of the final query of data
+
+        ' Pull new data and insert
+        msSQL = "SELECT * FROM lpOfferRequirements"
+        msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
+        msSQLReader = msSQLQuery.ExecuteReader()
+
+        Call BeginSQLiteTransaction(SQLiteDB)
+
+        While msSQLReader.Read
+            Application.DoEvents()
+
+            SQL = "INSERT INTO LP_OFFER_REQUIREMENTS VALUES ("
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(0)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ")"
+
+            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        End While
+
+        Call CommitSQLiteTransaction(SQLiteDB)
+
+        msSQLReader.Close()
+        msSQLReader = Nothing
+        msSQLQuery = Nothing
+
+        ' Now index and PK the table
+        SQL = "CREATE INDEX IDX_LO_OID_TID ON LP_OFFER_REQUIREMENTS (offerID,typeID)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        pgMain.Visible = False
+        Application.DoEvents()
+
+    End Sub
+
+    ' LP_OFFERS
+    Private Sub Build_LP_OFFERS()
+        Dim SQL As String
+
+        ' MS SQL variables
+        Dim msSQLQuery As New SqlCommand
+        Dim msSQLReader As SqlDataReader
+        Dim msSQL As String
+
+        SQL = "CREATE TABLE LP_OFFERS ("
+        SQL = SQL & "offerID INTEGER PRIMARY KEY,"
+        SQL = SQL & "typeID INTEGER NOT NULL,"
+        SQL = SQL & "quantity INTEGER NOT NULL,"
+        SQL = SQL & "lpCost FLOAT NOT NULL,"
+        SQL = SQL & "iskCost FLOAT NOT NULL"
+        SQL = SQL & ")"
+
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        ' Now select the count of the final query of data
+
+        ' Pull new data and insert
+        msSQL = "SELECT * FROM lpOffers"
+        msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
+        msSQLReader = msSQLQuery.ExecuteReader()
+
+        Call BeginSQLiteTransaction(SQLiteDB)
+
+        While msSQLReader.Read
+            Application.DoEvents()
+
+            SQL = "INSERT INTO LP_OFFERS VALUES ("
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(0)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(3)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(4)) & ")"
+
+            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        End While
+
+        Call CommitSQLiteTransaction(SQLiteDB)
+
+        msSQLReader.Close()
+        msSQLReader = Nothing
+        msSQLQuery = Nothing
+
+        ' Now index and PK the table
+        SQL = "CREATE INDEX IDX_LO_OID ON LP_OFFERS (offerID)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        pgMain.Visible = False
+        Application.DoEvents()
+
+    End Sub
+
+    ' LP_STORE
+    Private Sub Build_LP_STORE()
+        Dim SQL As String
+
+        ' MS SQL variables
+        Dim msSQLQuery As New SqlCommand
+        Dim msSQLReader As SqlDataReader
+        Dim msSQL As String
+
+        SQL = "CREATE TABLE LP_STORE ("
+        SQL = SQL & "corporationID INTEGER NOT NULL,"
+        SQL = SQL & "offerID INTEGER NOT NULL"
+        SQL = SQL & ")"
+
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        ' Now select the count of the final query of data
+
+        ' Pull new data and insert
+        msSQL = "SELECT * FROM lpStore"
+        msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
+        msSQLReader = msSQLQuery.ExecuteReader()
+
+        Call BeginSQLiteTransaction(SQLiteDB)
+
+        While msSQLReader.Read
+            Application.DoEvents()
+
+            SQL = "INSERT INTO LP_STORE VALUES ("
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(0)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ")"
+
+            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        End While
+
+        Call CommitSQLiteTransaction(SQLiteDB)
+
+        msSQLReader.Close()
+        msSQLReader = Nothing
+        msSQLQuery = Nothing
+
+        ' Now index and PK the table
+        SQL = "CREATE INDEX IDX_LO_CID_OID ON LP_STORE (corporationID, offerID)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        pgMain.Visible = False
+        Application.DoEvents()
+
+    End Sub
+
+    ' LP_VERIFIED
+    Private Sub Build_LP_VERIFIED()
+        Dim SQL As String
+
+        ' MS SQL variables
+        Dim msSQLQuery As New SqlCommand
+        Dim msSQLReader As SqlDataReader
+        Dim msSQL As String
+
+        SQL = "CREATE TABLE LP_VERIFIED ("
+        SQL = SQL & "corporationID INTEGER PRIMARY KEY,"
+        SQL = SQL & "verified INTEGER NOT NULL,"
+        SQL = SQL & "verifiedWith INTEGER"
+        SQL = SQL & ")"
+
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        ' Now select the count of the final query of data
+
+        ' Pull new data and insert
+        msSQL = "SELECT * FROM lpVerified"
+        msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
+        msSQLReader = msSQLQuery.ExecuteReader()
+
+        Call BeginSQLiteTransaction(SQLiteDB)
+
+        While msSQLReader.Read
+            Application.DoEvents()
+
+            SQL = "INSERT INTO LP_VERIFIED VALUES ("
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(0)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ")"
+
+            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        End While
+
+        Call CommitSQLiteTransaction(SQLiteDB)
+
+        msSQLReader.Close()
+        msSQLReader = Nothing
+        msSQLQuery = Nothing
+
+        ' Now index and PK the table
+        SQL = "CREATE INDEX IDX_LO_COID ON LP_VERIFIED (corporationID)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        pgMain.Visible = False
+        Application.DoEvents()
+
+    End Sub
+
+#End Region
+
     ' TO DO - Rebuild Adds/updates data for outpost items - these don't have BPs so I add them as BPs here (ie an egg has a bp but when deploying it doesn't but takes mats)
     'Private Sub AddOutpostData()
     '    Dim SQL As String
@@ -6068,7 +6298,8 @@ Public Class frmMain
         End If
 
         Me.Cursor = Cursors.WaitCursor
-Call EnableButtons(False)
+
+        Call EnableButtons(False)
 
         If Not ConnectToDBs() Then
             Me.Cursor = Cursors.Default
@@ -6134,6 +6365,13 @@ Call EnableButtons(False)
         ' the ramAssemblyLineTypes table - this will (should!) speed up updates for CREST facilities
         lblTableName.Text = "Updating ramAssemblyLineTypeDetailPerCategory"
         Call UpdateramAssemblyLineTypeDetailPerCategory()
+
+        Try
+            ' Add the LP Store tables from script
+            Call Execute_msSQL(File.OpenText(WorkingDirectory & "\lpDatabase_v0.11\lpDatabase_v0.11.sql").ReadToEnd())
+        Catch
+            MsgBox(Err.Description)
+        End Try
 
         MsgBox("Build Complete")
         pgMain.Visible = False
