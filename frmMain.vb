@@ -592,6 +592,8 @@ Public Class frmMain
         File.Copy(IECFOlder & "\24688_64.png", WorkingImageFolder & "\24688_64.png")   ' Rokh
         File.Copy(IECFOlder & "\33697_64.png", EVEIPHImageFolder & "\33697_64.png")    ' Prospect
         File.Copy(IECFOlder & "\33697_64.png", WorkingImageFolder & "\33697_64.png")   ' Prospect
+        File.Copy(IECFOlder & "\37135_64.png", EVEIPHImageFolder & "\37135_64.png")    ' Endurance
+        File.Copy(IECFOlder & "\37135_64.png", WorkingImageFolder & "\37135_64.png")   ' Endurance
 
         ' Now Zip the images
         ' Create an instance of the ZipForge class
@@ -966,6 +968,18 @@ Public Class frmMain
 
         Call UpdateramAssemblyLineTypeDetailPerCategory()
 
+        ' Set the version value
+        SQL = "CREATE TABLE DB_VERSION ("
+        SQL = SQL & "VERSION_NUMBER VARCHAR(50)"
+        SQL = SQL & ")"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        ' Insert the database name for the version
+        Call Execute_SQLiteSQL("INSERT INTO DB_VERSION VALUES ('" & DatabaseName & "')", SQLiteDB)
+
+        lblTableName.Text = "Building: LP_OFFER_REQUIREMENTS"
+        Call Build_LP_OFFER_REQUIREMENTS()
+
         lblTableName.Text = "Building: INVENTORY_TYPES"
         Call Build_INVENTORY_TYPES()
 
@@ -980,6 +994,12 @@ Public Class frmMain
 
         lblTableName.Text = "Building: ALL_BLUEPRINT_MATERIALS"
         Call Build_ALL_BLUEPRINT_MATERIALS()
+
+        lblTableName.Text = "Building: ITEM_PRICES"
+        Call Build_ITEM_PRICES()
+
+        lblTableName.Text = "Building: LP_STORE"
+        Call Build_LP_STORE()
 
         lblTableName.Text = "Building: ASSEMBLY_ARRAYS"
         Call Build_ASSEMBLY_ARRAYS()
@@ -998,9 +1018,6 @@ Public Class frmMain
 
         lblTableName.Text = "Building: SOLAR_SYSTEMS"
         Call Build_SOLAR_SYSTEMS()
-
-        lblTableName.Text = "Building: ITEM_PRICES"
-        Call Build_ITEM_PRICES()
 
         lblTableName.Text = "Building: MARKET_HISTORY"
         Call Build_MARKET_HISTORY()
@@ -1031,6 +1048,9 @@ Public Class frmMain
 
         lblTableName.Text = "Building: RACE_IDS"
         Call Build_RACE_IDS()
+
+        lblTableName.Text = "Building: FW_SYSTEM_UPGRADES"
+        Call Build_FW_SYSTEM_UPGRADES()
 
         lblTableName.Text = "Building: RAM_ACTIVITIES"
         Call Build_RAM_ACTIVITIES()
@@ -1130,18 +1150,6 @@ Public Class frmMain
 
         lblTableName.Text = "Building: PLANET_RESOURCES"
         Call Build_PLANET_RESOURCES()
-
-        lblTableName.Text = "Building: LP_OFFER_REQUIREMENTS"
-        Call Build_LP_OFFER_REQUIREMENTS()
-
-        lblTableName.Text = "Building: LP_OFFERS"
-        Call Build_LP_OFFERS()
-
-        lblTableName.Text = "Building: LP_STORE"
-        Call Build_LP_STORE()
-
-        lblTableName.Text = "Building: LP_VERIFIED"
-        Call Build_LP_VERIFIED()
 
         ' After we are done with everything, use the following tables to update the RACE ID value in the ALL_BLUEPRINTS table
         lblTableName.Text = "Updating the Race ID's"
@@ -1379,9 +1387,7 @@ Public Class frmMain
         Execute_msSQL(SQL)
         SQL = "UPDATE ALL_BLUEPRINTS SET ITEM_TYPE = TECH_LEVEL WHERE ITEM_TYPE = 0 OR ITEM_TYPE IS NULL"
         Execute_msSQL(SQL)
-        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE =15 WHERE  BLUEPRINT_GROUP = 'Combat Drone Blueprint' AND ITEM_TYPE = 16" ' Aug/Integrated drones
-        Execute_msSQL(SQL)
-        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 1 WHERE BLUEPRINT_ID = 33684" ' ORE version of Mack, it's just a skin not a T2 BP to invent
+        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 15 WHERE  BLUEPRINT_GROUP = 'Combat Drone Blueprint' AND ITEM_TYPE = 16" ' Aug/Integrated drones
         Execute_msSQL(SQL)
 
         ' Add the S/M/L/XL tag to these here
@@ -2018,7 +2024,9 @@ Public Class frmMain
         SQL = SQL & "STATION_TYPE_ID INTEGER NOT NULL,"
         SQL = SQL & "SOLAR_SYSTEM_ID INTEGER,"
         SQL = SQL & "SOLAR_SYSTEM_SECURITY FLOAT NOT NULL,"
-        SQL = SQL & "REGION_ID INTEGER NOT NULL"
+        SQL = SQL & "REGION_ID INTEGER NOT NULL,"
+        SQL = SQL & "REPROCESSING_EFFICIENCY FLOAT NOT NULL,"
+        SQL = SQL & "REPROCESSING_TAX_RATE FLOAT NOT NULL"
         SQL = SQL & ")"
 
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
@@ -2026,7 +2034,7 @@ Public Class frmMain
         Call SetProgressBarValues("staStations")
 
         ' Pull new data and insert
-        msSQL = "SELECT stationID, stationName, stationTypeID, solarSystemID, security, regionID FROM staStations"
+        msSQL = "SELECT stationID, stationName, stationTypeID, solarSystemID, security, regionID, reprocessingEfficiency, reprocessingStationsTake FROM staStations"
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
@@ -2042,7 +2050,9 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(3)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(4)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(5)) & ")"
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(5)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(6)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(7)) & ")"
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
@@ -2078,6 +2088,15 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
         SQL = "INSERT INTO RACE_IDS VALUES (8, 'Gallente')"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+    End Sub
+
+    ' FW_SYSTEM_UPGRADES
+    Private Sub Build_FW_SYSTEM_UPGRADES()
+        Dim SQL As String
+
+        SQL = "CREATE TABLE FW_SYSTEM_UPGRADES (SOLAR_SYSTEM_ID INTEGER PRIMARY KEY, UPGRADE_LEVEL INTEGER NOT NULL)"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
     End Sub
@@ -4921,13 +4940,16 @@ Public Class frmMain
         SQL = SQL & "constellationID INTEGER NOT NULL,"
         SQL = SQL & "solarSystemID INTEGER PRIMARY KEY,"
         SQL = SQL & "solarSystemName VARCHAR(17) NOT NULL,"
-        SQL = SQL & "security REAL NOT NULL"
+        SQL = SQL & "security REAL NOT NULL,"
+        SQL = SQL & "factionWarzone INTEGER NOT NULL"
         SQL = SQL & ")"
 
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
         ' Pull new data and insert
-        msSQL = "SELECT regionID, constellationID, solarSystemID, solarSystemName, security FROM mapSolarSystems"
+        msSQL = "SELECT regionID, constellationID, solarSystemID, solarSystemName, security, "
+        msSQL = msSQL & "CASE WHEN solarSystemID in (SELECT solarSystemID FROM warCombatZoneSystems) THEN 1 ELSE 0 END as fwsystem "
+        msSQL = msSQL & "FROM mapSolarSystems "
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
@@ -4941,7 +4963,8 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(3)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(4)) & ")"
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(4)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(5)) & ")"
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
@@ -5324,7 +5347,7 @@ Public Class frmMain
             msSQLReader.Close()
         End If
 
-        msSQL = "CREATE VIEW PRICES_NOBUILD AS "
+        msSQL = "CREATE VIEW PRICES_NOBUILD AS SELECT * FROM ("
         ' Get all the materials used to build stuff
         msSQL = msSQL & "SELECT DISTINCT MATERIAL_ID, MATERIAL, 0 AS TECH_LEVEL, 0 AS PRICE, MATERIAL_CATEGORY, MATERIAL_GROUP, 0 AS MANUFACTURE, "
         msSQL = msSQL & "0 AS ITEM_TYPE, 'None' AS PRICE_TYPE "
@@ -5332,7 +5355,7 @@ Public Class frmMain
         msSQL = msSQL & "WHERE MATERIAL_ID NOT IN (SELECT ITEM_ID FROM ALL_BLUEPRINTS) "
         msSQL = msSQL & "AND MATERIAL_CATEGORY <> 'Skill' "
         msSQL = msSQL & "UNION "
-        ' Get specific materials for later use or other areas in IPH (ie asteroids)
+        ' Get specific materials for later use or other areas in IPH (ie asteroids) - include items for LP Store
         msSQL = msSQL & "SELECT DISTINCT typeID AS MATERIAL_ID, typeName AS MATERIAL, 0 AS TECH_LEVEL, 0 AS PRICE, categoryName AS MATERIAL_CATEGORY, "
         msSQL = msSQL & "groupName AS MATERIAL_GROUP, 0 AS MANUFACTURE, 0 AS ITEM_TYPE, 'None' AS PRICE_TYPE "
         msSQL = msSQL & "FROM invTypes, invGroups, invCategories "
@@ -5342,9 +5365,76 @@ Public Class frmMain
         msSQL = msSQL & "AND invTypes.marketGroupID IS NOT NULL "
         msSQL = msSQL & "AND (categoryName IN ('Asteroid','Decryptors','Planetary Commodities','Planetary Resources') "
         msSQL = msSQL & "OR groupName in ('Moon Materials','Ice Product','Harvestable Cloud','Intermediate Materials') "
-        ' The last four are random items that come out of booster production or needed in station building (Quafe)
-        msSQL = msSQL & "OR typeID in (41, 3699, 3773, 9850, 33195))" ' Garbage, Quafe, Hydrochloric Acid, Spirits, Spatial Attunment
+        ' The last IDs are random items that come out of booster production or needed in station building (Quafe), or for the LP Store
+        msSQL = msSQL & "OR typeID in (41, 3699, 3773, 9850, 33195))) AS X " ' Garbage, Quafe, Hydrochloric Acid, Spirits, Spatial Attunment
+        msSQL = msSQL & "WHERE MATERIAL_ID NOT IN (SELECT ITEM_ID FROM PRICES_BUILD)"
+        Execute_msSQL(msSQL)
 
+        ' See if the view exists and delete if so
+        SQL = "SELECT COUNT(*) FROM sys.all_views where name = 'PRICES_LP_OFFERS'"
+        msSQLQuery = New SqlCommand(SQL, SQLExpressConnection)
+        msSQLReader = msSQLQuery.ExecuteReader()
+        msSQLReader.Read()
+
+        If CInt(msSQLReader.GetValue(0)) = 1 Then
+            SQL = "DROP VIEW PRICES_LP_OFFERS"
+            msSQLReader.Close()
+            Execute_msSQL(SQL)
+        Else
+            msSQLReader.Close()
+        End If
+
+        ' Build a view for items that are LP offers and requirements for those items
+        msSQL = "CREATE VIEW PRICES_LP_OFFERS AS SELECT * FROM ("
+        msSQL = msSQL & "SELECT DISTINCT lpOfferRequirements.typeID AS MATERIAL_ID, typeName AS MATERIAL, "
+        ' If we can build this group, then mark the item as a tech 1 (lp stores don't have tech 2 items) and manufacture as 1 too
+        msSQL = msSQL & "CASE WHEN groupName IN (SELECT ITEM_GROUP FROM ALL_BLUEPRINTS GROUP BY ITEM_GROUP) AND groupName NOT IN ('Cyberimplant','Miscellaneous') THEN 1 ELSE 0 END AS TECH_LEVEL, "
+        msSQL = msSQL & "0 AS PRICE, categoryName AS MATERIAL_CATEGORY, groupName AS MATERIAL_GROUP, "
+        msSQL = msSQL & "CASE WHEN groupName IN (SELECT ITEM_GROUP FROM ALL_BLUEPRINTS GROUP BY ITEM_GROUP) AND groupName NOT IN ('Cyberimplant','Miscellaneous') THEN 1 ELSE 0 END AS MANUFACTURE, "
+        msSQL = msSQL & "CASE WHEN (typeName LIKE '%Navy%' OR typeName LIKE '%Fleet%' OR typeName LIKE '%Sisters%' OR typeName LIKE '%ORE%' OR typeName LIKE '%Thukker%') THEN 15 ELSE 16 END as ITEM_TYPE, 'None' AS PRICE_TYPE "
+        msSQL = msSQL & "FROM invTypes, invGroups, invCategories, lpOfferRequirements "
+        msSQL = msSQL & "WHERE lpOfferRequirements.typeID = invTypes.typeID "
+        msSQL = msSQL & "AND invTypes.groupID = invGroups.groupID "
+        msSQL = msSQL & "AND invGroups.categoryID = invCategories.categoryID "
+        msSQL = msSQL & "UNION "
+        msSQL = msSQL & "SELECT DISTINCT lpOffers.typeID AS MATERIAL_ID, typeName AS MATERIAL, "
+        msSQL = msSQL & "CASE WHEN groupName IN (SELECT ITEM_GROUP FROM ALL_BLUEPRINTS GROUP BY ITEM_GROUP) AND groupName NOT IN ('Cyberimplant','Miscellaneous') THEN 1 ELSE 0 END AS TECH_LEVEL, "
+        msSQL = msSQL & "0 AS PRICE, categoryName AS MATERIAL_CATEGORY, groupName AS MATERIAL_GROUP, "
+        msSQL = msSQL & "CASE WHEN groupName IN (SELECT ITEM_GROUP FROM ALL_BLUEPRINTS GROUP BY ITEM_GROUP) AND groupName NOT IN ('Cyberimplant','Miscellaneous') THEN 1 ELSE 0 END AS MANUFACTURE, "
+        msSQL = msSQL & "CASE WHEN (typeName LIKE '%Navy%' OR typeName LIKE '%Fleet%' OR typeName LIKE '%Sisters%' OR typeName LIKE '%ORE%' OR typeName LIKE '%Thukker%') THEN 15 ELSE 16 END as ITEM_TYPE, 'None' AS PRICE_TYPE "
+        msSQL = msSQL & "FROM invTypes, invGroups, invCategories, lpOffers "
+        msSQL = msSQL & "WHERE lpOffers.typeID = invTypes.typeID "
+        msSQL = msSQL & "AND invTypes.groupID = invGroups.groupID "
+        msSQL = msSQL & "AND invGroups.categoryID = invCategories.categoryID) AS X "
+        msSQL = msSQL & "WHERE MATERIAL_ID NOT IN (SELECT ITEM_ID FROM PRICES_BUILD) AND MATERIAL_ID NOT IN (SELECT MATERIAL_ID FROM PRICES_NOBUILD)"
+        Execute_msSQL(msSQL)
+
+        ' See if the view exists and delete if so
+        SQL = "SELECT COUNT(*) FROM sys.all_views where name = 'PRICES_LP_BP_ITEMS'"
+        msSQLQuery = New SqlCommand(SQL, SQLExpressConnection)
+        msSQLReader = msSQLQuery.ExecuteReader()
+        msSQLReader.Read()
+
+        If CInt(msSQLReader.GetValue(0)) = 1 Then
+            SQL = "DROP VIEW PRICES_LP_BP_ITEMS"
+            msSQLReader.Close()
+            Execute_msSQL(SQL)
+        Else
+            msSQLReader.Close()
+        End If
+
+        ' Finally make sure all the items that we can build from BP's are included
+        msSQL = "CREATE VIEW PRICES_LP_BP_ITEMS AS SELECT * FROM ("
+        msSQL = msSQL & "SELECT DISTINCT industryActivityProducts.productTypeID AS MATERIAL_ID, typeName AS MATERIAL, 1 AS TECH_LEVEL, 0 AS PRICE, "
+        msSQL = msSQL & "categoryName AS MATERIAL_CATEGORY, groupName AS MATERIAL_GROUP, 1 AS MANUFACTURE, 0 AS ITEM_TYPE, 'None' AS PRICE_TYPE "
+        msSQL = msSQL & "FROM lpOffers, industryActivityProducts, invTypes, invGroups, invCategories "
+        msSQL = msSQL & "WHERE lpOffers.typeID = industryActivityProducts.blueprintTypeID "
+        msSQL = msSQL & "AND industryActivityProducts.productTypeID = invTypes.typeID "
+        msSQL = msSQL & "AND invTypes.groupID = invGroups.groupID "
+        msSQL = msSQL & "AND invGroups.categoryID = invCategories.categoryID "
+        msSQL = msSQL & "AND activityID = 1) AS X "
+        msSQL = msSQL & "WHERE MATERIAL_ID NOT IN (SELECT ITEM_ID FROM PRICES_BUILD) AND MATERIAL_ID NOT IN (SELECT MATERIAL_ID FROM PRICES_NOBUILD) "
+        msSQL = msSQL & "AND MATERIAL_ID NOT IN (SELECT MATERIAL_ID FROM PRICES_LP_OFFERS)"
         Execute_msSQL(msSQL)
 
         ' See if the union view exists and delete if so
@@ -5361,7 +5451,8 @@ Public Class frmMain
             msSQLReader.Close()
         End If
 
-        SQL = "CREATE VIEW ITEM_PRICES_UNION AS SELECT * FROM PRICES_BUILD UNION SELECT * FROM PRICES_NOBUILD"
+        SQL = "CREATE VIEW ITEM_PRICES_UNION AS SELECT * FROM PRICES_BUILD UNION SELECT * FROM PRICES_NOBUILD "
+        SQL = SQL & "UNION SELECT * FROM PRICES_LP_OFFERS UNION SELECT * FROM PRICES_LP_BP_ITEMS"
         Execute_msSQL(SQL)
 
         ' Create SQLite table
@@ -5385,7 +5476,8 @@ Public Class frmMain
         Call SetProgressBarValues("ITEM_PRICES_UNION")
 
         ' Now select the final query of data
-        msSQL = "SELECT * FROM ITEM_PRICES_UNION"
+        msSQL = "SELECT ITEM_ID, ITEM_NAME, TECH_LEVEL, PRICE, ITEM_CATEGORY, ITEM_GROUP, MANUFACTURE, ITEM_TYPE, PRICE_TYPE FROM ITEM_PRICES_UNION "
+        msSQL = msSQL & "GROUP BY ITEM_ID, ITEM_NAME, TECH_LEVEL, PRICE, ITEM_CATEGORY, ITEM_GROUP, MANUFACTURE, ITEM_TYPE, PRICE_TYPE"
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
@@ -5415,6 +5507,10 @@ Public Class frmMain
         Call CommitSQLiteTransaction(SQLiteDB)
 
         msSQLReader.Close()
+
+        ' Update the item types fields to make sure they are all able to be found
+        SQL = "UPDATE ITEM_PRICES SET ITEM_TYPE = 1 WHERE ITEM_TYPE = 0 AND TECH_LEVEL = 1"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
         ' Build SQL Lite indexes
         SQL = "CREATE INDEX IDX_IP_GROUP ON ITEM_PRICES (ITEM_GROUP)"
@@ -5972,9 +6068,9 @@ Public Class frmMain
         Dim msSQL As String
 
         SQL = "CREATE TABLE LP_OFFER_REQUIREMENTS ("
-        SQL = SQL & "offerID INTEGER NOT NULL,"
-        SQL = SQL & "typeID INTEGER NOT NULL,"
-        SQL = SQL & "quantity INTEGER NOT NULL"
+        SQL = SQL & "OFFER_ID INTEGER NOT NULL,"
+        SQL = SQL & "REQ_TYPE_ID INTEGER NOT NULL,"
+        SQL = SQL & "REQ_QUANTITY INTEGER NOT NULL"
         SQL = SQL & ")"
 
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
@@ -5982,7 +6078,7 @@ Public Class frmMain
         ' Now select the count of the final query of data
 
         ' Pull new data and insert
-        msSQL = "SELECT * FROM lpOfferRequirements"
+        msSQL = "SELECT * FROM lpOfferRequirements WHERE offerID <> 1201" '1201 seems to be extra
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
@@ -6007,7 +6103,10 @@ Public Class frmMain
         msSQLQuery = Nothing
 
         ' Now index and PK the table
-        SQL = "CREATE INDEX IDX_LO_OID_TID ON LP_OFFER_REQUIREMENTS (offerID,typeID)"
+        SQL = "CREATE INDEX IDX_LO_OID_RTID ON LP_OFFER_REQUIREMENTS (OFFER_ID, REQ_TYPE_ID)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        SQL = "CREATE INDEX IDX_LO_RTID ON LP_OFFER_REQUIREMENTS (REQ_TYPE_ID)"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
         pgMain.Visible = False
@@ -6015,62 +6114,62 @@ Public Class frmMain
 
     End Sub
 
-    ' LP_OFFERS
-    Private Sub Build_LP_OFFERS()
-        Dim SQL As String
+    '' LP_OFFERS
+    'Private Sub Build_LP_OFFERS()
+    '    Dim SQL As String
 
-        ' MS SQL variables
-        Dim msSQLQuery As New SqlCommand
-        Dim msSQLReader As SqlDataReader
-        Dim msSQL As String
+    '    ' MS SQL variables
+    '    Dim msSQLQuery As New SqlCommand
+    '    Dim msSQLReader As SqlDataReader
+    '    Dim msSQL As String
 
-        SQL = "CREATE TABLE LP_OFFERS ("
-        SQL = SQL & "offerID INTEGER PRIMARY KEY,"
-        SQL = SQL & "typeID INTEGER NOT NULL,"
-        SQL = SQL & "quantity INTEGER NOT NULL,"
-        SQL = SQL & "lpCost FLOAT NOT NULL,"
-        SQL = SQL & "iskCost FLOAT NOT NULL"
-        SQL = SQL & ")"
+    '    SQL = "CREATE TABLE LP_OFFERS ("
+    '    SQL = SQL & "offerID INTEGER PRIMARY KEY,"
+    '    SQL = SQL & "typeID INTEGER NOT NULL,"
+    '    SQL = SQL & "quantity INTEGER NOT NULL,"
+    '    SQL = SQL & "lpCost FLOAT NOT NULL,"
+    '    SQL = SQL & "iskCost FLOAT NOT NULL"
+    '    SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+    '    Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-        ' Now select the count of the final query of data
+    '    ' Now select the count of the final query of data
 
-        ' Pull new data and insert
-        msSQL = "SELECT * FROM lpOffers"
-        msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
-        msSQLReader = msSQLQuery.ExecuteReader()
+    '    ' Pull new data and insert
+    '    msSQL = "SELECT * FROM lpOffers"
+    '    msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
+    '    msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+    '    Call BeginSQLiteTransaction(SQLiteDB)
 
-        While msSQLReader.Read
-            Application.DoEvents()
+    '    While msSQLReader.Read
+    '        Application.DoEvents()
 
-            SQL = "INSERT INTO LP_OFFERS VALUES ("
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(0)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(3)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(4)) & ")"
+    '        SQL = "INSERT INTO LP_OFFERS VALUES ("
+    '        SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(0)) & ","
+    '        SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ","
+    '        SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ","
+    '        SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(3)) & ","
+    '        SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(4)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+    '        Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-        End While
+    '    End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+    '    Call CommitSQLiteTransaction(SQLiteDB)
 
-        msSQLReader.Close()
-        msSQLReader = Nothing
-        msSQLQuery = Nothing
+    '    msSQLReader.Close()
+    '    msSQLReader = Nothing
+    '    msSQLQuery = Nothing
 
-        ' Now index and PK the table
-        SQL = "CREATE INDEX IDX_LO_OID ON LP_OFFERS (offerID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+    '    ' Now index and PK the table
+    '    SQL = "CREATE INDEX IDX_LO_OID ON LP_OFFERS (offerID)"
+    '    Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-        pgMain.Visible = False
-        Application.DoEvents()
+    '    pgMain.Visible = False
+    '    Application.DoEvents()
 
-    End Sub
+    'End Sub
 
     ' LP_STORE
     Private Sub Build_LP_STORE()
@@ -6082,8 +6181,15 @@ Public Class frmMain
         Dim msSQL As String
 
         SQL = "CREATE TABLE LP_STORE ("
-        SQL = SQL & "corporationID INTEGER NOT NULL,"
-        SQL = SQL & "offerID INTEGER NOT NULL"
+        SQL = SQL & "OFFER_ID INTEGER NOT NULL,"
+        SQL = SQL & "CORP_ID INTEGER NOT NULL,"
+        SQL = SQL & "CORP_NAME VARCHAR(200) NOT NULL,"
+        SQL = SQL & "ITEM_ID INTEGER NOT NULL,"
+        SQL = SQL & "ITEM VARCHAR (100) NOT NULL,"
+        SQL = SQL & "ITEM_QUANTITY INTEGER NOT NULL,"
+        SQL = SQL & "LP_COST INTEGER NOT NULL,"
+        SQL = SQL & "ISK_COST INTEGER NOT NULL,"
+        SQL = SQL & "RACE_ID INTEGER NOT NULL"
         SQL = SQL & ")"
 
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
@@ -6091,7 +6197,16 @@ Public Class frmMain
         ' Now select the count of the final query of data
 
         ' Pull new data and insert
-        msSQL = "SELECT * FROM lpStore"
+        msSQL = "SELECT lpOffers.offerID AS OFFER_ID, lpStore.corporationID AS CORP_ID, invNames.itemName AS CORP_NAME, "
+        msSQL = msSQL & "invTypes.typeID AS ITEM_ID, invTypes.typeName AS ITEM, lpOffers.quantity AS ITEM_QUANTITY, "
+        msSQL = msSQL & "lpCost AS LP_COST, iskCost AS ISK_COST, chrFactions.raceIDs AS RACE_ID "
+        msSQL = msSQL & "FROM invTypes, lpOffers, lpStore, invNames, crpNPCCorporations, chrFactions "
+        msSQL = msSQL & "WHERE lpOffers.typeID = invTypes.typeID "
+        msSQL = msSQL & "AND lpStore.corporationID = invNames.itemID "
+        msSQL = msSQL & "AND lpOffers.offerID = lpStore.offerID "
+        msSQL = msSQL & "AND lpStore.corporationID = crpNPCCorporations.corporationID "
+        msSQL = msSQL & "AND crpNPCCorporations.factionID = chrFactions.factionID "
+
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
@@ -6102,60 +6217,14 @@ Public Class frmMain
 
             SQL = "INSERT INTO LP_STORE VALUES ("
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(0)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ")"
-
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
-
-        End While
-
-        Call CommitSQLiteTransaction(SQLiteDB)
-
-        msSQLReader.Close()
-        msSQLReader = Nothing
-        msSQLQuery = Nothing
-
-        ' Now index and PK the table
-        SQL = "CREATE INDEX IDX_LO_CID_OID ON LP_STORE (corporationID, offerID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
-
-        pgMain.Visible = False
-        Application.DoEvents()
-
-    End Sub
-
-    ' LP_VERIFIED
-    Private Sub Build_LP_VERIFIED()
-        Dim SQL As String
-
-        ' MS SQL variables
-        Dim msSQLQuery As New SqlCommand
-        Dim msSQLReader As SqlDataReader
-        Dim msSQL As String
-
-        SQL = "CREATE TABLE LP_VERIFIED ("
-        SQL = SQL & "corporationID INTEGER PRIMARY KEY,"
-        SQL = SQL & "verified INTEGER NOT NULL,"
-        SQL = SQL & "verifiedWith INTEGER"
-        SQL = SQL & ")"
-
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
-
-        ' Now select the count of the final query of data
-
-        ' Pull new data and insert
-        msSQL = "SELECT * FROM lpVerified"
-        msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
-        msSQLReader = msSQLQuery.ExecuteReader()
-
-        Call BeginSQLiteTransaction(SQLiteDB)
-
-        While msSQLReader.Read
-            Application.DoEvents()
-
-            SQL = "INSERT INTO LP_VERIFIED VALUES ("
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(0)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ","
-            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ")"
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(3)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(4)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(5)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(6)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(7)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(8)) & ")"
 
             Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
@@ -6168,13 +6237,72 @@ Public Class frmMain
         msSQLQuery = Nothing
 
         ' Now index and PK the table
-        SQL = "CREATE INDEX IDX_LO_COID ON LP_VERIFIED (corporationID)"
+        SQL = "CREATE INDEX IDX_LS_OID ON LP_STORE (OFFER_ID)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        SQL = "CREATE INDEX IDX_LS_CID ON LP_STORE (CORP_ID)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        SQL = "CREATE INDEX IDX_LS_IID ON LP_STORE (ITEM_ID)"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
         pgMain.Visible = False
         Application.DoEvents()
 
     End Sub
+
+    '' LP_VERIFIED
+    'Private Sub Build_LP_VERIFIED()
+    '    Dim SQL As String
+
+    '    ' MS SQL variables
+    '    Dim msSQLQuery As New SqlCommand
+    '    Dim msSQLReader As SqlDataReader
+    '    Dim msSQL As String
+
+    '    SQL = "CREATE TABLE LP_VERIFIED ("
+    '    SQL = SQL & "corporationID INTEGER PRIMARY KEY,"
+    '    SQL = SQL & "verified INTEGER NOT NULL,"
+    '    SQL = SQL & "verifiedWith INTEGER"
+    '    SQL = SQL & ")"
+
+    '    Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+    '    ' Now select the count of the final query of data
+
+    '    ' Pull new data and insert
+    '    msSQL = "SELECT * FROM lpVerified"
+    '    msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
+    '    msSQLReader = msSQLQuery.ExecuteReader()
+
+    '    Call BeginSQLiteTransaction(SQLiteDB)
+
+    '    While msSQLReader.Read
+    '        Application.DoEvents()
+
+    '        SQL = "INSERT INTO LP_VERIFIED VALUES ("
+    '        SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(0)) & ","
+    '        SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ","
+    '        SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ")"
+
+    '        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+    '    End While
+
+    '    Call CommitSQLiteTransaction(SQLiteDB)
+
+    '    msSQLReader.Close()
+    '    msSQLReader = Nothing
+    '    msSQLQuery = Nothing
+
+    '    ' Now index and PK the table
+    '    SQL = "CREATE INDEX IDX_LO_COID ON LP_VERIFIED (corporationID)"
+    '    Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+    '    pgMain.Visible = False
+    '    Application.DoEvents()
+
+    'End Sub
 
 #End Region
 
@@ -6315,7 +6443,7 @@ Public Class frmMain
         Call Load_YMAL_invGroups()
         Call Load_YMAL_invCategories()
 
-        'Call Load_YMAL_Icons() ' not currently using
+        Call Load_YMAL_Icons()
 
         'Do all random updates here first
         Call RandomSDEUpdates()
@@ -6977,7 +7105,7 @@ Public Class frmMain
         Dim FindNodes() As TreeNode
 
         Dim iconID As String
-        Dim description As String
+        Dim description As String = ""
         Dim iconFile As String
 
         Dim SQL As String
@@ -7017,13 +7145,17 @@ Public Class frmMain
             description = ""
 
             If FindNodes.Count <> 0 Then
-                For Each TempNode In FindNodes(0).Nodes
-                    description = TempNode.Nodes.Find("description", True)(0).Text
-                Next
+                If FindNodes(0).Text <> "Unknown" And FindNodes(0).Name = "description" Then
+                    description = FormatDBString(FindNodes(0).Text)
+                Else
+                    description = ""
+                End If
             End If
 
-            If Not description.Contains("'") Then
+            If description <> "" Then
                 description = "'" & description & "'"
+            Else
+                description = "NULL"
             End If
 
             If Not iconFile.Contains("'") Then
@@ -7031,7 +7163,7 @@ Public Class frmMain
             End If
 
             ' Insert this industryBlueprints record
-            Call Execute_msSQL("INSERT INTO eveIcons VALUES (" & iconID & "," & description & "," & iconFile & ")")
+            Call Execute_msSQL("INSERT INTO eveIcons VALUES (" & iconID & "," & iconFile & "," & description & ")")
 
             Count += 1
         Next
