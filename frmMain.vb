@@ -5573,19 +5573,19 @@ Public Class frmMain
         Dim SQL As String
 
         SQL = "CREATE TABLE EMD_ITEM_PRICE_HISTORY ("
-        SQL = SQL & "TypeID INTEGER,"
-        SQL = SQL & "RegionID INTEGER,"
-        SQL = SQL & "PriceDate VARCHAR(23)," ' Date
-        SQL = SQL & "LowPrice FLOAT,"
-        SQL = SQL & "HighPrice FLOAT,"
-        SQL = SQL & "AvgPrice FLOAT,"
-        SQL = SQL & "Volume INTEGER,"
-        SQL = SQL & "Orders INTEGER"
+        SQL = SQL & "TYPE_ID INTEGER,"
+        SQL = SQL & "REGION_ID INTEGER,"
+        SQL = SQL & "PRICE_DATE VARCHAR(23)," ' Date
+        SQL = SQL & "LOW_PRICE FLOAT,"
+        SQL = SQL & "HIGH_PRICE FLOAT,"
+        SQL = SQL & "AVG_PRICE FLOAT,"
+        SQL = SQL & "VOLUME INTEGER,"
+        SQL = SQL & "ORDER_COUNT INTEGER"
         SQL = SQL & ")"
 
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-        SQL = "CREATE UNIQUE INDEX IDX_EMD_HISTORY ON EMD_ITEM_PRICE_HISTORY (TypeID, RegionID, PriceDate)"
+        SQL = "CREATE UNIQUE INDEX IDX_EMD_HISTORY ON EMD_ITEM_PRICE_HISTORY (TYPE_ID, REGION_ID, PRICE_DATE)"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
     End Sub
@@ -5613,19 +5613,19 @@ Public Class frmMain
         Dim SQL As String
 
         SQL = "CREATE TABLE MARKET_HISTORY ("
-        SQL = SQL & "TYPE_ID INTEGER NOT NULL,"
-        SQL = SQL & "REGION_ID INTEGER NOT NULL,"
-        SQL = SQL & "VOLUME INTEGER NOT NULL,"
-        SQL = SQL & "LOW_PRICE FLOAT NOT NULL,"
-        SQL = SQL & "HIGH_PRICE FLOAT NOT NULL,"
-        SQL = SQL & "AVERAGE_PRICE FLOAT NOT NULL,"
-        SQL = SQL & "ORDER_COUNT INTEGER NOT NULL,"
-        SQL = SQL & "DATE VARCHAR(23)"
+        SQL = SQL & "TYPE_ID INTEGER,"
+        SQL = SQL & "REGION_ID INTEGER,"
+        SQL = SQL & "PRICE_DATE VARCHAR(23)," ' Date
+        SQL = SQL & "LOW_PRICE FLOAT,"
+        SQL = SQL & "HIGH_PRICE FLOAT,"
+        SQL = SQL & "AVG_PRICE FLOAT,"
+        SQL = SQL & "VOLUME INTEGER,"
+        SQL = SQL & "ORDER_COUNT INTEGER"
         SQL = SQL & ")"
 
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-        SQL = "CREATE INDEX IDX_MH_TID_RID ON MARKET_HISTORY (TYPE_ID, REGION_ID)"
+        SQL = "CREATE INDEX IDX_MH_TID_RID ON MARKET_HISTORY (TYPE_ID, REGION_ID, PRICE_DATE)"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
     End Sub
