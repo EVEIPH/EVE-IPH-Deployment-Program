@@ -1025,6 +1025,12 @@ Public Class frmMain
         lblTableName.Text = "Building: MARKET_HISTORY_UPDATE_CACHE"
         Call Build_MARKET_HISTORY_UPDATE_CACHE()
 
+        lblTableName.Text = "Building: MARKET_ORDERS"
+        Call Build_MARKET_ORDERS()
+
+        lblTableName.Text = "Building: MARKET_ORDERS_UPDATE_CACHE"
+        Call Build_MARKET_ORDERS_UPDATE_CACHE()
+
         lblTableName.Text = "Building: INVENTORY_FLAGS"
         Call Build_Inventory_Flags()
 
@@ -1379,7 +1385,7 @@ Public Class frmMain
         Execute_msSQL(SQL)
         SQL = "UPDATE ALL_BLUEPRINTS SET ITEM_TYPE = 16 WHERE META_GROUP = 4 AND MARKET_GROUP = 'Scan Probes'"
         Execute_msSQL(SQL)
-        SQL = "UPDATE ALL_BLUEPRINTS SET ITEM_TYPE = 15 WHERE META_GROUP = 4 AND ITEM_CATEGORY = 'Structure'"
+        SQL = "UPDATE ALL_BLUEPRINTS SET ITEM_TYPE = 15 WHERE META_GROUP = 4 AND ITEM_CATEGORY IN ('Structure', 'Starbase')"
         Execute_msSQL(SQL)
         SQL = "UPDATE ALL_BLUEPRINTS SET ITEM_TYPE = 16 WHERE META_GROUP = 4 AND ITEM_CATEGORY = 'Module'"
         Execute_msSQL(SQL)
@@ -5575,17 +5581,17 @@ Public Class frmMain
         SQL = "CREATE TABLE EMD_ITEM_PRICE_HISTORY ("
         SQL = SQL & "TYPE_ID INTEGER,"
         SQL = SQL & "REGION_ID INTEGER,"
-        SQL = SQL & "PRICE_DATE VARCHAR(23)," ' Date
+        SQL = SQL & "PRICE_HISTORY_DATE VARCHAR(23)," ' Date
         SQL = SQL & "LOW_PRICE FLOAT,"
         SQL = SQL & "HIGH_PRICE FLOAT,"
         SQL = SQL & "AVG_PRICE FLOAT,"
-        SQL = SQL & "VOLUME INTEGER,"
-        SQL = SQL & "ORDER_COUNT INTEGER"
+        SQL = SQL & "TOTAL_ORDERS_FILLED INTEGER,"
+        SQL = SQL & "TOTAL_VOLUME_FILLED INTEGER"
         SQL = SQL & ")"
 
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-        SQL = "CREATE UNIQUE INDEX IDX_EMD_HISTORY ON EMD_ITEM_PRICE_HISTORY (TYPE_ID, REGION_ID, PRICE_DATE)"
+        SQL = "CREATE UNIQUE INDEX IDX_EMD_HISTORY ON EMD_ITEM_PRICE_HISTORY (TYPE_ID, REGION_ID, PRICE_HISTORY_DATE)"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
     End Sub
@@ -5595,15 +5601,15 @@ Public Class frmMain
         Dim SQL As String
 
         SQL = "CREATE TABLE EMD_UPDATE_HISTORY ("
-        SQL = SQL & "TypeID INTEGER,"
-        SQL = SQL & "Days INTEGER,"
-        SQL = SQL & "RegionID INTEGER,"
-        SQL = SQL & "UpdateLastRan VARCHAR(23)" ' Date
+        SQL = SQL & "TYPE_ID INTEGER,"
+        SQL = SQL & "DAYS INTEGER,"
+        SQL = SQL & "REGION_ID INTEGER,"
+        SQL = SQL & "UPDATE_LAST_RAN VARCHAR(23)" ' Date
         SQL = SQL & ")"
 
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-        SQL = "CREATE UNIQUE INDEX IDX_EMD_U_HISTORY ON EMD_UPDATE_HISTORY (TypeID, Days, RegionID, UpdateLastRan)"
+        SQL = "CREATE UNIQUE INDEX IDX_EMD_U_HISTORY ON EMD_UPDATE_HISTORY (TYPE_ID, DAYS, REGION_ID, UPDATE_LAST_RAN)"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
     End Sub
@@ -5615,17 +5621,17 @@ Public Class frmMain
         SQL = "CREATE TABLE MARKET_HISTORY ("
         SQL = SQL & "TYPE_ID INTEGER,"
         SQL = SQL & "REGION_ID INTEGER,"
-        SQL = SQL & "PRICE_DATE VARCHAR(23)," ' Date
+        SQL = SQL & "PRICE_HISTORY_DATE VARCHAR(23)," ' Date
         SQL = SQL & "LOW_PRICE FLOAT,"
         SQL = SQL & "HIGH_PRICE FLOAT,"
         SQL = SQL & "AVG_PRICE FLOAT,"
-        SQL = SQL & "VOLUME INTEGER,"
-        SQL = SQL & "ORDER_COUNT INTEGER"
+        SQL = SQL & "TOTAL_ORDERS_FILLED INTEGER,"
+        SQL = SQL & "TOTAL_VOLUME_FILLED INTEGER"
         SQL = SQL & ")"
 
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-        SQL = "CREATE INDEX IDX_MH_TID_RID ON MARKET_HISTORY (TYPE_ID, REGION_ID, PRICE_DATE)"
+        SQL = "CREATE UNIQUE INDEX IDX_MH_TID_RID ON MARKET_HISTORY (TYPE_ID, REGION_ID, PRICE_HISTORY_DATE)"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
     End Sub
@@ -5642,7 +5648,48 @@ Public Class frmMain
 
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-        SQL = "CREATE INDEX IDX_MHUC_TID_RID ON MARKET_HISTORY_UPDATE_CACHE (TYPE_ID, REGION_ID)"
+        SQL = "CREATE UNIQUE INDEX IDX_MHUC_TID_RID ON MARKET_HISTORY_UPDATE_CACHE (TYPE_ID, REGION_ID)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+    End Sub
+
+    ' MARKET_ORDERS
+    Private Sub Build_MARKET_ORDERS()
+        Dim SQL As String
+
+        SQL = "CREATE TABLE MARKET_ORDERS ("
+        SQL = SQL & "TYPE_ID INTEGER,"
+        SQL = SQL & "REGION_ID INTEGER,"
+        SQL = SQL & "SOLAR_SYSTEM_ID INTEGER,"
+        SQL = SQL & "ORDER_ISSUED VARCHAR(23)," ' Date
+        SQL = SQL & "DURATION INTEGER,"
+        SQL = SQL & "ORDER_TYPE VARCHAR(4)," ' buy or sell
+        SQL = SQL & "PRICE FLOAT,"
+        SQL = SQL & "VOLUME_ENTERED INTEGER,"
+        SQL = SQL & "MINIMUM_VOLUME INTEGER,"
+        SQL = SQL & "VOLUME_REMAINING INTEGER"
+        SQL = SQL & ")"
+
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        SQL = "CREATE INDEX IDX_MO_TID_RID_SID ON MARKET_ORDERS (TYPE_ID, REGION_ID, SOLAR_SYSTEM_ID)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+    End Sub
+
+    ' MARKET_ORDERS_UPDATE_CACHE
+    Private Sub Build_MARKET_ORDERS_UPDATE_CACHE()
+        Dim SQL As String
+
+        SQL = "CREATE TABLE MARKET_ORDERS_UPDATE_CACHE ("
+        SQL = SQL & "TYPE_ID INTEGER NOT NULL,"
+        SQL = SQL & "REGION_ID INTEGER NOT NULL,"
+        SQL = SQL & "CACHE_DATE VARCHAR(23)"
+        SQL = SQL & ")"
+
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        SQL = "CREATE UNIQUE INDEX IDX_MOUC_TID_RID ON MARKET_ORDERS_UPDATE_CACHE (TYPE_ID, REGION_ID)"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
     End Sub
@@ -8009,7 +8056,7 @@ Public Class frmMain
         Call InsertNegativeBPTypeIDRecord(27658)
 
         ' Special insert for the product, which will be 1000 added to the current type id
-        msSQL = "INSERT INTO invTypes SELECT 100027658 AS typeID, groupID, 'Foundation Upgrade', description, mass, volume, capacity, portionSize, factionID, raceID, "
+        msSQL = "INSERT INTO invTypes SELECT 100027658 AS typeID, groupID, 'Pedestal Upgrade', description, mass, volume, capacity, portionSize, factionID, raceID, "
         msSQL = msSQL & "basePrice, published, marketGroupID, chanceOfDuplicating, graphicID, radius, iconID, soundID, sofFactionName, sofDnaAddition "
         msSQL = msSQL & "FROM invTypes WHERE typeID = 27658"
         Call Execute_msSQL(msSQL)
@@ -8048,7 +8095,7 @@ Public Class frmMain
         Call InsertNegativeBPTypeIDRecord(27660)
 
         ' Special insert for the product, which will be 1000 added to the current type id
-        msSQL = "INSERT INTO invTypes SELECT 100027660 AS typeID, groupID, 'Foundation Upgrade', description, mass, volume, capacity, portionSize, factionID, raceID, "
+        msSQL = "INSERT INTO invTypes SELECT 100027660 AS typeID, groupID, 'Monument Upgrade', description, mass, volume, capacity, portionSize, factionID, raceID, "
         msSQL = msSQL & "basePrice, published, marketGroupID, chanceOfDuplicating, graphicID, radius, iconID, soundID, sofFactionName, sofDnaAddition "
         msSQL = msSQL & "FROM invTypes WHERE typeID = 27660"
         Call Execute_msSQL(msSQL)
