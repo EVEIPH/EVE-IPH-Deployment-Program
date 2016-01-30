@@ -19,6 +19,7 @@ Public Class frmMain
     Private RootDirectory As String ' For the debugging process, will copy images here as well
     Private WorkingDirectory As String ' Where the final DB and image zip is stored 
     Private MediaFireDirectory As String ' Where all the files we want to sync to the Media fire server for download are
+    Private MediaFireTestDirectory As String
 
     ' DB
     Private DatabasePath As String ' Where we build the SQLite database
@@ -51,7 +52,8 @@ Public Class frmMain
     Private UpdaterManifest As String = "EVEIPH Updater.exe.manifest"
     Private EXEManifest As String = "EVE Isk per Hour.exe.manifest"
     Private ImageZipFile As String = "EVEIPH Images.zip"
-    Private LatestVersionXML As String ' Set with scan for text.txt
+    Private LatestVersionXML As String
+    Private LatestTestVersionXML As String
 
     ' File URLs
     Private ZipForgeDLLURL As String = "http://www.mediafire.com/download/va7avejtnl5boto/ZipForge.dll"
@@ -63,6 +65,16 @@ Public Class frmMain
     Private UpdaterManifestURL As String = "http://www.mediafire.com/download/c149x7vcf1gab2p/EVEIPH_Updater.exe.manifest"
     Private EXEManifestURL As String = "http://www.mediafire.com/download/sdlrk28t18gv8z0/EVE_Isk_per_Hour.exe.manifest"
     Private ImageZipFileURL As String = "http://www.mediafire.com/download/duq6nw4d0p59rci/EVEIPH_Images.zip"
+
+    Private TestZipForgeDLLURL As String = "http://www.mediafire.com/download/18ijh46m72r1955/ZipForge.dll"
+    Private TestJSONDLLURL As String = "http://www.mediafire.com/download/wmgmu7qu6ha4qag/Newtonsoft.Json.dll"
+    Private TestSQLiteDLLURL As String = "http://www.mediafire.com/download/q1bbs5hgp4e18gh/System.Data.SQLite.dll"
+    Private TestEVEIPHEXEURL As String = "http://www.mediafire.com/download/8cp2ffnb50y0or5/EVE_Isk_per_Hour.exe"
+    Private TestEVEIPHUpdaterURL As String = "http://www.mediafire.com/download/2d0dsgfap2gq299/EVEIPH_Updater.exe"
+    Private TestEVEIPHDBURL As String = "http://www.mediafire.com/download/w69bgqr9bo7awt4/EVEIPH_DB.s3db"
+    Private TestUpdaterManifestURL As String = "http://www.mediafire.com/download/9my8r2x78bbym9k/EVEIPH_Updater.exe.manifest"
+    Private TestEXEManifestURL As String = "http://www.mediafire.com/download/9snq0e79zbesfuq/EVE_Isk_per_Hour.exe.manifest"
+    Private TestImageZipFileURL As String = "http://www.mediafire.com/download/eox20bz6ddey1g3/EVEIPH_Images.zip"
 
     ' YAML files
     Private Const YAMLBlueprints As String = "blueprints.yaml"
@@ -99,7 +111,6 @@ Public Class frmMain
     Private Const ASCII_Quote_Code As Integer = 39
     Private Const ASCII_DoubleQuote_Code As Integer = 34
 
-    Private TestBuild As Boolean
     Private FileList As List(Of FileNameDate)
 
     Const SpaceFlagCode As Integer = 500
@@ -176,6 +187,10 @@ Public Class frmMain
             If Not Directory.Exists(MediaFireDirectory) Then
                 MediaFireDirectory = ""
             End If
+            MediaFireTestDirectory = BPStream.ReadLine
+            If Not Directory.Exists(MediaFireTestDirectory) Then
+                MediaFireTestDirectory = ""
+            End If
 
             If Not IsNothing(VersionNumber) Then
                 ' Set these if we have a version number
@@ -195,6 +210,7 @@ Public Class frmMain
             RootDirectory = ""
             WorkingDirectory = ""
             MediaFireDirectory = ""
+            MediaFireTestDirectory = ""
             VersionNumber = ""
         End If
     End Sub
@@ -220,6 +236,12 @@ Public Class frmMain
             End If
         End If
 
+        If MediaFireTestDirectory <> "" Then
+            If MediaFireTestDirectory.Substring(Len(MediaFireTestDirectory) - 1) <> "\" Then
+                MediaFireTestDirectory = MediaFireTestDirectory & "\"
+            End If
+        End If
+
         WorkingImageFolder = WorkingDirectory
         DatabasePath = WorkingDirectory & DatabaseName
         FinalDBPath = WorkingDirectory & FinalDBName
@@ -237,17 +259,16 @@ Public Class frmMain
             lblMediaFirePath.Text = MediaFireDirectory
         End If
 
+        If MediaFireTestDirectory <> "\" Then
+            lblMediaFireTestPath.Text = MediaFireTestDirectory
+        End If
+
         If RootDirectory <> "\" Then
             lblRootDebugFolderPath.Text = RootDirectory
         End If
 
-        If File.Exists(RootDirectory & "Test.txt") Then
-            TestBuild = True
-            LatestVersionXML = "LatestVersionIPH Test.xml"
-        Else
-            TestBuild = False
-            LatestVersionXML = "LatestVersionIPH.xml"
-        End If
+        LatestVersionXML = "LatestVersionIPH.xml"
+        LatestTestVersionXML = "LatestVersionIPH Test.xml"
 
         ' When updating the image files to build the zip, update the root directory images as well so we have the updated images for running in debug mode
         WorkingImageFolder = RootDirectory & "EVEIPH Images"
@@ -281,7 +302,7 @@ Public Class frmMain
 
     End Sub
 
-    Private Sub btnSelectInstallerBinaryPath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectInstallerBinaryPath.Click
+    Private Sub btnSelectMediaFirePath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectMediaFirePath.Click
         If MediaFireDirectory <> "" Then
             FolderBrowserDialog.SelectedPath = MediaFireDirectory
         End If
@@ -297,7 +318,23 @@ Public Class frmMain
         End If
     End Sub
 
-    Private Sub btnSelectDBImagesPath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectDBImagesPath.Click
+    Private Sub btnSelectMediaFireTestPath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectMediaFireTestPath.Click
+        If MediaFireTestDirectory <> "" Then
+            FolderBrowserDialog.SelectedPath = MediaFireTestDirectory
+        End If
+
+        If FolderBrowserDialog.ShowDialog() = DialogResult.OK Then
+            Try
+                lblMediaFireTestPath.Text = FolderBrowserDialog.SelectedPath
+                MediaFireTestDirectory = FolderBrowserDialog.SelectedPath
+                Call SetFilePaths()
+            Catch ex As Exception
+                MsgBox(Err.Description, vbExclamation, Application.ProductName)
+            End Try
+        End If
+    End Sub
+
+    Private Sub btnSelectDBImagesPath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectWorkingPath.Click
         If WorkingDirectory <> "" Then
             FolderBrowserDialog.SelectedPath = WorkingDirectory
         End If
@@ -329,6 +366,12 @@ Public Class frmMain
 
         If Trim(lblMediaFirePath.Text) = "" Then
             MsgBox("Invalid Installer/Binary file path", vbExclamation, Application.ProductName)
+            TabPage2.Select()
+            Exit Sub
+        End If
+
+        If Trim(lblMediaFireTestPath.Text) = "" Then
+            MsgBox("Invalid Installer/Binary test file path", vbExclamation, Application.ProductName)
             TabPage2.Select()
             Exit Sub
         End If
@@ -367,6 +410,7 @@ Public Class frmMain
         RootDirectory = lblRootDebugFolderPath.Text
         WorkingDirectory = lblWorkingFolderPath.Text
         MediaFireDirectory = lblMediaFirePath.Text
+        MediaFireTestDirectory = lblMediaFireTestPath.Text
 
         ' Set these if we have a version number
         FinalBinaryZip = "EVEIPH v" & VersionNumber & " Binaries.zip"
@@ -382,6 +426,7 @@ Public Class frmMain
         MyStream.Write(lblRootDebugFolderPath.Text & Environment.NewLine)
         MyStream.Write(lblWorkingFolderPath.Text & Environment.NewLine)
         MyStream.Write(lblMediaFirePath.Text & Environment.NewLine)
+        MyStream.Write(lblMediaFireTestPath.Text & Environment.NewLine)
 
         MyStream.Flush()
         MyStream.Close()
@@ -432,9 +477,15 @@ Public Class frmMain
     Private Sub LoadFileGrid()
         Dim lstViewRow As ListViewItem
         Dim TempFile As FileNameDate
+        Dim di As DirectoryInfo
 
         If MediaFireDirectory <> "" Then
-            Dim di As New DirectoryInfo(MediaFireDirectory)
+            If chkCreateTest.Checked Then
+                di = New DirectoryInfo(MediaFireTestDirectory)
+            Else
+                di = New DirectoryInfo(MediaFireDirectory)
+            End If
+
             Dim fiArr As FileInfo() = di.GetFiles()
 
             ' Reset
@@ -652,7 +703,7 @@ Public Class frmMain
             Directory.Delete(FinalBinaryFolderPath, True)
         End If
 
-        If TestBuild Then
+        If chkCreateTest.Checked Then
             ' Copy the test.txt to the binary
             File.Copy(RootDirectory & "Test.txt", FinalBinaryFolderPath & "Test.txt")
         End If
@@ -1079,11 +1130,29 @@ Public Class frmMain
         lblTableName.Text = "Building: INDUSTRY_ACTIVITY_PRODUCTS"
         Call Build_INDUSTRY_ACTIVITY_PRODUCTS()
 
+        lblTableName.Text = "Building: CHARACTER_SHEET"
+        Call Build_CHARACTER_SHEET()
+
         lblTableName.Text = "Building: CHARACTER_SKILLS"
         Call Build_CHARACTER_SKILLS()
 
+        lblTableName.Text = "Building: CHARACTER_IMPLANTS"
+        Call Build_CHARACTER_IMPLANTS()
+
+        lblTableName.Text = "Building: CHARACTER_JUMP_CLONES"
+        Call Build_CHARACTER_JUMP_CLONES()
+
+        lblTableName.Text = "Building: CHARACTER_CORP_ROLES"
+        Call Build_CHARACTER_CORP_ROLES()
+
+        lblTableName.Text = "Building: CHARACTER_CORP_TITLES"
+        Call Build_CHARACTER_CORP_TITLES()
+
         lblTableName.Text = "Building: CHARACTER_API"
         Call Build_API()
+
+        lblTableName.Text = "Building: PRICE_PROFILES"
+        Call Build_PRICE_PROFILES()
 
         lblTableName.Text = "Building: CHARACTER_STANDINGS"
         Call Build_Character_Standings()
@@ -2122,14 +2191,126 @@ Public Class frmMain
 
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-        lblTableName.Text = "Building: CHARACTER_SKILLS"
-
         SQL = "CREATE INDEX IDX_CSKILLS_CHARACTER_ID ON CHARACTER_SKILLS (CHARACTER_ID)"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
         SQL = "CREATE INDEX IDX_CSKILLS_SKILL_TYPE_ID ON CHARACTER_SKILLS (SKILL_TYPE_ID)"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
+    End Sub
+
+    ' CHARACTER_SHEET
+    Private Sub Build_CHARACTER_SHEET()
+        Dim SQL As String
+
+        SQL = "CREATE TABLE CHARACTER_SHEET ("
+        SQL = SQL & "CHARACTER_ID INTEGER NOT NULL,"
+        SQL = SQL & "CHARACTER_NAME VARCHAR(100) NOT NULL,"
+        SQL = SQL & "HOME_STATION_ID INTEGER NOT NULL,"
+        SQL = SQL & "DOB VARCHAR(20) NOT NULL,"
+        SQL = SQL & "RACE VARCHAR(10) NOT NULL,"
+        SQL = SQL & "BLOOD_LINE_ID INTEGER NOT NULL,"
+        SQL = SQL & "BLOOD_LINE VARCHAR(20) NOT NULL,"
+        SQL = SQL & "ANCESTRY_LINE_ID INTEGER NOT NULL,"
+        SQL = SQL & "ANCESTRY_LINE VARCHAR(20) NOT NULL,"
+        SQL = SQL & "GENDER VARCHAR(6) NOT NULL,"
+        SQL = SQL & "CORPORATION_NAME VARCHAR(200),"
+        SQL = SQL & "CORPORATION_ID INTEGER NOT NULL,"
+        SQL = SQL & "ALLIANCE_NAME VARCHAR(200),"
+        SQL = SQL & "ALLIANCE_ID INTEGER NOT NULL,"
+        SQL = SQL & "FACTION_NAME VARCHAR(200) NOT NULL,"
+        SQL = SQL & "FACTION_ID INTEGER NOT NULL,"
+        SQL = SQL & "FREE_SKILL_POINTS INTEGER NOT NULL,"
+        SQL = SQL & "FREE_RESPECS INTEGER NOT NULL,"
+        SQL = SQL & "CLONE_JUMP_DATE VARCHAR(23) NOT NULL," ' Date
+        SQL = SQL & "LAST_RESPEC_DATE VARCHAR(23) NOT NULL," ' Date
+        SQL = SQL & "LAST_TIMED_RESPEC VARCHAR(23) NOT NULL," ' Date
+        SQL = SQL & "REMOTE_STATION_DATE VARCHAR(23) NOT NULL," ' Date
+        SQL = SQL & "JUMP_ACTIVATION VARCHAR(23) NOT NULL," ' Date
+        SQL = SQL & "JUMP_FATIGUE VARCHAR(23) NOT NULL," ' Date
+        SQL = SQL & "JUMP_LAST_UPDATE VARCHAR(23) NOT NULL," ' Date
+        SQL = SQL & "BALANCE FLOAT NOT NULL," ' Date
+        SQL = SQL & "INTELLIGENCE INTEGER NOT NULL,"
+        SQL = SQL & "MEMORY INTEGER NOT NULL,"
+        SQL = SQL & "WILLPOWER INTEGER NOT NULL,"
+        SQL = SQL & "PERCEPTION INTEGER NOT NULL,"
+        SQL = SQL & "CHARISMA INTEGER NOT NULL"
+        SQL = SQL & ")"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        SQL = "CREATE INDEX IDX_CSHEET_CHARACTER_ID ON CHARACTER_SHEET (CHARACTER_ID)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+    End Sub
+
+    ' CHARACTER_IMPLANTS
+    Private Sub Build_CHARACTER_IMPLANTS()
+        Dim SQL As String
+
+        SQL = "CREATE TABLE CHARACTER_IMPLANTS ("
+        SQL = SQL & "CHARACTER_ID INTEGER NOT NULL,"
+        SQL = SQL & "JUMP_CLONE_ID INTEGER NOT NULL,"
+        SQL = SQL & "IMPLANT_ID INTEGER NOT NULL,"
+        SQL = SQL & "IMPLANT_NAME VARCHAR(100) NOT NULL)"
+
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        SQL = "CREATE INDEX IDX_CI_CHARACTER_ID ON CHARACTER_IMPLANTS (CHARACTER_ID)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+    End Sub
+
+    ' CHARACTER_JUMP_CLONES
+    Private Sub Build_CHARACTER_JUMP_CLONES()
+        Dim SQL As String
+
+        SQL = "CREATE TABLE CHARACTER_JUMP_CLONES ("
+        SQL = SQL & "CHARACTER_ID INTEGER NOT NULL,"
+        SQL = SQL & "JUMP_CLONE_ID INTEGER NOT NULL,"
+        SQL = SQL & "LOCATION_ID INTEGER NOT NULL,"
+        SQL = SQL & "TYPE_ID INTEGER NOT NULL,"
+        SQL = SQL & "CLONE_NAME VARCHAR(100)"
+        SQL = SQL & ")"
+
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        SQL = "CREATE INDEX IDX_CJD_CHARACTER_ID ON CHARACTER_JUMP_CLONES (CHARACTER_ID)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+    End Sub
+
+    ' CHARACTER_CORP_ROLES
+    Private Sub Build_CHARACTER_CORP_ROLES()
+        Dim SQL As String
+
+        SQL = "CREATE TABLE CHARACTER_CORP_ROLES ("
+        SQL = SQL & "CHARACTER_ID INTEGER NOT NULL,"
+        SQL = SQL & "ROLE_TYPE VARCHAR(5) NOT NULL," ' Main, HQ, Base, Other
+        SQL = SQL & "ROLE_ID INTEGER NOT NULL,"
+        SQL = SQL & "ROLE_NAME VARCHAR(100)"
+        SQL = SQL & ")"
+
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        SQL = "CREATE INDEX IDX_CCR_CID_RT ON CHARACTER_CORP_ROLES (CHARACTER_ID, ROLE_TYPE)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+    End Sub
+
+    ' CHARACTER_CORP_TITLES
+    Private Sub Build_CHARACTER_CORP_TITLES()
+        Dim SQL As String
+
+        SQL = "CREATE TABLE CHARACTER_CORP_TITLES ("
+        SQL = SQL & "CHARACTER_ID INTEGER NOT NULL,"
+        SQL = SQL & "TITLE_ID INTEGER NOT NULL,"
+        SQL = SQL & "TITLE_NAME VARCHAR(100)"
+        SQL = SQL & ")"
+
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        SQL = "CREATE INDEX IDX_CCT_CID ON CHARACTER_CORP_TITLES (CHARACTER_ID)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
     End Sub
 
@@ -2302,6 +2483,102 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
         SQL = "CREATE INDEX IDX_CAPI_KEY_ID ON API (KEY_ID)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+    End Sub
+
+    ' PRICE_PROFILES
+    Private Sub Build_PRICE_PROFILES()
+        Dim SQL As String
+
+        SQL = "CREATE TABLE PRICE_PROFILES ("
+        SQL = SQL & "ID INTEGER NOT NULL,"
+        SQL = SQL & "GROUP_NAME VARCHAR(50) NOT NULL,"
+        SQL = SQL & "PRICE_TYPE VARCHAR(25) NOT NULL,"
+        SQL = SQL & "REGION_NAME VARCHAR(50) NOT NULL,"
+        SQL = SQL & "SOLAR_SYSTEM_NAME VARCHAR(50) NOT NULL,"
+        SQL = SQL & "PRICE_MODIFIER FLOAT NOT NULL,"
+        SQL = SQL & "RAW_MATERIAL INTEGER NOT NULL"
+        SQL = SQL & ")"
+
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        ' Insert the base data, this will be default until they change it and it's copied in the updater - start with raw, in Jita
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Minerals','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Ice Products','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Gas','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Datacores','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Decryptors','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Planetary','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Asteroids','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Salvage','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Ancient Salvage','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Ancient Relics','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Hybrid Polymers','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Misc.','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Raw Moon Materials','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Processed Moon Materials','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Advanced Moon Materials','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Materials & Compounds','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Rogue Drone Components','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Booster Materials','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Ships','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Charges','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Modules','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Drones','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Rigs','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Deployables','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Subsystems','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Boosters','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Structures','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Celestials','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Station Parts','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Adv. Capital Construction Components','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Capital Construction Components','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Construction Components','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Hybrid Tech Components','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Tools','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Fuel Blocks','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Implants','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        SQL = "CREATE INDEX IDX_PP_ID ON PRICE_PROFILES (ID)"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
     End Sub
@@ -11381,7 +11658,7 @@ Public Class frmMain
             msSQLReader.Close()
         End If
 
-        msSQL = "CREATE TABLE mapSolarSystems ( regionID integer,constellationID integer,solarSystemID integer primary key,solarSystemName varchar(100),x real,y real,z real,xMin real,xMax real,yMin real,yMax real,zMin real,zMax real,luminosity real,border bit,fringe bit,corridor bit,hub bit,international bit,regional bit,constellation bit,security real,factionID integer,radius real,sunTypeID integer,securityClass varchar(2))"
+        msSQL = "CREATE TABLE mapSolarSystems (regionID integer,constellationID integer,solarSystemID integer primary key,solarSystemName varchar(100),x real,y real,z real,xMin real,xMax real,yMin real,yMax real,zMin real,zMax real,luminosity real,border bit,fringe bit,corridor bit,hub bit,international bit,regional bit,constellation bit,security real,factionID integer,radius real,sunTypeID integer,securityClass varchar(2))"
 
         Call Execute_msSQL(msSQL) ' msSQL server table
 
@@ -11409,6 +11686,9 @@ Public Class frmMain
             msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(0)) & ","
             msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(1)) & ","
             msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(2)) & ","
+            If CStr(SQLiteReader.GetValue(2)) = "30003270" Then
+                Application.DoEvents()
+            End If
             msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(3)) & ","
             msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(4)) & ","
             msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(5)) & ","
@@ -11482,14 +11762,14 @@ Public Class frmMain
 
         If CStr(CheckNullValue) <> "null" Then
             ' Not null, so format
-            If TypeOf inValue Is Boolean Then
+            If CheckNullValue.GetType.Name = "Boolean" Then
                 ' Change these to numeric values
                 If inValue = True Then
                     OutputString = "1"
                 Else
                     OutputString = "0"
                 End If
-            ElseIf IsNumeric(inValue) Then
+            ElseIf CheckNullValue.GetType.Name <> "String" Then
                 OutputString = CStr(inValue)
             Else
                 ' String, so check for appostrophes
@@ -11590,6 +11870,13 @@ Public Class frmMain
     ' Copies all the files from directories and then builds the xml file and saves it here for upload to github
     Private Sub CopyFilesBuildXML()
         Dim NewFilesAdded As Boolean = False
+        Dim FileDirectory As String = ""
+
+        If chkCreateTest.Checked Then
+            FileDirectory = MediaFireTestDirectory
+        Else
+            FileDirectory = MediaFireDirectory
+        End If
 
         On Error Resume Next
         Me.Cursor = Cursors.WaitCursor
@@ -11597,48 +11884,48 @@ Public Class frmMain
         Call EnableButtons(False)
 
         ' Copy the files over to the latest directory, overwrite if needed - check the hash first 
-        If MD5CalcFile(RootDirectory & ZipForgeDLL) <> MD5CalcFile(MediaFireDirectory & ZipForgeDLL) Then
-            File.Copy(RootDirectory & ZipForgeDLL, MediaFireDirectory & ZipForgeDLL, True)
+        If MD5CalcFile(RootDirectory & ZipForgeDLL) <> MD5CalcFile(FileDirectory & ZipForgeDLL) Then
+            File.Copy(RootDirectory & ZipForgeDLL, FileDirectory & ZipForgeDLL, True)
             NewFilesAdded = True
         End If
 
-        If MD5CalcFile(RootDirectory & JSONDLL) <> MD5CalcFile(MediaFireDirectory & JSONDLL) Then
-            File.Copy(RootDirectory & JSONDLL, MediaFireDirectory & JSONDLL, True)
+        If MD5CalcFile(RootDirectory & JSONDLL) <> MD5CalcFile(FileDirectory & JSONDLL) Then
+            File.Copy(RootDirectory & JSONDLL, FileDirectory & JSONDLL, True)
             NewFilesAdded = True
         End If
 
-        If MD5CalcFile(RootDirectory & SQLiteDLL) <> MD5CalcFile(MediaFireDirectory & SQLiteDLL) Then
-            File.Copy(RootDirectory & SQLiteDLL, MediaFireDirectory & SQLiteDLL, True)
+        If MD5CalcFile(RootDirectory & SQLiteDLL) <> MD5CalcFile(FileDirectory & SQLiteDLL) Then
+            File.Copy(RootDirectory & SQLiteDLL, FileDirectory & SQLiteDLL, True)
             NewFilesAdded = True
         End If
 
-        If MD5CalcFile(RootDirectory & EVEIPHEXE) <> MD5CalcFile(MediaFireDirectory & EVEIPHEXE) Then
-            File.Copy(RootDirectory & EVEIPHEXE, MediaFireDirectory & EVEIPHEXE, True)
+        If MD5CalcFile(RootDirectory & EVEIPHEXE) <> MD5CalcFile(FileDirectory & EVEIPHEXE) Then
+            File.Copy(RootDirectory & EVEIPHEXE, FileDirectory & EVEIPHEXE, True)
             NewFilesAdded = True
         End If
 
-        If MD5CalcFile(RootDirectory & EVEIPHUpdater) <> MD5CalcFile(MediaFireDirectory & EVEIPHUpdater) Then
-            File.Copy(RootDirectory & EVEIPHUpdater, MediaFireDirectory & EVEIPHUpdater, True)
+        If MD5CalcFile(RootDirectory & EVEIPHUpdater) <> MD5CalcFile(FileDirectory & EVEIPHUpdater) Then
+            File.Copy(RootDirectory & EVEIPHUpdater, FileDirectory & EVEIPHUpdater, True)
             NewFilesAdded = True
         End If
 
-        If MD5CalcFile(WorkingDirectory & EVEIPHDB) <> MD5CalcFile(MediaFireDirectory & EVEIPHDB) Then
-            File.Copy(WorkingDirectory & EVEIPHDB, MediaFireDirectory & EVEIPHDB, True)
+        If MD5CalcFile(WorkingDirectory & EVEIPHDB) <> MD5CalcFile(FileDirectory & EVEIPHDB) Then
+            File.Copy(WorkingDirectory & EVEIPHDB, FileDirectory & EVEIPHDB, True)
             NewFilesAdded = True
         End If
 
-        If MD5CalcFile(WorkingDirectory & ImageZipFile) <> MD5CalcFile(MediaFireDirectory & ImageZipFile) Then
-            File.Copy(WorkingDirectory & ImageZipFile, MediaFireDirectory & ImageZipFile, True)
+        If MD5CalcFile(WorkingDirectory & ImageZipFile) <> MD5CalcFile(FileDirectory & ImageZipFile) Then
+            File.Copy(WorkingDirectory & ImageZipFile, FileDirectory & ImageZipFile, True)
             NewFilesAdded = True
         End If
 
-        If MD5CalcFile(RootDirectory & UpdaterManifest) <> MD5CalcFile(MediaFireDirectory & UpdaterManifest) Then
-            File.Copy(RootDirectory & UpdaterManifest, MediaFireDirectory & UpdaterManifest, True)
+        If MD5CalcFile(RootDirectory & UpdaterManifest) <> MD5CalcFile(FileDirectory & UpdaterManifest) Then
+            File.Copy(RootDirectory & UpdaterManifest, FileDirectory & UpdaterManifest, True)
             NewFilesAdded = True
         End If
 
-        If MD5CalcFile(RootDirectory & EXEManifest) <> MD5CalcFile(MediaFireDirectory & EXEManifest) Then
-            File.Copy(RootDirectory & EXEManifest, MediaFireDirectory & EXEManifest, True)
+        If MD5CalcFile(RootDirectory & EXEManifest) <> MD5CalcFile(FileDirectory & EXEManifest) Then
+            File.Copy(RootDirectory & EXEManifest, FileDirectory & EXEManifest, True)
             NewFilesAdded = True
         End If
 
@@ -11662,19 +11949,31 @@ Public Class frmMain
 
     ' Writes the sent settings to the sent file name
     Private Sub WriteLatestXMLFile()
+        Dim VersionXMLFileName As String = ""
+        Dim FileDirectory As String = ""
 
         ' Create XmlWriterSettings.
         Dim XMLSettings As XmlWriterSettings = New XmlWriterSettings()
         XMLSettings.Indent = True
 
         ' Delete and make a fresh copy
-        If File.Exists(LatestVersionXML) Then
-            File.Delete(LatestVersionXML)
+        If chkCreateTest.Checked Then
+            If File.Exists(LatestTestVersionXML) Then
+                File.Delete(LatestTestVersionXML)
+            End If
+            VersionXMLFileName = LatestTestVersionXML
+            FileDirectory = MediaFireTestDirectory
+        Else
+            If File.Exists(LatestVersionXML) Then
+                File.Delete(LatestVersionXML)
+            End If
+            VersionXMLFileName = LatestVersionXML
+            FileDirectory = MediaFireDirectory
         End If
 
         ' Loop through the settings sent and output each name and value
         ' Copy the new XML file into the root directory - so I don't get updates and then manually upload this to media fire so people don't get crazy updates
-        Using writer As XmlWriter = XmlWriter.Create(RootDirectory & LatestVersionXML, XMLSettings)
+        Using writer As XmlWriter = XmlWriter.Create(RootDirectory & VersionXMLFileName, XMLSettings)
             writer.WriteStartDocument()
             writer.WriteStartElement("EVEIPH") ' Root.
             writer.WriteAttributeString("Version", VersionNumber)
@@ -11692,63 +11991,63 @@ Public Class frmMain
             writer.WriteStartElement("row")
             writer.WriteAttributeString("Name", EVEIPHEXE)
             writer.WriteAttributeString("Version", VersionNumber)
-            writer.WriteAttributeString("MD5", MD5CalcFile(MediaFireDirectory & EVEIPHEXE))
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EVEIPHEXE))
             writer.WriteAttributeString("URL", EVEIPHEXEURL)
             writer.WriteEndElement()
 
             writer.WriteStartElement("row")
             writer.WriteAttributeString("Name", EVEIPHUpdater)
             writer.WriteAttributeString("Version", "2.0")
-            writer.WriteAttributeString("MD5", MD5CalcFile(MediaFireDirectory & EVEIPHUpdater))
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EVEIPHUpdater))
             writer.WriteAttributeString("URL", EVEIPHUpdaterURL)
             writer.WriteEndElement()
 
             writer.WriteStartElement("row")
             writer.WriteAttributeString("Name", EVEIPHDB)
             writer.WriteAttributeString("Version", DatabaseName)
-            writer.WriteAttributeString("MD5", MD5CalcFile(MediaFireDirectory & EVEIPHDB))
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EVEIPHDB))
             writer.WriteAttributeString("URL", EVEIPHDBURL)
             writer.WriteEndElement()
 
             writer.WriteStartElement("row")
             writer.WriteAttributeString("Name", ImageZipFile)
             writer.WriteAttributeString("Version", ImagesVersion)
-            writer.WriteAttributeString("MD5", MD5CalcFile(MediaFireDirectory & ImageZipFile))
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & ImageZipFile))
             writer.WriteAttributeString("URL", ImageZipFileURL)
             writer.WriteEndElement()
 
             writer.WriteStartElement("row")
             writer.WriteAttributeString("Name", ZipForgeDLL)
             writer.WriteAttributeString("Version", "3.00")
-            writer.WriteAttributeString("MD5", MD5CalcFile(MediaFireDirectory & ZipForgeDLL))
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & ZipForgeDLL))
             writer.WriteAttributeString("URL", ZipForgeDLLURL)
             writer.WriteEndElement()
 
             writer.WriteStartElement("row")
             writer.WriteAttributeString("Name", JSONDLL)
             writer.WriteAttributeString("Version", "6.03")
-            writer.WriteAttributeString("MD5", MD5CalcFile(MediaFireDirectory & JSONDLL))
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & JSONDLL))
             writer.WriteAttributeString("URL", JSONDLLURL)
             writer.WriteEndElement()
 
             writer.WriteStartElement("row")
             writer.WriteAttributeString("Name", SQLiteDLL)
             writer.WriteAttributeString("Version", "1.07.9.0")
-            writer.WriteAttributeString("MD5", MD5CalcFile(MediaFireDirectory & SQLiteDLL))
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & SQLiteDLL))
             writer.WriteAttributeString("URL", SQLiteDLLURL)
             writer.WriteEndElement()
 
             writer.WriteStartElement("row")
             writer.WriteAttributeString("Name", UpdaterManifest)
             writer.WriteAttributeString("Version", "1.0")
-            writer.WriteAttributeString("MD5", MD5CalcFile(MediaFireDirectory & UpdaterManifest))
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & UpdaterManifest))
             writer.WriteAttributeString("URL", UpdaterManifestURL)
             writer.WriteEndElement()
 
             writer.WriteStartElement("row")
             writer.WriteAttributeString("Name", EXEManifest)
             writer.WriteAttributeString("Version", "1.0")
-            writer.WriteAttributeString("MD5", MD5CalcFile(MediaFireDirectory & EXEManifest))
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EXEManifest))
             writer.WriteAttributeString("URL", EXEManifestURL)
             writer.WriteEndElement()
 
@@ -11764,5 +12063,6 @@ Public Class frmMain
     End Sub
 
 #End Region
+
 
 End Class

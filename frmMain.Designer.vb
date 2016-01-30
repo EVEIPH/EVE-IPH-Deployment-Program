@@ -28,6 +28,7 @@ Partial Class frmMain
         Me.ToolTip = New System.Windows.Forms.ToolTip(Me.components)
         Me.TabControl1 = New System.Windows.Forms.TabControl()
         Me.TabPage1 = New System.Windows.Forms.TabPage()
+        Me.chkCreateTest = New System.Windows.Forms.CheckBox()
         Me.btnRefreshList = New System.Windows.Forms.Button()
         Me.lblDBNameDisplay1 = New System.Windows.Forms.Label()
         Me.lblDBNameDisplay = New System.Windows.Forms.Label()
@@ -43,6 +44,9 @@ Partial Class frmMain
         Me.ShapeContainer1 = New Microsoft.VisualBasic.PowerPacks.ShapeContainer()
         Me.LineShape1 = New Microsoft.VisualBasic.PowerPacks.LineShape()
         Me.TabPage2 = New System.Windows.Forms.TabPage()
+        Me.lblMediaFireTestPath = New System.Windows.Forms.Label()
+        Me.btnSelectMediaFireTestPath = New System.Windows.Forms.Button()
+        Me.lblMediaFireTest = New System.Windows.Forms.Label()
         Me.lblImageVersion = New System.Windows.Forms.Label()
         Me.txtImageVersion = New System.Windows.Forms.TextBox()
         Me.Label1 = New System.Windows.Forms.Label()
@@ -51,13 +55,13 @@ Partial Class frmMain
         Me.txtDBName = New System.Windows.Forms.TextBox()
         Me.btnSaveFilePath = New System.Windows.Forms.Button()
         Me.lblMediaFirePath = New System.Windows.Forms.Label()
-        Me.btnSelectInstallerBinaryPath = New System.Windows.Forms.Button()
+        Me.btnSelectMediaFirePath = New System.Windows.Forms.Button()
         Me.lblMediaFire = New System.Windows.Forms.Label()
         Me.lblRootDebugFolderPath = New System.Windows.Forms.Label()
         Me.btnSelectRootDebugPath = New System.Windows.Forms.Button()
         Me.lblRootDebugFolder = New System.Windows.Forms.Label()
         Me.lblWorkingFolderPath = New System.Windows.Forms.Label()
-        Me.btnSelectDBImagesPath = New System.Windows.Forms.Button()
+        Me.btnSelectWorkingPath = New System.Windows.Forms.Button()
         Me.lblWorkingFolder = New System.Windows.Forms.Label()
         Me.TabPage3 = New System.Windows.Forms.TabPage()
         Me.TreeView = New System.Windows.Forms.TreeView()
@@ -80,6 +84,7 @@ Partial Class frmMain
         '
         'TabPage1
         '
+        Me.TabPage1.Controls.Add(Me.chkCreateTest)
         Me.TabPage1.Controls.Add(Me.btnRefreshList)
         Me.TabPage1.Controls.Add(Me.lblDBNameDisplay1)
         Me.TabPage1.Controls.Add(Me.lblDBNameDisplay)
@@ -100,6 +105,15 @@ Partial Class frmMain
         Me.TabPage1.TabIndex = 0
         Me.TabPage1.Text = "DB Updater & Deployment"
         Me.TabPage1.UseVisualStyleBackColor = True
+        '
+        'chkCreateTest
+        '
+        Me.chkCreateTest.Location = New System.Drawing.Point(344, 157)
+        Me.chkCreateTest.Name = "chkCreateTest"
+        Me.chkCreateTest.Size = New System.Drawing.Size(95, 40)
+        Me.chkCreateTest.TabIndex = 13
+        Me.chkCreateTest.Text = "Create Test Version"
+        Me.chkCreateTest.UseVisualStyleBackColor = True
         '
         'btnRefreshList
         '
@@ -230,6 +244,9 @@ Partial Class frmMain
         '
         'TabPage2
         '
+        Me.TabPage2.Controls.Add(Me.lblMediaFireTestPath)
+        Me.TabPage2.Controls.Add(Me.btnSelectMediaFireTestPath)
+        Me.TabPage2.Controls.Add(Me.lblMediaFireTest)
         Me.TabPage2.Controls.Add(Me.lblImageVersion)
         Me.TabPage2.Controls.Add(Me.txtImageVersion)
         Me.TabPage2.Controls.Add(Me.Label1)
@@ -238,13 +255,13 @@ Partial Class frmMain
         Me.TabPage2.Controls.Add(Me.txtDBName)
         Me.TabPage2.Controls.Add(Me.btnSaveFilePath)
         Me.TabPage2.Controls.Add(Me.lblMediaFirePath)
-        Me.TabPage2.Controls.Add(Me.btnSelectInstallerBinaryPath)
+        Me.TabPage2.Controls.Add(Me.btnSelectMediaFirePath)
         Me.TabPage2.Controls.Add(Me.lblMediaFire)
         Me.TabPage2.Controls.Add(Me.lblRootDebugFolderPath)
         Me.TabPage2.Controls.Add(Me.btnSelectRootDebugPath)
         Me.TabPage2.Controls.Add(Me.lblRootDebugFolder)
         Me.TabPage2.Controls.Add(Me.lblWorkingFolderPath)
-        Me.TabPage2.Controls.Add(Me.btnSelectDBImagesPath)
+        Me.TabPage2.Controls.Add(Me.btnSelectWorkingPath)
         Me.TabPage2.Controls.Add(Me.lblWorkingFolder)
         Me.TabPage2.Location = New System.Drawing.Point(4, 22)
         Me.TabPage2.Name = "TabPage2"
@@ -253,6 +270,33 @@ Partial Class frmMain
         Me.TabPage2.TabIndex = 1
         Me.TabPage2.Text = "File Path Settings"
         Me.TabPage2.UseVisualStyleBackColor = True
+        '
+        'lblMediaFireTestPath
+        '
+        Me.lblMediaFireTestPath.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+        Me.lblMediaFireTestPath.Location = New System.Drawing.Point(22, 151)
+        Me.lblMediaFireTestPath.Name = "lblMediaFireTestPath"
+        Me.lblMediaFireTestPath.Size = New System.Drawing.Size(421, 20)
+        Me.lblMediaFireTestPath.TabIndex = 17
+        Me.lblMediaFireTestPath.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+        '
+        'btnSelectMediaFireTestPath
+        '
+        Me.btnSelectMediaFireTestPath.Location = New System.Drawing.Point(22, 174)
+        Me.btnSelectMediaFireTestPath.Name = "btnSelectMediaFireTestPath"
+        Me.btnSelectMediaFireTestPath.Size = New System.Drawing.Size(55, 23)
+        Me.btnSelectMediaFireTestPath.TabIndex = 18
+        Me.btnSelectMediaFireTestPath.Text = "Select"
+        Me.btnSelectMediaFireTestPath.UseVisualStyleBackColor = True
+        '
+        'lblMediaFireTest
+        '
+        Me.lblMediaFireTest.AutoSize = True
+        Me.lblMediaFireTest.Location = New System.Drawing.Point(19, 135)
+        Me.lblMediaFireTest.Name = "lblMediaFireTest"
+        Me.lblMediaFireTest.Size = New System.Drawing.Size(171, 13)
+        Me.lblMediaFireTest.TabIndex = 16
+        Me.lblMediaFireTest.Text = "MediaFire Test Deployment Folder:"
         '
         'lblImageVersion
         '
@@ -304,7 +348,7 @@ Partial Class frmMain
         '
         'btnSaveFilePath
         '
-        Me.btnSaveFilePath.Location = New System.Drawing.Point(183, 282)
+        Me.btnSaveFilePath.Location = New System.Drawing.Point(183, 317)
         Me.btnSaveFilePath.Name = "btnSaveFilePath"
         Me.btnSaveFilePath.Size = New System.Drawing.Size(97, 28)
         Me.btnSaveFilePath.TabIndex = 15
@@ -320,14 +364,14 @@ Partial Class frmMain
         Me.lblMediaFirePath.TabIndex = 7
         Me.lblMediaFirePath.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         '
-        'btnSelectInstallerBinaryPath
+        'btnSelectMediaFirePath
         '
-        Me.btnSelectInstallerBinaryPath.Location = New System.Drawing.Point(22, 109)
-        Me.btnSelectInstallerBinaryPath.Name = "btnSelectInstallerBinaryPath"
-        Me.btnSelectInstallerBinaryPath.Size = New System.Drawing.Size(55, 23)
-        Me.btnSelectInstallerBinaryPath.TabIndex = 8
-        Me.btnSelectInstallerBinaryPath.Text = "Select"
-        Me.btnSelectInstallerBinaryPath.UseVisualStyleBackColor = True
+        Me.btnSelectMediaFirePath.Location = New System.Drawing.Point(22, 109)
+        Me.btnSelectMediaFirePath.Name = "btnSelectMediaFirePath"
+        Me.btnSelectMediaFirePath.Size = New System.Drawing.Size(55, 23)
+        Me.btnSelectMediaFirePath.TabIndex = 8
+        Me.btnSelectMediaFirePath.Text = "Select"
+        Me.btnSelectMediaFirePath.UseVisualStyleBackColor = True
         '
         'lblMediaFire
         '
@@ -341,7 +385,7 @@ Partial Class frmMain
         'lblRootDebugFolderPath
         '
         Me.lblRootDebugFolderPath.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-        Me.lblRootDebugFolderPath.Location = New System.Drawing.Point(22, 216)
+        Me.lblRootDebugFolderPath.Location = New System.Drawing.Point(22, 285)
         Me.lblRootDebugFolderPath.Name = "lblRootDebugFolderPath"
         Me.lblRootDebugFolderPath.Size = New System.Drawing.Size(421, 20)
         Me.lblRootDebugFolderPath.TabIndex = 13
@@ -349,7 +393,7 @@ Partial Class frmMain
         '
         'btnSelectRootDebugPath
         '
-        Me.btnSelectRootDebugPath.Location = New System.Drawing.Point(22, 239)
+        Me.btnSelectRootDebugPath.Location = New System.Drawing.Point(22, 308)
         Me.btnSelectRootDebugPath.Name = "btnSelectRootDebugPath"
         Me.btnSelectRootDebugPath.Size = New System.Drawing.Size(55, 23)
         Me.btnSelectRootDebugPath.TabIndex = 14
@@ -359,7 +403,7 @@ Partial Class frmMain
         'lblRootDebugFolder
         '
         Me.lblRootDebugFolder.AutoSize = True
-        Me.lblRootDebugFolder.Location = New System.Drawing.Point(19, 200)
+        Me.lblRootDebugFolder.Location = New System.Drawing.Point(19, 269)
         Me.lblRootDebugFolder.Name = "lblRootDebugFolder"
         Me.lblRootDebugFolder.Size = New System.Drawing.Size(100, 13)
         Me.lblRootDebugFolder.TabIndex = 12
@@ -368,25 +412,25 @@ Partial Class frmMain
         'lblWorkingFolderPath
         '
         Me.lblWorkingFolderPath.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-        Me.lblWorkingFolderPath.Location = New System.Drawing.Point(22, 151)
+        Me.lblWorkingFolderPath.Location = New System.Drawing.Point(22, 220)
         Me.lblWorkingFolderPath.Name = "lblWorkingFolderPath"
         Me.lblWorkingFolderPath.Size = New System.Drawing.Size(421, 20)
         Me.lblWorkingFolderPath.TabIndex = 10
         Me.lblWorkingFolderPath.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         '
-        'btnSelectDBImagesPath
+        'btnSelectWorkingPath
         '
-        Me.btnSelectDBImagesPath.Location = New System.Drawing.Point(22, 174)
-        Me.btnSelectDBImagesPath.Name = "btnSelectDBImagesPath"
-        Me.btnSelectDBImagesPath.Size = New System.Drawing.Size(55, 23)
-        Me.btnSelectDBImagesPath.TabIndex = 11
-        Me.btnSelectDBImagesPath.Text = "Select"
-        Me.btnSelectDBImagesPath.UseVisualStyleBackColor = True
+        Me.btnSelectWorkingPath.Location = New System.Drawing.Point(22, 243)
+        Me.btnSelectWorkingPath.Name = "btnSelectWorkingPath"
+        Me.btnSelectWorkingPath.Size = New System.Drawing.Size(55, 23)
+        Me.btnSelectWorkingPath.TabIndex = 11
+        Me.btnSelectWorkingPath.Text = "Select"
+        Me.btnSelectWorkingPath.UseVisualStyleBackColor = True
         '
         'lblWorkingFolder
         '
         Me.lblWorkingFolder.AutoSize = True
-        Me.lblWorkingFolder.Location = New System.Drawing.Point(19, 135)
+        Me.lblWorkingFolder.Location = New System.Drawing.Point(19, 204)
         Me.lblWorkingFolder.Name = "lblWorkingFolder"
         Me.lblWorkingFolder.Size = New System.Drawing.Size(82, 13)
         Me.lblWorkingFolder.TabIndex = 9
@@ -444,10 +488,10 @@ Partial Class frmMain
     Friend WithEvents btnSelectRootDebugPath As System.Windows.Forms.Button
     Friend WithEvents lblRootDebugFolder As System.Windows.Forms.Label
     Friend WithEvents lblWorkingFolderPath As System.Windows.Forms.Label
-    Friend WithEvents btnSelectDBImagesPath As System.Windows.Forms.Button
+    Friend WithEvents btnSelectWorkingPath As System.Windows.Forms.Button
     Friend WithEvents lblWorkingFolder As System.Windows.Forms.Label
     Friend WithEvents lblMediaFirePath As System.Windows.Forms.Label
-    Friend WithEvents btnSelectInstallerBinaryPath As System.Windows.Forms.Button
+    Friend WithEvents btnSelectMediaFirePath As System.Windows.Forms.Button
     Friend WithEvents lblMediaFire As System.Windows.Forms.Label
     Friend WithEvents btnCopyFilesBuildXML As System.Windows.Forms.Button
     Friend WithEvents btnBuildBinary As System.Windows.Forms.Button
@@ -466,5 +510,9 @@ Partial Class frmMain
     Friend WithEvents btnRefreshList As System.Windows.Forms.Button
     Friend WithEvents TabPage3 As System.Windows.Forms.TabPage
     Friend WithEvents TreeView As System.Windows.Forms.TreeView
+    Friend WithEvents chkCreateTest As System.Windows.Forms.CheckBox
+    Friend WithEvents lblMediaFireTestPath As System.Windows.Forms.Label
+    Friend WithEvents btnSelectMediaFireTestPath As System.Windows.Forms.Button
+    Friend WithEvents lblMediaFireTest As System.Windows.Forms.Label
 
 End Class
