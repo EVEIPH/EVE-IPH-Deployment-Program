@@ -3,6 +3,8 @@ Imports System.Data.SqlClient ' For SQL Server Connection
 Imports System.Data.SQLite
 Imports System.IO
 Imports System.Xml
+Imports YamlDotNet
+Imports YamlDotNet.RepresentationModel
 
 Imports ComponentAce.Compression.ZipForge
 ' This namespace contains ArchiverException class required for error handling
@@ -1178,11 +1180,11 @@ Public Class frmMain
         lblTableName.Text = "Building: ORES_LOCATIONS"
         Call Build_ORE_LOCATIONS()
 
-        lblTableName.Text = "Building: ORES"
-        Call Build_ORES()
-
         lblTableName.Text = "Building: REPROCESSING"
         Call Build_Reprocessing()
+
+        lblTableName.Text = "Building: ORES"
+        Call Build_ORES()
 
         lblTableName.Text = "Building: REACTIONS"
         Call Build_Reactions()
@@ -1492,7 +1494,7 @@ Public Class frmMain
         SQL = SQL & "OR (ITEM_CATEGORY = 'Subsystem') "
         SQL = SQL & "OR (ITEM_CATEGORY = 'Module' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE marketGroupID IN (562,565,568,572,575,578,1673,1674))) "
         SQL = SQL & "OR (ITEM_CATEGORY IN ('Charge','Module') AND ITEM_NAME Like '%Heavy%' AND ITEM_NAME Not Like '%Jolt%')  "
-        SQL = SQL & "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE (volume >= 10000 AND volume < 50000) OR ITEM_GROUP_ID = 963)) "
+        SQL = SQL & "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE (volume >= 10000 AND volume < 50000) OR ITEM_GROUP_ID = 963 OR ITEM_GROUP_ID = 1534)) "
         Execute_msSQL(SQL)
 
         ' Drones are Heavy, missiles are cruise/torp, towers are regular towers (Caldari Control Tower)
@@ -2268,7 +2270,7 @@ Public Class frmMain
         SQL = SQL & "CHARACTER_ID INTEGER NOT NULL,"
         SQL = SQL & "JUMP_CLONE_ID INTEGER NOT NULL,"
         SQL = SQL & "LOCATION_ID INTEGER NOT NULL,"
-        SQL = SQL & "TYPE_ID INTEGER NOT NULL,"
+        SQL = SQL & "TYPE_ID INTEGER,"
         SQL = SQL & "CLONE_NAME VARCHAR(100)"
         SQL = SQL & ")"
 
@@ -2354,6 +2356,7 @@ Public Class frmMain
         Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (7000,'Colossal','Mercoxit',5,0)", SQLiteDB)
         Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (7000,'Colossal','Magma Mercoxit',5,5)", SQLiteDB)
         Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (7000,'Colossal','Vitreous Mercoxit',5,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (1,'Testing','Vitreous Mercoxit',5,10)", SQLiteDB)
 
         Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (58000,'Enormous','Arkonor',4,0)", SQLiteDB)
         Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (58000,'Enormous','Crimson Arkonor',4,5)", SQLiteDB)
@@ -3624,6 +3627,72 @@ Public Class frmMain
         Call CommitSQLiteTransaction(SQLiteDB)
 
         msSQLReader.Close()
+
+        ' Now set the 5%/10% flag
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Crimson Arkonor'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Triclinic Bistot'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Sharp Crokite'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Onyx Ochre'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Vitric Hedbergite'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Vivid Hemorphite'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Pure Jaspet'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Luminous Kernite'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Azure Plagioclase'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Solid Pyroxeres'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Condensed Scordite'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Bright Spodumain'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Concentrated Veldspar'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Iridescent Gneiss'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Magma Mercoxit'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Silvery Omber'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Prime Arkonor'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Monoclinic Bistot'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Crystalline Crokite'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Obsidian Ochre'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Glazed Hedbergite'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Radiant Hemorphite'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Pristine Jaspet'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Fiery Kernite'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Rich Plagioclase'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Viscous Pyroxeres'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Massive Scordite'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Gleaming Spodumain'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Dense Veldspar'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Prismatic Gneiss'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Vitreous Mercoxit'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Golden Omber'"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
         SQL = "CREATE INDEX IDX_ORES_ORE_ID ON ORES (ORE_ID)"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
@@ -6944,6 +7013,31 @@ Public Class frmMain
 
         ' Load the yaml file into a string array for easier processing
         Dim Lines As String() = IO.File.ReadAllLines(FileName)
+
+        '' Get the data from the YAML file
+        'Dim YFile As New StringReader(FileName)
+        'Dim ymal As New YamlStream(YFile)
+
+        'Dim Mapping As VariantType = 0
+
+        '// Examine the stream
+        'var Mapping = (YamlMappingNode)yaml.Documents[0].RootNode;
+
+        'foreach(var entry In mapping.Children)
+        '{
+        '	Console.WriteLine(((YamlScalarNode)entry.Key).Value);
+        '}
+
+        '// List all the items
+        'var items = (YamlSequenceNode)mapping.Children[new YamlScalarNode("items")];
+        'foreach(YamlMappingNode item In items)
+        '{
+        '	Console.WriteLine(
+        '                 "{0}\t{1}",
+        '                 item.Children[new YamlScalarNode("part_no")],
+        '		item.Children[new YamlScalarNode("descrip")]
+        '	);
+        '}
 
         ' Set the block and index values
         Dim SpaceCount As Integer = GetNumSpaces(Lines(1))
@@ -12063,6 +12157,5 @@ Public Class frmMain
     End Sub
 
 #End Region
-
 
 End Class
