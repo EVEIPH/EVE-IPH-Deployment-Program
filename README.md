@@ -19,6 +19,7 @@ Steps to import an Static Data Export (SDE), build the new database, and export 
   5. Hit OK to restore the database.
 
 ** NOTE: CCP has indicated that they will be migrating the entire SDE to YAML files in the coming months. There has been no date set but this program only does very simple YAML processing and will need to be updated to use the installed package YAML.net to process YAML files to continue working after this change. **
+
 4. Open the EVE IPH Deployment Program (run in debug or run the exe)
 5. Select the 'File Path Settings' tab and update the following:
   1. Database Name - Set to the name used to restore the database to the MS Sql Server - Example: 'YC-118-2_1.0_116998'
