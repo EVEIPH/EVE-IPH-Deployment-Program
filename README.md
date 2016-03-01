@@ -17,7 +17,8 @@ Steps to import an Static Data Export (SDE), build the new database, and export 
   3. Select your *.bak file from step 1b above and hit OK
   4. Rename the "Database:" field (typically named 'ebs_DATADUMP') to the name of the *.zip file. For example, if the *.zip file is named 'YC-118-2_1.0_116998.zip', change the database name to 'YC-118-2_1.0_116998'. NOTE: This name is important and will be the name of the database used in the update program to correctly import the SDE data as well as the folder to import yaml and other files from.
   5. Hit OK to restore the database.
-  6. ** NOTE: CCP has indicated that they will be migrating the entire SDE to YAML files in the coming months. There has been no date set but this program only does very simple YAML processing and will need to be updated to use the installed package YAML.net to process YAML files to continue working after this change. **
+
+** NOTE: CCP has indicated that they will be migrating the entire SDE to YAML files in the coming months. There has been no date set but this program only does very simple YAML processing and will need to be updated to use the installed package YAML.net to process YAML files to continue working after this change. **
 4. Open the EVE IPH Deployment Program (run in debug or run the exe)
 5. Select the 'File Path Settings' tab and update the following:
   1. Database Name - Set to the name used to restore the database to the MS Sql Server - Example: 'YC-118-2_1.0_116998'
