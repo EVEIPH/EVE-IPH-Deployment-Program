@@ -25,7 +25,7 @@ Steps to import an Static Data Export (SDE), build the new database, and export 
   1. Database Name - Set to the name used to restore the database to the MS Sql Server - Example: 'YC-118-2_1.0_116998'
   2. Image Version - Set this name to the name of the *_Types.zip file. For example, 'YC-118-1_1.0_Types.zip' would be 'YC-118-1_1.0'
   3. Version Number - This is the Major and Minor version of the program and important for building a binary program. 
-  4. Media Fire Deployment Folder - This is the folder where updates to the Media Fire server from the desktop app are stored so users can update the program. For this app, Media Fire will automatically update the files when replaced and maintain the same link locations used in the updater program.
+  4. Media Fire Deployment Folder (Media fire only required for updates, set this folder to whatever you like if you are not doing updates to the file server) - This is the folder where updates to the Media Fire server from the desktop app are stored so users can update the program. For this app, Media Fire will automatically update the files when replaced and maintain the same link locations used in the updater program.
   5. Working Folder - This is the folder where the image files folder ('Types') is stored along with the folder for the database version we are working with (YC-118-1_1.0_116998). 
   6. Root Debug Folder - This folder is where VB.net will run the debug executable, which is set in the EVE Isk Per Hour program properties -> Compile -> Build Output Path
   7. Save the settings.
@@ -42,6 +42,8 @@ Steps to import an Static Data Export (SDE), build the new database, and export 
 2. Hit 'Image Copy' and the program will copy all the relevant images, zip them into a final file, and export the new images to the Root Directory set in the program settings above for use in debugging.
 
 ## Updating and Deploying EVE IPH files
+
+NOTE: You only need to work with these instructions if you intend on letting users to run updates. If you have your own file server that you want to update, replace the instructions for media fire to your own file server.
 
 The program allows easy deployment of the required files to update the program. Complete the following anytime you need to update a new file for user download. Note: If you delete and replace a file in the Media File folder, the links for downloading will change and require an update to the program, which you may not be able to push to users but instead require them to re-install. The following are details on updating the files through this process.
 
