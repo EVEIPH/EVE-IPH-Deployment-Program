@@ -1384,7 +1384,7 @@ Public Class frmMain
         SQL = SQL & "isNULL(dgmTypeAttributes.valueInt,dgmTypeAttributes.valueFloat) AS ITEM_TYPE, "
         SQL = SQL & "invTypes.raceID AS RACE_ID, "
         SQL = SQL & "invMetaTypes.metaGroupID AS META_GROUP, "
-        SQL = SQL & "'  ' AS SIZE_GROUP, "
+        SQL = SQL & "'XX' AS SIZE_GROUP, "
         SQL = SQL & "0 AS IGNORE "
         SQL = SQL & "INTO ALL_BLUEPRINTS "
         SQL = SQL & "FROM invTypes "
@@ -1470,7 +1470,7 @@ Public Class frmMain
         ' Add the S/M/L/XL tag to these here
 
         ' Drones are light, missiles are rockets and light
-        SQL = "UPDATE ALL_BLUEPRINTS SET SIZE_GROUP = 'S' WHERE "
+        SQL = "UPDATE ALL_BLUEPRINTS SET SIZE_GROUP = 'S' WHERE SIZE_GROUP = 'XX' AND ("
         SQL = SQL & "ITEM_NAME LIKE '% S' OR ITEM_NAME Like '%Small%' "
         SQL = SQL & "OR (ITEM_NAME Like '%Micro%' AND ITEM_GROUP <> 'Propulsion Module' AND ITEM_NAME NOT LIKE 'Microwave%') "
         SQL = SQL & "OR ITEM_NAME Like '%Defender%' "
@@ -1481,12 +1481,12 @@ Public Class frmMain
         SQL = SQL & "OR (ITEM_GROUP = 'Propulsion Module' AND ITEM_NAME Like '1MN%') "
         SQL = SQL & "OR (ITEM_CATEGORY = 'Module' AND ITEM_ID IN (SELECT typeID from invTypes where marketGroupID IN (561,564,567,570,574,577,1671,1672,1037)))  "
         SQL = SQL & "OR (ITEM_CATEGORY IN ('Charge','Module') AND (ITEM_NAME Like '%Rocket%' OR ITEM_NAME Like '%Light Missile%') AND ITEM_GROUP NOT IN ('Propulsion Module', 'Rig Launcher'))  "
-        SQL = SQL & "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE volume < 10000))"
+        SQL = SQL & "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE volume < 10000) AND ITEM_GROUP_ID <> 963) OR ITEM_GROUP_ID = 1527)"
 
         Execute_msSQL(SQL)
 
         ' Drones are medium, missiles are heavys and hams
-        SQL = "UPDATE ALL_BLUEPRINTS SET SIZE_GROUP = 'M' WHERE "
+        SQL = "UPDATE ALL_BLUEPRINTS SET SIZE_GROUP = 'M' WHERE SIZE_GROUP = 'XX' AND ("
         SQL = SQL & "ITEM_NAME LIKE '% M' OR ITEM_NAME Like '%Medium%' OR ITEM_NAME IN ('Cap Booster 75','Cap Booster 100') "
         SQL = SQL & "OR (ITEM_CATEGORY = 'Drone' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE volume = 10)) "
         SQL = SQL & "OR (ITEM_GROUP = 'Propulsion Module' AND ITEM_NAME Like '10MN%') "
@@ -1494,12 +1494,13 @@ Public Class frmMain
         SQL = SQL & "OR (ITEM_CATEGORY = 'Subsystem') "
         SQL = SQL & "OR (ITEM_CATEGORY = 'Module' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE marketGroupID IN (562,565,568,572,575,578,1673,1674))) "
         SQL = SQL & "OR (ITEM_CATEGORY IN ('Charge','Module') AND ITEM_NAME Like '%Heavy%' AND ITEM_NAME Not Like '%Jolt%')  "
-        SQL = SQL & "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE (volume >= 10000 AND volume < 50000) OR ITEM_GROUP_ID = 963 OR ITEM_GROUP_ID = 1534)) "
+        SQL = SQL & "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE (volume >= 10000 AND volume < 50000) "
+        SQL = SQL & "OR ITEM_GROUP_ID = 963 OR ITEM_GROUP_ID = 1534))) "
         Execute_msSQL(SQL)
 
         ' Drones are Heavy, missiles are cruise/torp, towers are regular towers (Caldari Control Tower)
         SQL = "UPDATE ALL_BLUEPRINTS SET SIZE_GROUP = 'L' "
-        SQL = SQL & "WHERE ITEM_NAME LIKE '% L' "
+        SQL = SQL & "WHERE SIZE_GROUP = 'XX' AND (ITEM_NAME LIKE '% L' "
         SQL = SQL & "OR (ITEM_NAME Like '%Large%' AND ITEM_NAME NOT Like '%X-Large%') "
         SQL = SQL & "OR ITEM_NAME IN ('Cap Booster 150','Cap Booster 200')"
         SQL = SQL & "OR (ITEM_CATEGORY = 'Drone' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE volume >= 25 and volume <=50)) "
@@ -1510,12 +1511,12 @@ Public Class frmMain
         SQL = SQL & "OR (ITEM_CATEGORY = 'Module' AND ITEM_NAME Like '%Heavy%' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE marketGroupID NOT IN (563,566,569,573,576,579,1675,1676))) "
         SQL = SQL & "OR (ITEM_CATEGORY = 'Module' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE marketGroupID IN (563,566,569,573,576,579,1675,1676))) "
         SQL = SQL & "OR (ITEM_CATEGORY IN ('Charge','Module') AND (ITEM_NAME Like '%Cruise%' OR ITEM_NAME Like '%Torpedo%')) "
-        SQL = SQL & "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE (volume >= 50000 AND volume < 500000)))"
+        SQL = SQL & "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE (volume >= 50000 AND volume < 500000))))"
         Execute_msSQL(SQL)
 
         ' Drones are fighters, missiles are citadel
         SQL = "UPDATE ALL_BLUEPRINTS SET SIZE_GROUP = 'XL' "
-        SQL = SQL & "WHERE ITEM_NAME LIKE '% XL' "
+        SQL = SQL & "WHERE SIZE_GROUP = 'XX' AND (ITEM_NAME LIKE '% XL' "
         SQL = SQL & "OR ITEM_NAME Like '%Capital%' "
         SQL = SQL & "OR ITEM_NAME Like '%Huge%'"
         SQL = SQL & "OR ITEM_NAME Like '%X-Large%' "
@@ -1529,11 +1530,11 @@ Public Class frmMain
         SQL = SQL & "OR (ITEM_CATEGORY IN ('Charge','Module') AND ITEM_NAME Like '%Citadel%') "
         SQL = SQL & "OR (ITEM_CATEGORY = 'Celestial' AND (ITEM_NAME Like 'Station%' OR ITEM_NAME LIKE '%Outpost%' OR ITEM_NAME LIKE '%Freight%')) "
         SQL = SQL & "OR ITEM_GROUP LIKE 'Bomb%' "
-        SQL = SQL & "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE volume >= 500000))"
+        SQL = SQL & "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE volume >= 500000)))"
         Execute_msSQL(SQL)
 
         ' Anything left update to small (may need to revisit later)
-        SQL = "UPDATE ALL_BLUEPRINTS SET SIZE_GROUP = 'S' WHERE SIZE_GROUP = '  '"
+        SQL = "UPDATE ALL_BLUEPRINTS SET SIZE_GROUP = 'S' WHERE SIZE_GROUP = 'XX'"
         Execute_msSQL(SQL)
 
         ' Now build the tables
@@ -10857,6 +10858,7 @@ Public Class frmMain
         SQLUniverse = "SELECT COUNT(*) FROM mapCelestialStatistics"
         SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
+        SQLiteReader.Read()
 
         pgMain.Minimum = 0
         pgMain.Value = 0
