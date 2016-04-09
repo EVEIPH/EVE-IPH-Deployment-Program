@@ -9,6 +9,7 @@ Imports YamlDotNet.RepresentationModel
 Imports ComponentAce.Compression.ZipForge
 ' This namespace contains ArchiverException class required for error handling
 Imports ComponentAce.Compression.Archiver
+Imports Ionic.Zip
 
 Public Class frmMain
     Inherits System.Windows.Forms.Form
@@ -648,24 +649,18 @@ Public Class frmMain
         File.Copy(IECFOlder & "\37135_64.png", EVEIPHImageFolder & "\37135_64.png")    ' Endurance
         File.Copy(IECFOlder & "\37135_64.png", WorkingImageFolder & "\37135_64.png")   ' Endurance
 
-        ' Now Zip the images
-        ' Create an instance of the ZipForge class
-        Dim archiver As New ZipForge()
 
         If File.Exists(DatabasePath & "EVEIPH Images.zip") Then
             File.Delete(DatabasePath & "EVEIPH Images.zip")
         End If
 
-        ' Set the name of the archive file we want to create
-        archiver.FileName = WorkingDirectory & "EVEIPH Images.zip"
-        ' Because we create a new archive, 
-        ' we set fileMode to System.IO.FileMode.Create
-        archiver.OpenArchive(System.IO.FileMode.Create)
-        ' Set base (default) directory for all archive operations
-        archiver.BaseDir = EVEIPHImageFolder
-        ' Add files to the archive by mask
-        archiver.AddFiles("*.*")
-        archiver.CloseArchive()
+        'Open the zip file, create if not exists
+        Using zip = New ZipFile(WorkingDirectory & "EVEIPH Images.zip")
+            'Remove everything, in case the zip already existed
+            zip.RemoveSelectedEntries("*")
+            zip.AddDirectory(EVEIPHImageFolder) 'Adds the *content* of the directory, not the directory itself
+            zip.Save()
+        End Using
 
         OutputFile.Close()
         pgMain.Visible = False
