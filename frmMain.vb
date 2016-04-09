@@ -570,9 +570,7 @@ Public Class frmMain
         Directory.CreateDirectory(WorkingImageFolder)
 
         ' For missing BP ID's
-        If File.Exists(MissingImagesFilePath) Then
-            File.Delete(MissingImagesFilePath)
-        End If
+        File.Delete(MissingImagesFilePath)
 
         Dim OutputFile As New StreamWriter(MissingImagesFilePath)
         OutputFile.WriteLine("Blueprint ID - Blueprint Name")
@@ -650,9 +648,8 @@ Public Class frmMain
         File.Copy(IECFOlder & "\37135_64.png", WorkingImageFolder & "\37135_64.png")   ' Endurance
 
 
-        If File.Exists(DatabasePath & "EVEIPH Images.zip") Then
-            File.Delete(DatabasePath & "EVEIPH Images.zip")
-        End If
+
+        File.Delete(DatabasePath & "EVEIPH Images.zip")
 
         'Open the zip file, create if not exists
         Using zip = New ZipFile(WorkingDirectory & "EVEIPH Images.zip")
@@ -727,9 +724,9 @@ Public Class frmMain
         ' Create an instance of the ZipForge class
         Dim archiver As New ZipForge()
 
-        If File.Exists(FinalBinaryZipPath) Then
-            File.Delete(FinalBinaryZipPath)
-        End If
+
+        File.Delete(FinalBinaryZipPath)
+
 
         ' Set the name of the archive file we want to create
         archiver.FileName = FinalBinaryZipPath
@@ -742,9 +739,8 @@ Public Class frmMain
         archiver.AddFiles("*.*")
         archiver.CloseArchive()
 
-        If File.Exists(MediaFireDirectory & FinalBinaryZip) Then
-            File.Delete(MediaFireDirectory & FinalBinaryZip)
-        End If
+        File.Delete(MediaFireDirectory & FinalBinaryZip)
+
 
         ' Copy binary zip file to the media file directory
         File.Copy(FinalBinaryZipPath, MediaFireDirectory & FinalBinaryZip)
@@ -12049,15 +12045,12 @@ Public Class frmMain
 
         ' Delete and make a fresh copy
         If chkCreateTest.Checked Then
-            If File.Exists(LatestTestVersionXML) Then
-                File.Delete(LatestTestVersionXML)
-            End If
+            File.Delete(LatestTestVersionXML)
+
             VersionXMLFileName = LatestTestVersionXML
             FileDirectory = MediaFireTestDirectory
         Else
-            If File.Exists(LatestVersionXML) Then
-                File.Delete(LatestVersionXML)
-            End If
+            File.Delete(LatestVersionXML)
             VersionXMLFileName = LatestVersionXML
             FileDirectory = MediaFireDirectory
         End If
