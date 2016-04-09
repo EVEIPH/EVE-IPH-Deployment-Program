@@ -721,26 +721,15 @@ Public Class frmMain
         My.Computer.FileSystem.CopyDirectory(WorkingDirectory & ImageFolder, FinalBinaryFolderPath & ImageFolder, True)
 
         ' Zip the whole folder up for download
-        ' Create an instance of the ZipForge class
-        Dim archiver As New ZipForge()
-
-
-        File.Delete(FinalBinaryZipPath)
-
-
-        ' Set the name of the archive file we want to create
-        archiver.FileName = FinalBinaryZipPath
-        ' Because we create a new archive, 
-        ' we set fileMode to System.IO.FileMode.Create
-        archiver.OpenArchive(System.IO.FileMode.Create)
-        ' Set base (default) directory for all archive operations
-        archiver.BaseDir = FinalBinaryFolderPath
-        ' Add files to the archive by mask
-        archiver.AddFiles("*.*")
-        archiver.CloseArchive()
+        'Open/create zip file
+        Using zip = New ZipFile(FinalBinaryZipPath)
+            'empty zip file
+            zip.RemoveSelectedEntries("*")
+            zip.AddDirectory(FinalBinaryFolderPath) 'Adds the *content* of the directory, not the directory itself
+            zip.Save()
+        End Using
 
         File.Delete(MediaFireDirectory & FinalBinaryZip)
-
 
         ' Copy binary zip file to the media file directory
         File.Copy(FinalBinaryZipPath, MediaFireDirectory & FinalBinaryZip)
