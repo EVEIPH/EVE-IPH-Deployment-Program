@@ -3,12 +3,7 @@ Imports System.Data.SqlClient ' For SQL Server Connection
 Imports System.Data.SQLite
 Imports System.IO
 Imports System.Xml
-Imports YamlDotNet
-Imports YamlDotNet.RepresentationModel
-
-Imports ComponentAce.Compression.ZipForge
 ' This namespace contains ArchiverException class required for error handling
-Imports ComponentAce.Compression.Archiver
 Imports Ionic.Zip
 
 Public Class frmMain
@@ -46,7 +41,6 @@ Public Class frmMain
     ' File names
     Private MSIInstaller As String = "Eve Isk per Hour " & VersionNumber & ".msi"
 
-    Private ZipForgeDLL As String = "ZipForge.dll"
     Private JSONDLL As String = "Newtonsoft.Json.dll"
     Private SQLiteDLL As String = "System.Data.SQLite.dll"
     Private EVEIPHEXE As String = "EVE Isk per Hour.exe"
@@ -59,7 +53,6 @@ Public Class frmMain
     Private LatestTestVersionXML As String
 
     ' File URLs
-    Private ZipForgeDLLURL As String = "http://www.mediafire.com/download/va7avejtnl5boto/ZipForge.dll"
     Private JSONDLLURL As String = "http://www.mediafire.com/download/7a6ml9gwu14616d/Newtonsoft.Json.dll"
     Private SQLiteDLLURL As String = "http://www.mediafire.com/download/b0px46xwaa8jgx4/System.Data.SQLite.dll"
     Private EVEIPHEXEURL As String = "http://www.mediafire.com/download/2ckpd2th8xlpysv/EVE_Isk_per_Hour.exe"
@@ -69,7 +62,6 @@ Public Class frmMain
     Private EXEManifestURL As String = "http://www.mediafire.com/download/sdlrk28t18gv8z0/EVE_Isk_per_Hour.exe.manifest"
     Private ImageZipFileURL As String = "http://www.mediafire.com/download/duq6nw4d0p59rci/EVEIPH_Images.zip"
 
-    Private TestZipForgeDLLURL As String = "http://www.mediafire.com/download/18ijh46m72r1955/ZipForge.dll"
     Private TestJSONDLLURL As String = "http://www.mediafire.com/download/wmgmu7qu6ha4qag/Newtonsoft.Json.dll"
     Private TestSQLiteDLLURL As String = "http://www.mediafire.com/download/q1bbs5hgp4e18gh/System.Data.SQLite.dll"
     Private TestEVEIPHEXEURL As String = "http://www.mediafire.com/download/8cp2ffnb50y0or5/EVE_Isk_per_Hour.exe"
@@ -705,7 +697,6 @@ Public Class frmMain
         Directory.CreateDirectory(FinalBinaryFolderPath)
 
         ' Copy all these files from the media file directory (should be most up to date) to the working directory to make the zip
-        File.Copy(MediaFireDirectory & ZipForgeDLL, FinalBinaryFolderPath & ZipForgeDLL)
         File.Copy(MediaFireDirectory & JSONDLL, FinalBinaryFolderPath & JSONDLL)
         File.Copy(MediaFireDirectory & SQLiteDLL, FinalBinaryFolderPath & SQLiteDLL)
         File.Copy(MediaFireDirectory & EVEIPHEXE, FinalBinaryFolderPath & EVEIPHEXE)
@@ -11959,12 +11950,6 @@ Public Class frmMain
         Application.DoEvents()
         Call EnableButtons(False)
 
-        ' Copy the files over to the latest directory, overwrite if needed - check the hash first 
-        If MD5CalcFile(RootDirectory & ZipForgeDLL) <> MD5CalcFile(FileDirectory & ZipForgeDLL) Then
-            File.Copy(RootDirectory & ZipForgeDLL, FileDirectory & ZipForgeDLL, True)
-            NewFilesAdded = True
-        End If
-
         If MD5CalcFile(RootDirectory & JSONDLL) <> MD5CalcFile(FileDirectory & JSONDLL) Then
             File.Copy(RootDirectory & JSONDLL, FileDirectory & JSONDLL, True)
             NewFilesAdded = True
@@ -12087,13 +12072,6 @@ Public Class frmMain
             writer.WriteAttributeString("Version", ImagesVersion)
             writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & ImageZipFile))
             writer.WriteAttributeString("URL", ImageZipFileURL)
-            writer.WriteEndElement()
-
-            writer.WriteStartElement("row")
-            writer.WriteAttributeString("Name", ZipForgeDLL)
-            writer.WriteAttributeString("Version", "3.00")
-            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & ZipForgeDLL))
-            writer.WriteAttributeString("URL", ZipForgeDLLURL)
             writer.WriteEndElement()
 
             writer.WriteStartElement("row")
