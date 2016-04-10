@@ -3,12 +3,8 @@ Imports System.Data.SqlClient ' For SQL Server Connection
 Imports System.Data.SQLite
 Imports System.IO
 Imports System.Xml
-Imports YamlDotNet
-Imports YamlDotNet.RepresentationModel
-
-Imports ComponentAce.Compression.ZipForge
 ' This namespace contains ArchiverException class required for error handling
-Imports ComponentAce.Compression.Archiver
+Imports Ionic.Zip
 
 Public Class frmMain
     Inherits System.Windows.Forms.Form
@@ -45,7 +41,6 @@ Public Class frmMain
     ' File names
     Private MSIInstaller As String = "Eve Isk per Hour " & VersionNumber & ".msi"
 
-    Private ZipForgeDLL As String = "ZipForge.dll"
     Private JSONDLL As String = "Newtonsoft.Json.dll"
     Private SQLiteDLL As String = "System.Data.SQLite.dll"
     Private EVEIPHEXE As String = "EVE Isk per Hour.exe"
@@ -58,7 +53,6 @@ Public Class frmMain
     Private LatestTestVersionXML As String
 
     ' File URLs
-    Private ZipForgeDLLURL As String = "http://www.mediafire.com/download/va7avejtnl5boto/ZipForge.dll"
     Private JSONDLLURL As String = "http://www.mediafire.com/download/7a6ml9gwu14616d/Newtonsoft.Json.dll"
     Private SQLiteDLLURL As String = "http://www.mediafire.com/download/b0px46xwaa8jgx4/System.Data.SQLite.dll"
     Private EVEIPHEXEURL As String = "http://www.mediafire.com/download/2ckpd2th8xlpysv/EVE_Isk_per_Hour.exe"
@@ -68,7 +62,6 @@ Public Class frmMain
     Private EXEManifestURL As String = "http://www.mediafire.com/download/sdlrk28t18gv8z0/EVE_Isk_per_Hour.exe.manifest"
     Private ImageZipFileURL As String = "http://www.mediafire.com/download/duq6nw4d0p59rci/EVEIPH_Images.zip"
 
-    Private TestZipForgeDLLURL As String = "http://www.mediafire.com/download/18ijh46m72r1955/ZipForge.dll"
     Private TestJSONDLLURL As String = "http://www.mediafire.com/download/wmgmu7qu6ha4qag/Newtonsoft.Json.dll"
     Private TestSQLiteDLLURL As String = "http://www.mediafire.com/download/q1bbs5hgp4e18gh/System.Data.SQLite.dll"
     Private TestEVEIPHEXEURL As String = "http://www.mediafire.com/download/8cp2ffnb50y0or5/EVE_Isk_per_Hour.exe"
@@ -569,9 +562,7 @@ Public Class frmMain
         Directory.CreateDirectory(WorkingImageFolder)
 
         ' For missing BP ID's
-        If File.Exists(MissingImagesFilePath) Then
-            File.Delete(MissingImagesFilePath)
-        End If
+        File.Delete(MissingImagesFilePath)
 
         Dim OutputFile As New StreamWriter(MissingImagesFilePath)
         OutputFile.WriteLine("Blueprint ID - Blueprint Name")
@@ -648,24 +639,17 @@ Public Class frmMain
         File.Copy(IECFOlder & "\37135_64.png", EVEIPHImageFolder & "\37135_64.png")    ' Endurance
         File.Copy(IECFOlder & "\37135_64.png", WorkingImageFolder & "\37135_64.png")   ' Endurance
 
-        ' Now Zip the images
-        ' Create an instance of the ZipForge class
-        Dim archiver As New ZipForge()
 
-        If File.Exists(DatabasePath & "EVEIPH Images.zip") Then
-            File.Delete(DatabasePath & "EVEIPH Images.zip")
-        End If
 
-        ' Set the name of the archive file we want to create
-        archiver.FileName = WorkingDirectory & "EVEIPH Images.zip"
-        ' Because we create a new archive, 
-        ' we set fileMode to System.IO.FileMode.Create
-        archiver.OpenArchive(System.IO.FileMode.Create)
-        ' Set base (default) directory for all archive operations
-        archiver.BaseDir = EVEIPHImageFolder
-        ' Add files to the archive by mask
-        archiver.AddFiles("*.*")
-        archiver.CloseArchive()
+        File.Delete(DatabasePath & "EVEIPH Images.zip")
+
+        'Open the zip file, create if not exists
+        Using zip = New ZipFile(WorkingDirectory & "EVEIPH Images.zip")
+            'Remove everything, in case the zip already existed
+            zip.RemoveSelectedEntries("*")
+            zip.AddDirectory(EVEIPHImageFolder) 'Adds the *content* of the directory, not the directory itself
+            zip.Save()
+        End Using
 
         OutputFile.Close()
         pgMain.Visible = False
@@ -713,7 +697,6 @@ Public Class frmMain
         Directory.CreateDirectory(FinalBinaryFolderPath)
 
         ' Copy all these files from the media file directory (should be most up to date) to the working directory to make the zip
-        File.Copy(MediaFireDirectory & ZipForgeDLL, FinalBinaryFolderPath & ZipForgeDLL)
         File.Copy(MediaFireDirectory & JSONDLL, FinalBinaryFolderPath & JSONDLL)
         File.Copy(MediaFireDirectory & SQLiteDLL, FinalBinaryFolderPath & SQLiteDLL)
         File.Copy(MediaFireDirectory & EVEIPHEXE, FinalBinaryFolderPath & EVEIPHEXE)
@@ -729,27 +712,15 @@ Public Class frmMain
         My.Computer.FileSystem.CopyDirectory(WorkingDirectory & ImageFolder, FinalBinaryFolderPath & ImageFolder, True)
 
         ' Zip the whole folder up for download
-        ' Create an instance of the ZipForge class
-        Dim archiver As New ZipForge()
+        'Open/create zip file
+        Using zip = New ZipFile(FinalBinaryZipPath)
+            'empty zip file
+            zip.RemoveSelectedEntries("*")
+            zip.AddDirectory(FinalBinaryFolderPath) 'Adds the *content* of the directory, not the directory itself
+            zip.Save()
+        End Using
 
-        If File.Exists(FinalBinaryZipPath) Then
-            File.Delete(FinalBinaryZipPath)
-        End If
-
-        ' Set the name of the archive file we want to create
-        archiver.FileName = FinalBinaryZipPath
-        ' Because we create a new archive, 
-        ' we set fileMode to System.IO.FileMode.Create
-        archiver.OpenArchive(System.IO.FileMode.Create)
-        ' Set base (default) directory for all archive operations
-        archiver.BaseDir = FinalBinaryFolderPath
-        ' Add files to the archive by mask
-        archiver.AddFiles("*.*")
-        archiver.CloseArchive()
-
-        If File.Exists(MediaFireDirectory & FinalBinaryZip) Then
-            File.Delete(MediaFireDirectory & FinalBinaryZip)
-        End If
+        File.Delete(MediaFireDirectory & FinalBinaryZip)
 
         ' Copy binary zip file to the media file directory
         File.Copy(FinalBinaryZipPath, MediaFireDirectory & FinalBinaryZip)
@@ -11979,12 +11950,6 @@ Public Class frmMain
         Application.DoEvents()
         Call EnableButtons(False)
 
-        ' Copy the files over to the latest directory, overwrite if needed - check the hash first 
-        If MD5CalcFile(RootDirectory & ZipForgeDLL) <> MD5CalcFile(FileDirectory & ZipForgeDLL) Then
-            File.Copy(RootDirectory & ZipForgeDLL, FileDirectory & ZipForgeDLL, True)
-            NewFilesAdded = True
-        End If
-
         If MD5CalcFile(RootDirectory & JSONDLL) <> MD5CalcFile(FileDirectory & JSONDLL) Then
             File.Copy(RootDirectory & JSONDLL, FileDirectory & JSONDLL, True)
             NewFilesAdded = True
@@ -12054,15 +12019,12 @@ Public Class frmMain
 
         ' Delete and make a fresh copy
         If chkCreateTest.Checked Then
-            If File.Exists(LatestTestVersionXML) Then
-                File.Delete(LatestTestVersionXML)
-            End If
+            File.Delete(LatestTestVersionXML)
+
             VersionXMLFileName = LatestTestVersionXML
             FileDirectory = MediaFireTestDirectory
         Else
-            If File.Exists(LatestVersionXML) Then
-                File.Delete(LatestVersionXML)
-            End If
+            File.Delete(LatestVersionXML)
             VersionXMLFileName = LatestVersionXML
             FileDirectory = MediaFireDirectory
         End If
@@ -12110,13 +12072,6 @@ Public Class frmMain
             writer.WriteAttributeString("Version", ImagesVersion)
             writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & ImageZipFile))
             writer.WriteAttributeString("URL", ImageZipFileURL)
-            writer.WriteEndElement()
-
-            writer.WriteStartElement("row")
-            writer.WriteAttributeString("Name", ZipForgeDLL)
-            writer.WriteAttributeString("Version", "3.00")
-            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & ZipForgeDLL))
-            writer.WriteAttributeString("URL", ZipForgeDLLURL)
             writer.WriteEndElement()
 
             writer.WriteStartElement("row")
