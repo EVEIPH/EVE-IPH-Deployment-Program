@@ -359,6 +359,12 @@ Public Class frmMain
             Exit Sub
         End If
 
+        If Trim(txtSqlInstanceName.Text) = "" Then
+            MsgBox("Invalid SQL Server Instance Name", vbExclamation, Application.ProductName)
+            TabPage2.Select()
+            txtSqlInstanceName.Focus()
+        End If
+
         If Trim(lblMediaFirePath.Text) = "" Then
             MsgBox("Invalid Installer/Binary file path", vbExclamation, Application.ProductName)
             TabPage2.Select()
@@ -928,18 +934,24 @@ Public Class frmMain
     Private Function ConnectToDBs() As Boolean
         Application.DoEvents()
         Me.Cursor = Cursors.WaitCursor
+        Dim SQLInstanceName = ""
+
+        If (txtSqlInstanceName.Text = "")
+            MessageBox.Show("SQL Server Instance Name not supplied", "Error", MessageBoxButtons.OK)
+            Return false
+        End If
 
         Try
             ' Open connections
-            SQLExpressConnection = New SqlConnection("Server=" & Environment.MachineName & "\EVESDE;Database=" & DatabaseName & ";Trusted_Connection=True; Connection Timeout=300;")
+            SQLExpressConnection = New SqlConnection(String.Format("Server={0}\{1};Database={2};Trusted_Connection=True;Connection Timeout=300", Environment.MachineName, SQLInstanceName, DatabaseName))
             SQLExpressConnection.Open()
-            SQLExpressConnection2 = New SqlConnection("Server=" & Environment.MachineName & "\EVESDE;Database=" & DatabaseName & ";Trusted_Connection=True; Connection Timeout=300;")
+            SQLExpressConnection2 = New SqlConnection(String.Format("Server={0}\{1};Database={2};Trusted_Connection=True;Connection Timeout=300", Environment.MachineName, SQLInstanceName, DatabaseName))
             SQLExpressConnection2.Open()
-            SQLExpressConnection3 = New SqlConnection("Server=" & Environment.MachineName & "\EVESDE;Database=" & DatabaseName & ";Trusted_Connection=True; Connection Timeout=300;")
+            SQLExpressConnection3 = New SqlConnection(String.Format("Server={0}\{1};Database={2};Trusted_Connection=True;Connection Timeout=300", Environment.MachineName, SQLInstanceName, DatabaseName))
             SQLExpressConnection3.Open()
-            SQLExpressProgressBar = New SqlConnection("Server=" & Environment.MachineName & "\EVESDE;Database=" & DatabaseName & ";Trusted_Connection=True; Connection Timeout=300;")
+            SQLExpressProgressBar = New SqlConnection(String.Format("Server={0}\{1};Database={2};Trusted_Connection=True;Connection Timeout=300", Environment.MachineName, SQLInstanceName, DatabaseName))
             SQLExpressProgressBar.Open()
-            SQLExpressConnectionExecute = New SqlConnection("Server=" & Environment.MachineName & "\EVESDE;Database=" & DatabaseName & ";Trusted_Connection=True; Connection Timeout=300;")
+            SQLExpressConnectionExecute = New SqlConnection(String.Format("Server={0}\{1};Database={2};Trusted_Connection=True;Connection Timeout=300", Environment.MachineName, SQLInstanceName, DatabaseName))
             SQLExpressConnectionExecute.Open()
 
             ' SQL Lite DB
@@ -1000,6 +1012,9 @@ Public Class frmMain
 
         ' Insert the database name for the version
         Call Execute_SQLiteSQL("INSERT INTO DB_VERSION VALUES ('" & DatabaseName & "')", SQLiteDB)
+
+        lblTableName.Text = "Building: OreRefine"
+        Call BuildOreRefine()
 
         lblTableName.Text = "Building: LP_OFFER_REQUIREMENTS"
         Call Build_LP_OFFER_REQUIREMENTS()
@@ -3536,7 +3551,10 @@ Public Class frmMain
         pgMain.Visible = False
 
     End Sub
-
+    ' OreRefine
+    Private Sub BuildOreRefine()
+        Call Execute_SQLiteSQL(File.OpenText(WorkingDirectory & "\OreRefine.sql").ReadToEnd(), SQLiteDB)
+    End Sub
     ' ORES
     Private Sub Build_ORES()
         Dim SQL As String
