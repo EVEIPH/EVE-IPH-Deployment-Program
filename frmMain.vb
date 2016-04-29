@@ -48,6 +48,7 @@ Public Class frmMain
     Private EVEIPHDB As String = "EVEIPH DB.s3db"
     Private UpdaterManifest As String = "EVEIPH Updater.exe.manifest"
     Private EXEManifest As String = "EVE Isk per Hour.exe.manifest"
+    Private IconicZipFile As String = "Iconic.zip"
     Private ImageZipFile As String = "EVEIPH Images.zip"
     Private LatestVersionXML As String
     Private LatestTestVersionXML As String
@@ -59,6 +60,7 @@ Public Class frmMain
     Private EVEIPHUpdaterURL As String = "http://www.mediafire.com/download/r9innfrf287mnd7/EVEIPH_Updater.exe"
     Private EVEIPHDBURL As String = "http://www.mediafire.com/download/cfylxmlq6v8i26c/EVEIPH_DB.s3db"
     Private UpdaterManifestURL As String = "http://www.mediafire.com/download/c149x7vcf1gab2p/EVEIPH_Updater.exe.manifest"
+    Private IconicZipFileURL As String = "http://www.mediafire.com/download/6ucs9it1bxjiccv/Ionic.Zip.dll"
     Private EXEManifestURL As String = "http://www.mediafire.com/download/sdlrk28t18gv8z0/EVE_Isk_per_Hour.exe.manifest"
     Private ImageZipFileURL As String = "http://www.mediafire.com/download/duq6nw4d0p59rci/EVEIPH_Images.zip"
 
@@ -68,6 +70,7 @@ Public Class frmMain
     Private TestEVEIPHUpdaterURL As String = "http://www.mediafire.com/download/2d0dsgfap2gq299/EVEIPH_Updater.exe"
     Private TestEVEIPHDBURL As String = "http://www.mediafire.com/download/w69bgqr9bo7awt4/EVEIPH_DB.s3db"
     Private TestUpdaterManifestURL As String = "http://www.mediafire.com/download/9my8r2x78bbym9k/EVEIPH_Updater.exe.manifest"
+    Private TestIconicZipFileURL As String = "http://www.mediafire.com/download/w3xwdhl8vnxw0q7/Ionic.Zip.dll"
     Private TestEXEManifestURL As String = "http://www.mediafire.com/download/9snq0e79zbesfuq/EVE_Isk_per_Hour.exe.manifest"
     Private TestImageZipFileURL As String = "http://www.mediafire.com/download/eox20bz6ddey1g3/EVEIPH_Images.zip"
 
@@ -2799,6 +2802,9 @@ Public Class frmMain
 
         SQL = "CREATE INDEX IDX_IAP_BTID_AID ON INDUSTRY_ACTIVITY_PRODUCTS (blueprintTypeID, activityID)"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        ' Temp fix
+        Call Execute_SQLiteSQL("UPDATE industry_activity_products SET productTypeID = 41641 where blueprintTypeID = 41639 and activityID = 8", SQLiteDB)
 
         pgMain.Visible = False
         Application.DoEvents()
@@ -7263,6 +7269,8 @@ Public Class frmMain
         Dim Count As Integer
 
         ' First set up our databases
+        'SQL = "CREATE DATABASE " & DatabaseName
+        'Call Execute_msSQL(SQL)
 
         ' industryBlueprints
         Call ResetTable("industryBlueprints")
@@ -12041,88 +12049,179 @@ Public Class frmMain
 
             VersionXMLFileName = LatestTestVersionXML
             FileDirectory = MediaFireTestDirectory
+
+            ' Loop through the settings sent and output each name and value
+            ' Copy the new XML file into the root directory - so I don't get updates and then manually upload this to media fire so people don't get crazy updates
+            Using writer As XmlWriter = XmlWriter.Create(RootDirectory & VersionXMLFileName, XMLSettings)
+                writer.WriteStartDocument()
+                writer.WriteStartElement("EVEIPH") ' Root.
+                writer.WriteAttributeString("Version", VersionNumber)
+                writer.WriteStartElement("LastUpdated")
+                writer.WriteString(CStr(Now))
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("result")
+                writer.WriteStartElement("rowset")
+                writer.WriteAttributeString("name", "filelist")
+                writer.WriteAttributeString("key", "version")
+                writer.WriteAttributeString("columns", "Name,Version,MD5,URL")
+
+                ' Add each file 
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", EVEIPHEXE)
+                writer.WriteAttributeString("Version", VersionNumber)
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EVEIPHEXE))
+                writer.WriteAttributeString("URL", TestEVEIPHEXEURL)
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", EVEIPHUpdater)
+                writer.WriteAttributeString("Version", "2.0")
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EVEIPHUpdater))
+                writer.WriteAttributeString("URL", TestEVEIPHUpdaterURL)
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", EVEIPHDB)
+                writer.WriteAttributeString("Version", DatabaseName)
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EVEIPHDB))
+                writer.WriteAttributeString("URL", TestEVEIPHDBURL)
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", ImageZipFile)
+                writer.WriteAttributeString("Version", ImagesVersion)
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & ImageZipFile))
+                writer.WriteAttributeString("URL", TestImageZipFileURL)
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", JSONDLL)
+                writer.WriteAttributeString("Version", "6.03")
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & JSONDLL))
+                writer.WriteAttributeString("URL", TestJSONDLLURL)
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", SQLiteDLL)
+                writer.WriteAttributeString("Version", "1.07.9.0")
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & SQLiteDLL))
+                writer.WriteAttributeString("URL", TestSQLiteDLLURL)
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", UpdaterManifest)
+                writer.WriteAttributeString("Version", "1.0")
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & UpdaterManifest))
+                writer.WriteAttributeString("URL", TestUpdaterManifestURL)
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", EXEManifest)
+                writer.WriteAttributeString("Version", "1.0")
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EXEManifest))
+                writer.WriteAttributeString("URL", TestEXEManifestURL)
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", IconicZipFile)
+                writer.WriteAttributeString("Version", "1.0")
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & IconicZipFile))
+                writer.WriteAttributeString("URL", TestIconicZipFileURL)
+                writer.WriteEndElement()
+
+                ' End document.
+                writer.WriteEndDocument()
+            End Using
         Else
             File.Delete(LatestVersionXML)
             VersionXMLFileName = LatestVersionXML
             FileDirectory = MediaFireDirectory
+
+            ' Loop through the settings sent and output each name and value
+            ' Copy the new XML file into the root directory - so I don't get updates and then manually upload this to media fire so people don't get crazy updates
+            Using writer As XmlWriter = XmlWriter.Create(RootDirectory & VersionXMLFileName, XMLSettings)
+                writer.WriteStartDocument()
+                writer.WriteStartElement("EVEIPH") ' Root.
+                writer.WriteAttributeString("Version", VersionNumber)
+                writer.WriteStartElement("LastUpdated")
+                writer.WriteString(CStr(Now))
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("result")
+                writer.WriteStartElement("rowset")
+                writer.WriteAttributeString("name", "filelist")
+                writer.WriteAttributeString("key", "version")
+                writer.WriteAttributeString("columns", "Name,Version,MD5,URL")
+
+                ' Add each file 
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", EVEIPHEXE)
+                writer.WriteAttributeString("Version", VersionNumber)
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EVEIPHEXE))
+                writer.WriteAttributeString("URL", EVEIPHEXEURL)
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", EVEIPHUpdater)
+                writer.WriteAttributeString("Version", "2.0")
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EVEIPHUpdater))
+                writer.WriteAttributeString("URL", EVEIPHUpdaterURL)
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", EVEIPHDB)
+                writer.WriteAttributeString("Version", DatabaseName)
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EVEIPHDB))
+                writer.WriteAttributeString("URL", EVEIPHDBURL)
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", ImageZipFile)
+                writer.WriteAttributeString("Version", ImagesVersion)
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & ImageZipFile))
+                writer.WriteAttributeString("URL", ImageZipFileURL)
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", JSONDLL)
+                writer.WriteAttributeString("Version", "6.03")
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & JSONDLL))
+                writer.WriteAttributeString("URL", JSONDLLURL)
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", SQLiteDLL)
+                writer.WriteAttributeString("Version", "1.07.9.0")
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & SQLiteDLL))
+                writer.WriteAttributeString("URL", SQLiteDLLURL)
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", UpdaterManifest)
+                writer.WriteAttributeString("Version", "1.0")
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & UpdaterManifest))
+                writer.WriteAttributeString("URL", UpdaterManifestURL)
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", EXEManifest)
+                writer.WriteAttributeString("Version", "1.0")
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EXEManifest))
+                writer.WriteAttributeString("URL", EXEManifestURL)
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", IconicZipFile)
+                writer.WriteAttributeString("Version", "1.0")
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & IconicZipFile))
+                writer.WriteAttributeString("URL", IconicZipFileURL)
+                writer.WriteEndElement()
+
+                ' End document.
+                writer.WriteEndDocument()
+            End Using
         End If
-
-        ' Loop through the settings sent and output each name and value
-        ' Copy the new XML file into the root directory - so I don't get updates and then manually upload this to media fire so people don't get crazy updates
-        Using writer As XmlWriter = XmlWriter.Create(RootDirectory & VersionXMLFileName, XMLSettings)
-            writer.WriteStartDocument()
-            writer.WriteStartElement("EVEIPH") ' Root.
-            writer.WriteAttributeString("Version", VersionNumber)
-            writer.WriteStartElement("LastUpdated")
-            writer.WriteString(CStr(Now))
-            writer.WriteEndElement()
-
-            writer.WriteStartElement("result")
-            writer.WriteStartElement("rowset")
-            writer.WriteAttributeString("name", "filelist")
-            writer.WriteAttributeString("key", "version")
-            writer.WriteAttributeString("columns", "Name,Version,MD5,URL")
-
-            ' Add each file 
-            writer.WriteStartElement("row")
-            writer.WriteAttributeString("Name", EVEIPHEXE)
-            writer.WriteAttributeString("Version", VersionNumber)
-            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EVEIPHEXE))
-            writer.WriteAttributeString("URL", EVEIPHEXEURL)
-            writer.WriteEndElement()
-
-            writer.WriteStartElement("row")
-            writer.WriteAttributeString("Name", EVEIPHUpdater)
-            writer.WriteAttributeString("Version", "2.0")
-            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EVEIPHUpdater))
-            writer.WriteAttributeString("URL", EVEIPHUpdaterURL)
-            writer.WriteEndElement()
-
-            writer.WriteStartElement("row")
-            writer.WriteAttributeString("Name", EVEIPHDB)
-            writer.WriteAttributeString("Version", DatabaseName)
-            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EVEIPHDB))
-            writer.WriteAttributeString("URL", EVEIPHDBURL)
-            writer.WriteEndElement()
-
-            writer.WriteStartElement("row")
-            writer.WriteAttributeString("Name", ImageZipFile)
-            writer.WriteAttributeString("Version", ImagesVersion)
-            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & ImageZipFile))
-            writer.WriteAttributeString("URL", ImageZipFileURL)
-            writer.WriteEndElement()
-
-            writer.WriteStartElement("row")
-            writer.WriteAttributeString("Name", JSONDLL)
-            writer.WriteAttributeString("Version", "6.03")
-            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & JSONDLL))
-            writer.WriteAttributeString("URL", JSONDLLURL)
-            writer.WriteEndElement()
-
-            writer.WriteStartElement("row")
-            writer.WriteAttributeString("Name", SQLiteDLL)
-            writer.WriteAttributeString("Version", "1.07.9.0")
-            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & SQLiteDLL))
-            writer.WriteAttributeString("URL", SQLiteDLLURL)
-            writer.WriteEndElement()
-
-            writer.WriteStartElement("row")
-            writer.WriteAttributeString("Name", UpdaterManifest)
-            writer.WriteAttributeString("Version", "1.0")
-            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & UpdaterManifest))
-            writer.WriteAttributeString("URL", UpdaterManifestURL)
-            writer.WriteEndElement()
-
-            writer.WriteStartElement("row")
-            writer.WriteAttributeString("Name", EXEManifest)
-            writer.WriteAttributeString("Version", "1.0")
-            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EXEManifest))
-            writer.WriteAttributeString("URL", EXEManifestURL)
-            writer.WriteEndElement()
-
-            ' End document.
-            writer.WriteEndDocument()
-        End Using
 
     End Sub
 
