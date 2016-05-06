@@ -944,6 +944,8 @@ Public Class frmMain
             Return false
         End If
 
+        SQLInstanceName = txtSqlInstanceName.Text
+
         Try
             ' Open connections
             SQLExpressConnection = New SqlConnection(String.Format("Server={0}\{1};Database={2};Trusted_Connection=True;Connection Timeout=300", Environment.MachineName, SQLInstanceName, DatabaseName))
@@ -1363,7 +1365,7 @@ Public Class frmMain
         SQL = SQL & "invMarketGroups.marketGroupID AS MARKET_GROUP_ID, "
         SQL = SQL & "invMarketGroups.marketGroupName AS MARKET_GROUP, "
         SQL = SQL & "0 AS TECH_LEVEL, "
-        SQL = SQL & "invTypes.portionSize AS PORTION_SIZE, "
+        SQL = SQL & "industryActivityProducts.quantity AS PORTION_SIZE, "
         SQL = SQL & "industryActivities.time AS BASE_PRODUCTION_TIME, "
         SQL = SQL & "IA1.time AS BASE_RESEARCH_TL_TIME, "
         SQL = SQL & "IA2.time AS BASE_RESEARCH_ML_TIME, "
