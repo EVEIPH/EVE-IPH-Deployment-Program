@@ -25,6 +25,7 @@ Public Class frmMain
     Private DatabaseName As String ' also folder name to update YAML and Universe DB stuff
     Private ImagesVersion As String ' Version of the images we have in the zip
     Private FinalDBName As String = "EVEIPH DB"
+    Private SQLInstance As String ' how to log into the SQL server on the host computer
 
     ' Image folders
     Private IECFOlder As String
@@ -201,6 +202,11 @@ Public Class frmMain
                 MSIInstaller = "Eve Isk per Hour 3.1.msi"
             End If
 
+            SQLInstance = BPStream.ReadLine
+            If Not Directory.Exists(RootDirectory) Then
+                SQLInstance = ""
+            End If
+
             BPStream.Close()
         Else
             DatabaseName = ""
@@ -210,6 +216,7 @@ Public Class frmMain
             MediaFireDirectory = ""
             MediaFireTestDirectory = ""
             VersionNumber = ""
+            SQLInstance = ""
         End If
     End Sub
 
@@ -248,6 +255,7 @@ Public Class frmMain
         txtImageVersion.Text = ImagesVersion
         lblDBNameDisplay.Text = DatabaseName
         txtVersionNumber.Text = VersionNumber
+        txtSqlInstanceName.Text = SQLInstance
 
         If WorkingDirectory <> "\" Then
             lblWorkingFolderPath.Text = WorkingDirectory
@@ -410,6 +418,7 @@ Public Class frmMain
         ImagesVersion = txtVersionNumber.Text
         lblDBNameDisplay.Text = DatabaseName
         VersionNumber = txtVersionNumber.Text
+        SQLInstance = txtSqlInstanceName.Text
 
         RootDirectory = lblRootDebugFolderPath.Text
         WorkingDirectory = lblWorkingFolderPath.Text
@@ -431,6 +440,7 @@ Public Class frmMain
         MyStream.Write(lblWorkingFolderPath.Text & Environment.NewLine)
         MyStream.Write(lblMediaFirePath.Text & Environment.NewLine)
         MyStream.Write(lblMediaFireTestPath.Text & Environment.NewLine)
+        MyStream.Write(txtSqlInstanceName.Text & Environment.NewLine)
 
         MyStream.Flush()
         MyStream.Close()

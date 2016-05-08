@@ -44,6 +44,8 @@ Partial Class frmMain
         Me.ShapeContainer1 = New Microsoft.VisualBasic.PowerPacks.ShapeContainer()
         Me.LineShape1 = New Microsoft.VisualBasic.PowerPacks.LineShape()
         Me.TabPage2 = New System.Windows.Forms.TabPage()
+        Me.txtSqlInstanceName = New System.Windows.Forms.TextBox()
+        Me.lblSqlInstanceName = New System.Windows.Forms.Label()
         Me.lblMediaFireTestPath = New System.Windows.Forms.Label()
         Me.btnSelectMediaFireTestPath = New System.Windows.Forms.Button()
         Me.lblMediaFireTest = New System.Windows.Forms.Label()
@@ -65,13 +67,11 @@ Partial Class frmMain
         Me.lblWorkingFolder = New System.Windows.Forms.Label()
         Me.TabPage3 = New System.Windows.Forms.TabPage()
         Me.TreeView = New System.Windows.Forms.TreeView()
-        Me.lblSqlInstanceName = New System.Windows.Forms.Label()
-        Me.txtSqlInstanceName = New System.Windows.Forms.TextBox()
-        Me.TabControl1.SuspendLayout
-        Me.TabPage1.SuspendLayout
-        Me.TabPage2.SuspendLayout
-        Me.TabPage3.SuspendLayout
-        Me.SuspendLayout
+        Me.TabControl1.SuspendLayout()
+        Me.TabPage1.SuspendLayout()
+        Me.TabPage2.SuspendLayout()
+        Me.TabPage3.SuspendLayout()
+        Me.SuspendLayout()
         '
         'TabControl1
         '
@@ -106,7 +106,7 @@ Partial Class frmMain
         Me.TabPage1.Size = New System.Drawing.Size(463, 352)
         Me.TabPage1.TabIndex = 0
         Me.TabPage1.Text = "DB Updater & Deployment"
-        Me.TabPage1.UseVisualStyleBackColor = true
+        Me.TabPage1.UseVisualStyleBackColor = True
         '
         'chkCreateTest
         '
@@ -115,7 +115,7 @@ Partial Class frmMain
         Me.chkCreateTest.Size = New System.Drawing.Size(95, 40)
         Me.chkCreateTest.TabIndex = 13
         Me.chkCreateTest.Text = "Create Test Version"
-        Me.chkCreateTest.UseVisualStyleBackColor = true
+        Me.chkCreateTest.UseVisualStyleBackColor = True
         '
         'btnRefreshList
         '
@@ -124,11 +124,11 @@ Partial Class frmMain
         Me.btnRefreshList.Size = New System.Drawing.Size(97, 40)
         Me.btnRefreshList.TabIndex = 12
         Me.btnRefreshList.Text = "Refresh List"
-        Me.btnRefreshList.UseVisualStyleBackColor = true
+        Me.btnRefreshList.UseVisualStyleBackColor = True
         '
         'lblDBNameDisplay1
         '
-        Me.lblDBNameDisplay1.AutoSize = true
+        Me.lblDBNameDisplay1.AutoSize = True
         Me.lblDBNameDisplay1.Location = New System.Drawing.Point(76, 19)
         Me.lblDBNameDisplay1.Name = "lblDBNameDisplay1"
         Me.lblDBNameDisplay1.Size = New System.Drawing.Size(87, 13)
@@ -151,7 +151,7 @@ Partial Class frmMain
         Me.btnCopyFilesBuildXML.Size = New System.Drawing.Size(97, 40)
         Me.btnCopyFilesBuildXML.TabIndex = 9
         Me.btnCopyFilesBuildXML.Text = "Update Files for Export"
-        Me.btnCopyFilesBuildXML.UseVisualStyleBackColor = true
+        Me.btnCopyFilesBuildXML.UseVisualStyleBackColor = True
         '
         'btnBuildBinary
         '
@@ -160,18 +160,18 @@ Partial Class frmMain
         Me.btnBuildBinary.Size = New System.Drawing.Size(97, 40)
         Me.btnBuildBinary.TabIndex = 10
         Me.btnBuildBinary.Text = "Build Binary"
-        Me.btnBuildBinary.UseVisualStyleBackColor = true
+        Me.btnBuildBinary.UseVisualStyleBackColor = True
         '
         'lstFileInformation
         '
-        Me.lstFileInformation.FullRowSelect = true
-        Me.lstFileInformation.GridLines = true
+        Me.lstFileInformation.FullRowSelect = True
+        Me.lstFileInformation.GridLines = True
         Me.lstFileInformation.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable
         Me.lstFileInformation.Location = New System.Drawing.Point(20, 205)
         Me.lstFileInformation.Name = "lstFileInformation"
         Me.lstFileInformation.Size = New System.Drawing.Size(421, 130)
         Me.lstFileInformation.TabIndex = 11
-        Me.lstFileInformation.UseCompatibleStateImageBehavior = false
+        Me.lstFileInformation.UseCompatibleStateImageBehavior = False
         Me.lstFileInformation.View = System.Windows.Forms.View.Details
         '
         'btnExit
@@ -181,7 +181,7 @@ Partial Class frmMain
         Me.btnExit.Size = New System.Drawing.Size(97, 40)
         Me.btnExit.TabIndex = 6
         Me.btnExit.Text = "Exit"
-        Me.btnExit.UseVisualStyleBackColor = true
+        Me.btnExit.UseVisualStyleBackColor = True
         '
         'pgMain
         '
@@ -189,7 +189,7 @@ Partial Class frmMain
         Me.pgMain.Name = "pgMain"
         Me.pgMain.Size = New System.Drawing.Size(421, 18)
         Me.pgMain.TabIndex = 7
-        Me.pgMain.Visible = false
+        Me.pgMain.Visible = False
         '
         'btnBuildSQLServerDB
         '
@@ -198,7 +198,7 @@ Partial Class frmMain
         Me.btnBuildSQLServerDB.Size = New System.Drawing.Size(97, 40)
         Me.btnBuildSQLServerDB.TabIndex = 5
         Me.btnBuildSQLServerDB.Text = "Update SQL Server DB"
-        Me.btnBuildSQLServerDB.UseVisualStyleBackColor = true
+        Me.btnBuildSQLServerDB.UseVisualStyleBackColor = True
         '
         'lblTableName
         '
@@ -215,7 +215,7 @@ Partial Class frmMain
         Me.btnBuildDatabase.Size = New System.Drawing.Size(97, 40)
         Me.btnBuildDatabase.TabIndex = 3
         Me.btnBuildDatabase.Text = "Build DB"
-        Me.btnBuildDatabase.UseVisualStyleBackColor = true
+        Me.btnBuildDatabase.UseVisualStyleBackColor = True
         '
         'btnImageCopy
         '
@@ -224,7 +224,7 @@ Partial Class frmMain
         Me.btnImageCopy.Size = New System.Drawing.Size(97, 40)
         Me.btnImageCopy.TabIndex = 4
         Me.btnImageCopy.Text = "Image Copy"
-        Me.btnImageCopy.UseVisualStyleBackColor = true
+        Me.btnImageCopy.UseVisualStyleBackColor = True
         '
         'ShapeContainer1
         '
@@ -234,7 +234,7 @@ Partial Class frmMain
         Me.ShapeContainer1.Shapes.AddRange(New Microsoft.VisualBasic.PowerPacks.Shape() {Me.LineShape1})
         Me.ShapeContainer1.Size = New System.Drawing.Size(457, 346)
         Me.ShapeContainer1.TabIndex = 0
-        Me.ShapeContainer1.TabStop = false
+        Me.ShapeContainer1.TabStop = False
         '
         'LineShape1
         '
@@ -273,7 +273,23 @@ Partial Class frmMain
         Me.TabPage2.Size = New System.Drawing.Size(463, 352)
         Me.TabPage2.TabIndex = 1
         Me.TabPage2.Text = "File Path Settings"
-        Me.TabPage2.UseVisualStyleBackColor = true
+        Me.TabPage2.UseVisualStyleBackColor = True
+        '
+        'txtSqlInstanceName
+        '
+        Me.txtSqlInstanceName.Location = New System.Drawing.Point(131, 46)
+        Me.txtSqlInstanceName.Name = "txtSqlInstanceName"
+        Me.txtSqlInstanceName.Size = New System.Drawing.Size(96, 20)
+        Me.txtSqlInstanceName.TabIndex = 20
+        '
+        'lblSqlInstanceName
+        '
+        Me.lblSqlInstanceName.AutoSize = True
+        Me.lblSqlInstanceName.Location = New System.Drawing.Point(19, 49)
+        Me.lblSqlInstanceName.Name = "lblSqlInstanceName"
+        Me.lblSqlInstanceName.Size = New System.Drawing.Size(106, 13)
+        Me.lblSqlInstanceName.TabIndex = 19
+        Me.lblSqlInstanceName.Text = "SQL Instance Name:"
         '
         'lblMediaFireTestPath
         '
@@ -291,11 +307,11 @@ Partial Class frmMain
         Me.btnSelectMediaFireTestPath.Size = New System.Drawing.Size(55, 23)
         Me.btnSelectMediaFireTestPath.TabIndex = 18
         Me.btnSelectMediaFireTestPath.Text = "Select"
-        Me.btnSelectMediaFireTestPath.UseVisualStyleBackColor = true
+        Me.btnSelectMediaFireTestPath.UseVisualStyleBackColor = True
         '
         'lblMediaFireTest
         '
-        Me.lblMediaFireTest.AutoSize = true
+        Me.lblMediaFireTest.AutoSize = True
         Me.lblMediaFireTest.Location = New System.Drawing.Point(19, 135)
         Me.lblMediaFireTest.Name = "lblMediaFireTest"
         Me.lblMediaFireTest.Size = New System.Drawing.Size(171, 13)
@@ -304,8 +320,8 @@ Partial Class frmMain
         '
         'lblImageVersion
         '
-        Me.lblImageVersion.AutoSize = true
-        Me.lblImageVersion.Location = New System.Drawing.Point(230, 3)
+        Me.lblImageVersion.AutoSize = True
+        Me.lblImageVersion.Location = New System.Drawing.Point(230, 7)
         Me.lblImageVersion.Name = "lblImageVersion"
         Me.lblImageVersion.Size = New System.Drawing.Size(77, 13)
         Me.lblImageVersion.TabIndex = 2
@@ -313,15 +329,15 @@ Partial Class frmMain
         '
         'txtImageVersion
         '
-        Me.txtImageVersion.Location = New System.Drawing.Point(233, 19)
+        Me.txtImageVersion.Location = New System.Drawing.Point(233, 23)
         Me.txtImageVersion.Name = "txtImageVersion"
         Me.txtImageVersion.Size = New System.Drawing.Size(122, 20)
         Me.txtImageVersion.TabIndex = 3
         '
         'Label1
         '
-        Me.Label1.AutoSize = true
-        Me.Label1.Location = New System.Drawing.Point(358, 3)
+        Me.Label1.AutoSize = True
+        Me.Label1.Location = New System.Drawing.Point(358, 7)
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(85, 13)
         Me.Label1.TabIndex = 4
@@ -329,15 +345,15 @@ Partial Class frmMain
         '
         'txtVersionNumber
         '
-        Me.txtVersionNumber.Location = New System.Drawing.Point(361, 19)
+        Me.txtVersionNumber.Location = New System.Drawing.Point(361, 23)
         Me.txtVersionNumber.Name = "txtVersionNumber"
         Me.txtVersionNumber.Size = New System.Drawing.Size(82, 20)
         Me.txtVersionNumber.TabIndex = 5
         '
         'lblDBName
         '
-        Me.lblDBName.AutoSize = true
-        Me.lblDBName.Location = New System.Drawing.Point(19, 3)
+        Me.lblDBName.AutoSize = True
+        Me.lblDBName.Location = New System.Drawing.Point(19, 7)
         Me.lblDBName.Name = "lblDBName"
         Me.lblDBName.Size = New System.Drawing.Size(87, 13)
         Me.lblDBName.TabIndex = 0
@@ -345,7 +361,7 @@ Partial Class frmMain
         '
         'txtDBName
         '
-        Me.txtDBName.Location = New System.Drawing.Point(22, 19)
+        Me.txtDBName.Location = New System.Drawing.Point(22, 23)
         Me.txtDBName.Name = "txtDBName"
         Me.txtDBName.Size = New System.Drawing.Size(205, 20)
         Me.txtDBName.TabIndex = 1
@@ -357,7 +373,7 @@ Partial Class frmMain
         Me.btnSaveFilePath.Size = New System.Drawing.Size(97, 28)
         Me.btnSaveFilePath.TabIndex = 15
         Me.btnSaveFilePath.Text = "Save Settings"
-        Me.btnSaveFilePath.UseVisualStyleBackColor = true
+        Me.btnSaveFilePath.UseVisualStyleBackColor = True
         '
         'lblMediaFirePath
         '
@@ -375,11 +391,11 @@ Partial Class frmMain
         Me.btnSelectMediaFirePath.Size = New System.Drawing.Size(55, 23)
         Me.btnSelectMediaFirePath.TabIndex = 8
         Me.btnSelectMediaFirePath.Text = "Select"
-        Me.btnSelectMediaFirePath.UseVisualStyleBackColor = true
+        Me.btnSelectMediaFirePath.UseVisualStyleBackColor = True
         '
         'lblMediaFire
         '
-        Me.lblMediaFire.AutoSize = true
+        Me.lblMediaFire.AutoSize = True
         Me.lblMediaFire.Location = New System.Drawing.Point(19, 70)
         Me.lblMediaFire.Name = "lblMediaFire"
         Me.lblMediaFire.Size = New System.Drawing.Size(147, 13)
@@ -402,11 +418,11 @@ Partial Class frmMain
         Me.btnSelectRootDebugPath.Size = New System.Drawing.Size(55, 23)
         Me.btnSelectRootDebugPath.TabIndex = 14
         Me.btnSelectRootDebugPath.Text = "Select"
-        Me.btnSelectRootDebugPath.UseVisualStyleBackColor = true
+        Me.btnSelectRootDebugPath.UseVisualStyleBackColor = True
         '
         'lblRootDebugFolder
         '
-        Me.lblRootDebugFolder.AutoSize = true
+        Me.lblRootDebugFolder.AutoSize = True
         Me.lblRootDebugFolder.Location = New System.Drawing.Point(19, 269)
         Me.lblRootDebugFolder.Name = "lblRootDebugFolder"
         Me.lblRootDebugFolder.Size = New System.Drawing.Size(100, 13)
@@ -429,11 +445,11 @@ Partial Class frmMain
         Me.btnSelectWorkingPath.Size = New System.Drawing.Size(55, 23)
         Me.btnSelectWorkingPath.TabIndex = 11
         Me.btnSelectWorkingPath.Text = "Select"
-        Me.btnSelectWorkingPath.UseVisualStyleBackColor = true
+        Me.btnSelectWorkingPath.UseVisualStyleBackColor = True
         '
         'lblWorkingFolder
         '
-        Me.lblWorkingFolder.AutoSize = true
+        Me.lblWorkingFolder.AutoSize = True
         Me.lblWorkingFolder.Location = New System.Drawing.Point(19, 204)
         Me.lblWorkingFolder.Name = "lblWorkingFolder"
         Me.lblWorkingFolder.Size = New System.Drawing.Size(82, 13)
@@ -448,7 +464,7 @@ Partial Class frmMain
         Me.TabPage3.Size = New System.Drawing.Size(463, 352)
         Me.TabPage3.TabIndex = 2
         Me.TabPage3.Text = "Misc"
-        Me.TabPage3.UseVisualStyleBackColor = true
+        Me.TabPage3.UseVisualStyleBackColor = True
         '
         'TreeView
         '
@@ -456,22 +472,6 @@ Partial Class frmMain
         Me.TreeView.Name = "TreeView"
         Me.TreeView.Size = New System.Drawing.Size(453, 346)
         Me.TreeView.TabIndex = 17
-        '
-        'lblSqlInstanceName
-        '
-        Me.lblSqlInstanceName.AutoSize = true
-        Me.lblSqlInstanceName.Location = New System.Drawing.Point(19, 45)
-        Me.lblSqlInstanceName.Name = "lblSqlInstanceName"
-        Me.lblSqlInstanceName.Size = New System.Drawing.Size(106, 13)
-        Me.lblSqlInstanceName.TabIndex = 19
-        Me.lblSqlInstanceName.Text = "SQL Instance Name:"
-        '
-        'txtSqlInstanceName
-        '
-        Me.txtSqlInstanceName.Location = New System.Drawing.Point(131, 42)
-        Me.txtSqlInstanceName.Name = "txtSqlInstanceName"
-        Me.txtSqlInstanceName.Size = New System.Drawing.Size(96, 20)
-        Me.txtSqlInstanceName.TabIndex = 20
         '
         'frmMain
         '
