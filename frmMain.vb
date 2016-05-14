@@ -1525,7 +1525,7 @@ Public Class frmMain
         SQL = SQL & "OR ITEM_CATEGORY IN ('Infrastructure Upgrades','Sovereignty Structures','Orbitals') "
         SQL = SQL & "OR ITEM_GROUP IN ('Station Components', 'Remote ECM Burst', 'Super Weapon', 'Siege Module')"
         SQL = SQL & "OR ITEM_NAME IN ('Cap Booster 400','Cap Booster 800') "
-        SQL = SQL & "OR (ITEM_CATEGORY = 'Drone' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE volume >= 5000))"
+        SQL = SQL & "OR (ITEM_CATEGORY = 'Fighter') "
         SQL = SQL & "OR (ITEM_CATEGORY = 'Module' AND (ITEM_ID IN (SELECT typeID FROM invTypes WHERE marketGroupID IN (771,772,773,774,775,776,1642,1941)))) "
         SQL = SQL & "OR (ITEM_GROUP IN ('Jump Drive Economizer','Drone Control Unit') OR ITEM_NAME LIKE 'Jump Portal%') "
         SQL = SQL & "OR (ITEM_CATEGORY IN ('Charge','Module') AND ITEM_NAME Like '%Citadel%') "
@@ -2815,9 +2815,6 @@ Public Class frmMain
         SQL = "CREATE INDEX IDX_IAP_BTID_AID ON INDUSTRY_ACTIVITY_PRODUCTS (blueprintTypeID, activityID)"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
 
-        ' Temp fix
-        Call Execute_SQLiteSQL("UPDATE industry_activity_products SET productTypeID = 41641 where blueprintTypeID = 41639 and activityID = 8", SQLiteDB)
-
         pgMain.Visible = False
         Application.DoEvents()
 
@@ -3569,10 +3566,12 @@ Public Class frmMain
         pgMain.Visible = False
 
     End Sub
+
     ' OreRefine
     Private Sub BuildOreRefine()
         Call Execute_SQLiteSQL(File.OpenText(WorkingDirectory & "\OreRefine.sql").ReadToEnd(), SQLiteDB)
     End Sub
+
     ' ORES
     Private Sub Build_ORES()
         Dim SQL As String
@@ -7518,6 +7517,19 @@ Public Class frmMain
         msSQLReader = Nothing
         msSQLQuery = Nothing
 
+        ' Put all the funky data fixes here
+
+        ' Temp fixes for Citadel data 
+        ' Capital Capacitor Battery - assigns correct productTypeID for invention
+        Call Execute_msSQL("UPDATE industryActivityProducts SET productTypeID = 41641 where blueprintTypeID = 41639 and activityID = 8")
+        ' Capital Capacitor Booster II Blueprint - assigns correct productTyepID (was Heavy capacitor booster II)
+        Call Execute_msSQL("UPDATE industryActivityProducts SET productTypeID = 41493 WHERE blueprintTypeID = 41646 AND activityID = 1")
+
+        ' Fix for Citadel data - Cap Emergency Energizer using capital fernite armor plates when they should be regular
+        Call Execute_msSQL("UPDATE industryActivityMaterials SET materialTypeID = 11542 WHERE blueprintTypeID = 40722 AND materialTypeID = 29049")
+        ' Fix for Capital Shield Booster II - this record ends up deleting the entire item in all_blueprint_materials
+        Call Execute_msSQL("DELETE FROM industryActivityMaterials WHERE blueprintTypeID = 41634 AND materialTypeID = 41507")
+
         lblTableName.Text = ""
         pgMain.Visible = False
         Application.UseWaitCursor = True
@@ -7729,10 +7741,20 @@ Public Class frmMain
                                 .typeName = .typeName.Substring(1)
                                 .typeName = .typeName.Substring(0, Len(.typeName) - 1)
                                 .typeName = .typeName.Replace("''", "'")
-                                Application.DoEvents()
                             End If
 
-                            InsertSQL = InsertSQL & "'" & FormatDBString(.typeName) & "',"
+                            ' Finally, correct any curly quote marks and set them to simple quote marks - this happens when someone saves/pastes data from a Rich text document instead of something like notepad
+                            ' ASCII value 145 and 146 are curly quotes
+                            If .typeName.Contains(Chr(145)) Then
+                                .typeName = .typeName.Replace(Chr(145), Chr(39))
+                            End If
+
+                            If .typeName.Contains(Chr(146)) Then
+                                .typeName = .typeName.Replace(Chr(146), Chr(39))
+                            End If
+
+                            ' Make sure to trim this to get the correct name without leading spaces
+                            InsertSQL = InsertSQL & "'" & Trim(FormatDBString(.typeName)) & "',"
                             FoundValue = True
                             Exit For
                         End If
@@ -7762,7 +7784,7 @@ Public Class frmMain
                                 .description = .description.Substring(0, Len(.description) - 1)
                             End If
 
-                            InsertSQL = InsertSQL & "'" & FormatDBString(.description) & "',"
+                            InsertSQL = InsertSQL & "'" & Trim(FormatDBString(.description)) & "',"
                             FoundValue = True
                             Exit For
                         End If
@@ -11884,7 +11906,7 @@ Public Class frmMain
             OutputString = "null"
         End If
 
-        Return OutputString
+        Return Trim(OutputString)
 
     End Function
 
