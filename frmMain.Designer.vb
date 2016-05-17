@@ -28,6 +28,7 @@ Partial Class frmMain
         Me.ToolTip = New System.Windows.Forms.ToolTip(Me.components)
         Me.TabControl1 = New System.Windows.Forms.TabControl()
         Me.TabPage1 = New System.Windows.Forms.TabPage()
+        Me.btnYAMLTest = New System.Windows.Forms.Button()
         Me.chkCreateTest = New System.Windows.Forms.CheckBox()
         Me.btnRefreshList = New System.Windows.Forms.Button()
         Me.lblDBNameDisplay1 = New System.Windows.Forms.Label()
@@ -86,6 +87,7 @@ Partial Class frmMain
         '
         'TabPage1
         '
+        Me.TabPage1.Controls.Add(Me.btnYAMLTest)
         Me.TabPage1.Controls.Add(Me.chkCreateTest)
         Me.TabPage1.Controls.Add(Me.btnRefreshList)
         Me.TabPage1.Controls.Add(Me.lblDBNameDisplay1)
@@ -107,6 +109,15 @@ Partial Class frmMain
         Me.TabPage1.TabIndex = 0
         Me.TabPage1.Text = "DB Updater & Deployment"
         Me.TabPage1.UseVisualStyleBackColor = True
+        '
+        'btnYAMLTest
+        '
+        Me.btnYAMLTest.Location = New System.Drawing.Point(392, 6)
+        Me.btnYAMLTest.Name = "btnYAMLTest"
+        Me.btnYAMLTest.Size = New System.Drawing.Size(62, 35)
+        Me.btnYAMLTest.TabIndex = 14
+        Me.btnYAMLTest.Text = "YAML Test"
+        Me.btnYAMLTest.UseVisualStyleBackColor = True
         '
         'chkCreateTest
         '
@@ -536,4 +547,5 @@ End Sub
     Friend WithEvents lblMediaFireTest As System.Windows.Forms.Label
     Friend WithEvents txtSqlInstanceName As TextBox
     Friend WithEvents lblSqlInstanceName As Label
+    Friend WithEvents btnYAMLTest As Button
 End Class

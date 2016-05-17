@@ -3,8 +3,11 @@ Imports System.Data.SqlClient ' For SQL Server Connection
 Imports System.Data.SQLite
 Imports System.IO
 Imports System.Xml
+Imports YamlDotNet.Serialization
+
 ' This namespace contains ArchiverException class required for error handling
 Imports Ionic.Zip
+Imports YamlDotNet.RepresentationModel
 
 Public Class frmMain
     Inherits System.Windows.Forms.Form
@@ -95,11 +98,8 @@ Public Class frmMain
     Private SQLExpressConnection As SqlConnection
     Private SQLExpressConnection2 As SqlConnection ' For updating while another connection is open
     Private SQLExpressConnection3 As SqlConnection ' For updating while another connection is open
-    Private SQLExpressConnectionExecute As SqlConnection ' For updating while another connection is open
     Private SQLExpressProgressBar As SqlConnection
-
-    Private SQLiteDB As New SQLiteConnection
-    Private UniverseDB As New SQLiteConnection
+    Private SQLExpressConnectionExecute As SqlConnection ' For updating while another connection is open
 
     Private INDENT As String = ""
     Private Const COLON As String = ":"
@@ -894,7 +894,7 @@ Public Class frmMain
         Call EnableButtons(False)
 
         ' Build DB's and open connections
-        Call BuildDB()
+        Call BuildDB(FinalDBPath)
 
         If Not ConnectToDBs() Then
             Try
@@ -926,21 +926,21 @@ Public Class frmMain
 
     End Sub
 
-    Private Sub BuildDB()
+    Private Sub BuildDB(DBPathandName As String)
 
         ' Check for SQLite DB
-        If File.Exists(FinalDBPath & ".s3db") Then
+        If File.Exists(DBPathandName & ".s3db") Then
             Try
                 SQLiteDB.Close()
             Catch
                 ' Nothing
             End Try
             ' Delete old one
-            File.Delete(FinalDBPath & ".s3db")
+            File.Delete(DBPathandName & ".s3db")
         End If
 
         ' Create new SQLite DB
-        SQLiteConnection.CreateFile(FinalDBPath & ".s3db")
+        SQLiteConnection.CreateFile(DBPathandName & ".s3db")
 
     End Sub
 
@@ -949,9 +949,9 @@ Public Class frmMain
         Me.Cursor = Cursors.WaitCursor
         Dim SQLInstanceName = ""
 
-        If (txtSqlInstanceName.Text = "")
+        If (txtSqlInstanceName.Text = "") Then
             MessageBox.Show("SQL Server Instance Name not supplied", "Error", MessageBoxButtons.OK)
-            Return false
+            Return False
         End If
 
         SQLInstanceName = txtSqlInstanceName.Text
@@ -6706,111 +6706,6 @@ Public Class frmMain
 
 #End Region
 
-    ' TO DO - Rebuild Adds/updates data for outpost items - these don't have BPs so I add them as BPs here (ie an egg has a bp but when deploying it doesn't but takes mats)
-    'Private Sub AddOutpostData()
-    '    Dim SQL As String
-
-    '    ' Update some typeIDs stuff first so it will look up the type materials correctly
-    '    '28183	Rank 1 Upgrade	27656	Foundation Upgrade Platform
-    '    '28184	Rank 2 Upgrade	27658	Pedestal Upgrade Platform
-    '    '28185	Rank 3 Upgrade	27660	Monument Upgrade Platform
-
-    '    SQL = "UPDATE invTypeMaterials SET typeID = 27656 where typeID = 28183"
-    '    Call Execute_msSQL(SQL)
-
-    '    SQL = "UPDATE invTypeMaterials SET typeID = 27658 where typeID = 28184"
-    '    Call Execute_msSQL(SQL)
-
-    '    SQL = "UPDATE invTypeMaterials SET typeID = 27660 where typeID = 28185"
-    '    Call Execute_msSQL(SQL)
-
-    '    ' Update the published field for stations and customs offices in groups and categories
-    '    SQL = "UPDATE invGroups SET published = -1 where groupID IN (15,1025)"
-    '    Call Execute_msSQL(SQL)
-
-    '    SQL = "UPDATE invCategories SET published = -1 where categoryID IN (3,46)"
-    '    Call Execute_msSQL(SQL)
-
-    '    SQL = "SELECT * FROM [OutpostCustoms invBlueprintTypes] "
-    '    DBCommand = New OleDbCommand(SQL, DB_ADDL_DATA)
-    '    readerDB = DBCommand.ExecuteReader
-
-    '    While readerDB.Read
-    '        Application.DoEvents()
-
-    '        ' Delete the record first
-    '        SQL = "DELETE FROM invBlueprintTypes WHERE blueprintTypeID = " & readerDB(0).ToString
-    '        Call Execute_msSQL(SQL)
-
-    '        ' Insert each value
-    '        SQL = "INSERT INTO invBlueprintTypes VALUES ("
-    '        SQL = SQL & BuildInsertFieldString(readerDB(0).ToString) & ","
-    '        SQL = SQL & BuildInsertFieldString(readerDB(1).ToString) & ","
-    '        SQL = SQL & BuildInsertFieldString(readerDB(2).ToString) & ","
-    '        SQL = SQL & BuildInsertFieldString(readerDB(3).ToString) & ","
-    '        SQL = SQL & BuildInsertFieldString(readerDB(4).ToString) & ","
-    '        SQL = SQL & BuildInsertFieldString(readerDB(5).ToString) & ","
-    '        SQL = SQL & BuildInsertFieldString(readerDB(6).ToString) & ","
-    '        SQL = SQL & BuildInsertFieldString(readerDB(7).ToString) & ","
-    '        SQL = SQL & BuildInsertFieldString(readerDB(8).ToString) & ","
-    '        SQL = SQL & BuildInsertFieldString(readerDB(9).ToString) & ","
-    '        SQL = SQL & BuildInsertFieldString(readerDB(10).ToString) & ","
-    '        SQL = SQL & BuildInsertFieldString(readerDB(11).ToString) & ","
-    '        SQL = SQL & BuildInsertFieldString(readerDB(12).ToString) & ")"
-
-    '        Call Execute_msSQL(SQL)
-
-    '        ' Ignore upgrade platforms
-    '        If readerDB(0).ToString <> 27656 And readerDB(0).ToString <> 27658 And readerDB(0).ToString <> 27660 Then
-
-    '            ' Update the published field for this "BP" in types
-    '            SQL = "UPDATE invTypes SET published = -1 where typeID = " & readerDB(0).ToString
-    '            Call Execute_msSQL(SQL)
-
-    '            ' Update the typeName and the marketGroupID in invTypes
-    '            SQL = "SELECT typeName, marketGroupID FROM [OutpostCustoms invTypes] WHERE typeID = " & readerDB(0).ToString
-    '            DBCommand = New OleDbCommand(SQL, DB_ADDL_DATA)
-    '            readerDB2 = DBCommand.ExecuteReader
-
-    '            readerDB2.Read()
-
-    '            SQL = "UPDATE invTypes SET typeName = '" & readerDB2.GetString(0) & "', marketGroupID = "
-    '            SQL = SQL & readerDB2.GetValue(1) & " WHERE typeID = " & readerDB(0).ToString
-    '            Call Execute_msSQL(SQL)
-
-    '        End If
-
-    '    End While
-
-    '    ' Get all the requirements that I think we need extra to this "BP" (mostly skills for outpost deployment)
-    '    SQL = "SELECT * FROM [OutpostCustoms ramTypeRequirements] "
-    '    DBCommand = New OleDbCommand(SQL, DB_ADDL_DATA)
-    '    readerDB = DBCommand.ExecuteReader
-
-    '    While readerDB.Read
-    '        Application.DoEvents()
-
-    '        ' Delete the record first
-    '        SQL = "DELETE FROM ramTypeRequirements WHERE typeID = " & readerDB(0).ToString & " AND requiredTypeID = " & readerDB(2).ToString
-    '        Call Execute_msSQL(SQL)
-
-    '        ' Insert each value
-    '        SQL = "INSERT INTO ramTypeRequirements VALUES ("
-    '        SQL = SQL & BuildInsertFieldString(readerDB(0).ToString) & ","
-    '        SQL = SQL & BuildInsertFieldString(readerDB(1).ToString) & ","
-    '        SQL = SQL & BuildInsertFieldString(readerDB(2).ToString) & ","
-    '        SQL = SQL & BuildInsertFieldString(readerDB(3).ToString) & ","
-    '        SQL = SQL & BuildInsertFieldString(readerDB(4).ToString) & ","
-    '        SQL = SQL & BuildInsertFieldString(readerDB(5).ToString) & ")"
-
-    '        Call Execute_msSQL(SQL)
-
-    '    End While
-
-    '    DB_ADDL_DATA.Close()
-
-    'End Sub
-
 #Region "Build SQL DB"
 
     ' Copies all the data from the universe DB into the MSSQL DB
@@ -7020,31 +6915,6 @@ Public Class frmMain
 
         ' Load the yaml file into a string array for easier processing
         Dim Lines As String() = IO.File.ReadAllLines(FileName)
-
-        '' Get the data from the YAML file
-        'Dim YFile As New StringReader(FileName)
-        'Dim ymal As New YamlStream(YFile)
-
-        'Dim Mapping As VariantType = 0
-
-        '// Examine the stream
-        'var Mapping = (YamlMappingNode)yaml.Documents[0].RootNode;
-
-        'foreach(var entry In mapping.Children)
-        '{
-        '	Console.WriteLine(((YamlScalarNode)entry.Key).Value);
-        '}
-
-        '// List all the items
-        'var items = (YamlSequenceNode)mapping.Children[new YamlScalarNode("items")];
-        'foreach(YamlMappingNode item In items)
-        '{
-        '	Console.WriteLine(
-        '                 "{0}\t{1}",
-        '                 item.Children[new YamlScalarNode("part_no")],
-        '		item.Children[new YamlScalarNode("descrip")]
-        '	);
-        '}
 
         ' Set the block and index values
         Dim SpaceCount As Integer = GetNumSpaces(Lines(1))
@@ -7280,8 +7150,8 @@ Public Class frmMain
         Dim Count As Integer
 
         ' First set up our databases
-        'SQL = "CREATE DATABASE " & DatabaseName
-        'Call Execute_msSQL(SQL)
+        SQL = "CREATE DATABASE " & DatabaseName
+        Call Execute_msSQL(SQL)
 
         ' industryBlueprints
         Call ResetTable("industryBlueprints")
@@ -7330,7 +7200,7 @@ Public Class frmMain
         For Each BPNode In BlueprintsTree.Nodes
 
             ' Update form
-            lblTableName.Text = "Saving BP: " & BPNode.Name
+            lblTableName.Text = "Saving BP:  " & BPNode.Name
             pgMain.Value = Count
             Application.UseWaitCursor = True
             Application.DoEvents()
@@ -7556,10 +7426,10 @@ Public Class frmMain
         ' industryActivities
         Call ResetTable("eveIcons")
         ' Build table
-        SQL = "CREATE TABLE eveIcons (iconID int PRIMARY KEY NOT NULL, iconFile varchar(500) NOT NULL, description text) "
+        SQL = "CREATE TABLE eveIcons (iconID int PRIMARY KEY Not NULL, iconFile varchar(500) Not NULL, description text) "
         Call Execute_msSQL(SQL)
         ' Create index
-        SQL = "CREATE INDEX IDX_iconID ON eveIcons (iconID)"
+        SQL = "CREATE INDEX IDX_iconID On eveIcons (iconID)"
         Call Execute_msSQL(SQL)
 
         ' Get the data from the YAML file
@@ -11861,131 +11731,6 @@ Public Class frmMain
 
 #End Region
 
-    Private Function CheckNull(ByVal inVariable As Object) As Object
-        If IsNothing(inVariable) Then
-            Return "null"
-        ElseIf DBNull.Value.Equals(inVariable) Then
-            Return "null"
-        Else
-            Return inVariable
-        End If
-    End Function
-
-    Private Function FormatDBString(ByVal inStrVar As String) As String
-        ' Anything with quote mark in name it won't correctly load - need to replace with double quotes
-        If InStr(inStrVar, "'") Then
-            inStrVar = Replace(inStrVar, "'", "''")
-        End If
-        Return inStrVar
-    End Function
-
-    ' Formats the value sent to what we want to insert inot the table field
-    Private Function BuildInsertFieldString(ByVal inValue As Object) As String
-        Dim CheckNullValue As Object
-        Dim OutputString As String
-
-        ' See if it is null first
-        CheckNullValue = CheckNull(inValue)
-
-        If CStr(CheckNullValue) <> "null" Then
-            ' Not null, so format
-            If CheckNullValue.GetType.Name = "Boolean" Then
-                ' Change these to numeric values
-                If inValue = True Then
-                    OutputString = "1"
-                Else
-                    OutputString = "0"
-                End If
-            ElseIf CheckNullValue.GetType.Name <> "String" Then
-                OutputString = CStr(inValue)
-            Else
-                ' String, so check for appostrophes
-                OutputString = "'" & FormatDBString(inValue) & "'"
-            End If
-        Else
-            OutputString = "null"
-        End If
-
-        Return Trim(OutputString)
-
-    End Function
-
-    Private Sub Execute_msSQL(ByVal SQL As String)
-        Dim Command As SqlCommand
-
-        Command = New SqlCommand(SQL, SQLExpressConnectionExecute)
-        Command.ExecuteNonQuery()
-
-        Command = Nothing
-
-    End Sub
-
-    Private Sub Execute_SQLiteSQL(ByVal SQL As String, ByRef DBRef As SQLiteConnection)
-        Dim DBExecuteCmd As SQLiteCommand
-
-        DBExecuteCmd = DBRef.CreateCommand
-        DBExecuteCmd.CommandText = SQL
-        DBExecuteCmd.ExecuteNonQuery()
-
-        DBExecuteCmd.Dispose()
-
-    End Sub
-
-    Private Sub BeginSQLiteTransaction(ByRef DBRef As SQLiteConnection)
-        Call Execute_SQLiteSQL("BEGIN;", DBRef)
-    End Sub
-
-    Private Sub CommitSQLiteTransaction(ByRef DBRef As SQLiteConnection)
-        Call Execute_SQLiteSQL("END;", DBRef)
-    End Sub
-
-    Private Function GetLenSQLExpField(ByVal FieldName As String, ByVal TableName As String) As String
-        Dim SQL As String
-        Dim msSQLQuery As New SqlCommand
-        Dim msSQLReader As SqlDataReader
-        Dim ColumnLength As Integer
-
-        SQL = "SELECT MAX(LEN(" & FieldName & ")) FROM " & TableName
-        msSQLQuery = New SqlCommand(SQL, SQLExpressConnection)
-        msSQLReader = msSQLQuery.ExecuteReader()
-        msSQLReader.Read()
-
-        If IsDBNull(msSQLReader.GetValue(0)) Then
-            ColumnLength = 100
-        Else
-            ColumnLength = msSQLReader.GetValue(0)
-        End If
-
-        msSQLReader.Close()
-
-        Return CStr(ColumnLength)
-
-    End Function
-
-    Private Sub ResetTable(TableName As String)
-        ' MS SQL variables
-        Dim msSQLQuery As New SqlCommand
-        Dim msSQLReader As SqlDataReader
-        Dim msSQL As String
-
-        Dim SQL As String
-
-        ' See if the table exists and drop if it does
-        msSQL = "SELECT COUNT(*) FROM sys.tables WHERE name = '" & TableName & "'"
-        msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
-        msSQLReader = msSQLQuery.ExecuteReader()
-        msSQLReader.Read()
-
-        If CInt(msSQLReader.GetValue(0)) = 1 Then
-            SQL = "DROP TABLE " & TableName
-            msSQLReader.Close()
-            Execute_msSQL(SQL)
-        Else
-            msSQLReader.Close()
-        End If
-
-    End Sub
-
 #End Region
 
 #Region "Deploy files"
@@ -12265,5 +12010,42 @@ Public Class frmMain
     End Sub
 
 #End Region
+
+
+    Private Sub btnYAMLTest_Click(sender As Object, e As EventArgs) Handles btnYAMLTest.Click
+        Dim NewSQLiteDB As New SQLiteConnection
+        Dim DBPath As String = WorkingDirectory & "YAMLTestDB"
+
+        ' Build a new database - each time this is run it deletes the old DB
+        Call BuildDB(WorkingDirectory & "YAMLTestDB")
+
+        ' Open new SQLite DB
+        If File.Exists(DBPath & ".s3db") Then
+            NewSQLiteDB.ConnectionString = "Data Source=" & DBPath & ".s3db"
+            NewSQLiteDB.Open()
+            ' Set pragma to make this faster
+            Call Execute_SQLiteSQL("PRAGMA synchronous = OFF", NewSQLiteDB)
+        End If
+
+        Dim YAMLBP As New YAMLBlueprints(NewSQLiteDB)
+
+        ' Load the files
+        Me.Cursor = Cursors.WaitCursor
+        Application.DoEvents()
+
+        Call YAMLBP.ImportFile(WorkingDirectory & DatabaseName & "\blueprints.yaml", lblTableName, pgMain)
+
+        Me.Cursor = Cursors.Default
+
+        ' Run a vacuum on the new SQL DB
+        Call Execute_SQLiteSQL("VACUUM;", NewSQLiteDB)
+
+        Call NewSQLiteDB.Close()
+        lblTableName.Text = "Finalizing..."
+        Application.DoEvents()
+
+        Call MsgBox("Files Imported", vbInformation, Application.ProductName)
+
+    End Sub
 
 End Class
