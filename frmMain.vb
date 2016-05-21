@@ -52,7 +52,7 @@ Public Class frmMain
     Private EVEIPHDB As String = "EVEIPH DB.s3db"
     Private UpdaterManifest As String = "EVEIPH Updater.exe.manifest"
     Private EXEManifest As String = "EVE Isk per Hour.exe.manifest"
-    Private IconicZipFile As String = "Ionic.Zip.dll"
+    Private IonicZipFile As String = "Ionic.Zip.dll"
     Private ImageZipFile As String = "EVEIPH Images.zip"
     Private LatestVersionXML As String
     Private LatestTestVersionXML As String
@@ -717,6 +717,7 @@ Public Class frmMain
         File.Copy(MediaFireDirectory & UpdaterManifest, FinalBinaryFolderPath & UpdaterManifest)
         File.Copy(MediaFireDirectory & EXEManifest, FinalBinaryFolderPath & EXEManifest)
         File.Copy(MediaFireDirectory & LatestVersionXML, FinalBinaryFolderPath & LatestVersionXML)
+        File.Copy(MediaFireDirectory & LatestVersionXML, FinalBinaryFolderPath & IonicZipFile)
 
         ' DB
         File.Copy(WorkingDirectory & EVEIPHDB, FinalBinaryFolderPath & EVEIPHDB)
@@ -11893,9 +11894,9 @@ Public Class frmMain
                 writer.WriteEndElement()
 
                 writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", IconicZipFile)
+                writer.WriteAttributeString("Name", IonicZipFile)
                 writer.WriteAttributeString("Version", "1.0")
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & IconicZipFile))
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & IonicZipFile))
                 writer.WriteAttributeString("URL", TestIconicZipFileURL)
                 writer.WriteEndElement()
 
@@ -11981,9 +11982,9 @@ Public Class frmMain
                 writer.WriteEndElement()
 
                 writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", IconicZipFile)
+                writer.WriteAttributeString("Name", IonicZipFile)
                 writer.WriteAttributeString("Version", "1.0")
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & IconicZipFile))
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & IonicZipFile))
                 writer.WriteAttributeString("URL", IconicZipFileURL)
                 writer.WriteEndElement()
 
@@ -12025,7 +12026,7 @@ Public Class frmMain
         Application.DoEvents()
 
         'Call YAMLBP.ImportFile(WorkingDirectory & DatabaseName & "\blueprints.yaml", lblTableName, pgMain)
-        Call Yamlinvnames.ImportFile(WorkingDirectory & DatabaseName & "\invNames.yaml", lblTableName, pgMain)
+        Call YAMLinvNames.ImportFile(WorkingDirectory & DatabaseName & "\invNames.yaml", lblTableName, pgMain)
 
         Me.Cursor = Cursors.Default
 
