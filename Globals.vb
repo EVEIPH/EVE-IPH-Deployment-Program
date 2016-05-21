@@ -3,10 +3,11 @@ Imports System.Data.SqlClient ' For SQL Server Connection
 
 Public Module Globals
 
-    Private SQLExpressConnectionExecute As SqlConnection ' For updating while another connection is open
-    Private SQLExpressConnection As SqlConnection
-
-    Private SQLExpressProgressBar As SqlConnection
+    Public SQLExpressConnection As SqlConnection
+    Public SQLExpressConnection2 As SqlConnection ' For updating while another connection is open
+    Public SQLExpressConnection3 As SqlConnection ' For updating while another connection is open
+    Public SQLExpressProgressBar As SqlConnection
+    Public SQLExpressConnectionExecute As SqlConnection ' For updating while another connection is open
 
     Public SQLiteDB As New SQLiteConnection
     Public UniverseDB As New SQLiteConnection

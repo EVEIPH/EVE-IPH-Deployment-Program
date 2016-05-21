@@ -22,12 +22,23 @@ Public Class YAMLBlueprints
     Public Sub ImportFile(FilePath As String, ByRef LabelRef As Label, ByRef PGRef As ProgressBar)
         Dim SQL As String = ""
         Dim Count As Long = 0
+        Dim Blueprints As New Dictionary(Of String, Blueprint)
 
-        Dim Deserializer = New Deserializer() ' Don't use a naming convention
-        ' Read the file into a string reader (file returns a string)
-        Dim InputText = New StringReader(File.ReadAllText(FilePath))
-        ' Now parse the input text
-        Dim Blueprints = Deserializer.Deserialize(Of Dictionary(Of Integer, Blueprint))(InputText)
+        Try
+            Dim Deserializer = New Deserializer() ' Don't use a naming convention
+            ' Read the file into a string reader (file returns a string)
+            Dim InputText = New StringReader(File.ReadAllText(FilePath))
+            ' Now parse the input text
+            Blueprints = Deserializer.Deserialize(Of Dictionary(Of String, Blueprint))(InputText)
+        Catch ex As Exception
+            Dim msg As String
+            If IsNothing(ex.InnerException) Then
+                msg = ""
+            Else
+                msg = "Inner Exception: " & ex.InnerException.ToString
+            End If
+            MsgBox(ex.Message & vbCrLf & msg)
+        End Try
 
         ' Update form
         PGRef.Value = 0

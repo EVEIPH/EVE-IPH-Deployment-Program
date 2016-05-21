@@ -52,7 +52,7 @@ Public Class frmMain
     Private EVEIPHDB As String = "EVEIPH DB.s3db"
     Private UpdaterManifest As String = "EVEIPH Updater.exe.manifest"
     Private EXEManifest As String = "EVE Isk per Hour.exe.manifest"
-    Private IconicZipFile As String = "Iconic.zip"
+    Private IconicZipFile As String = "Ionic.Zip.dll"
     Private ImageZipFile As String = "EVEIPH Images.zip"
     Private LatestVersionXML As String
     Private LatestTestVersionXML As String
@@ -94,12 +94,6 @@ Public Class frmMain
 
     Private Const AssemblyArraysTable As String = "ASSEMBLY_ARRAYS"
     Private Const StationFacilitiesTable As String = "STATION_FACILITIES"
-
-    Private SQLExpressConnection As SqlConnection
-    Private SQLExpressConnection2 As SqlConnection ' For updating while another connection is open
-    Private SQLExpressConnection3 As SqlConnection ' For updating while another connection is open
-    Private SQLExpressProgressBar As SqlConnection
-    Private SQLExpressConnectionExecute As SqlConnection ' For updating while another connection is open
 
     Private INDENT As String = ""
     Private Const COLON As String = ":"
@@ -7149,10 +7143,6 @@ Public Class frmMain
         Dim SQL As String
         Dim Count As Integer
 
-        ' First set up our databases
-        SQL = "CREATE DATABASE " & DatabaseName
-        Call Execute_msSQL(SQL)
-
         ' industryBlueprints
         Call ResetTable("industryBlueprints")
         ' Build table
@@ -7397,8 +7387,8 @@ Public Class frmMain
 
         ' Fix for Citadel data - Cap Emergency Energizer using capital fernite armor plates when they should be regular
         Call Execute_msSQL("UPDATE industryActivityMaterials SET materialTypeID = 11542 WHERE blueprintTypeID = 40722 AND materialTypeID = 29049")
-        ' Fix for Capital Shield Booster II - this record ends up deleting the entire item in all_blueprint_materials
-        Call Execute_msSQL("DELETE FROM industryActivityMaterials WHERE blueprintTypeID = 41634 AND materialTypeID = 41507")
+        ' Fix for Capital Shield Booster II - this record should be the Cap booster I not II
+        Call Execute_msSQL("UPDATE industryActivityMaterials SET materialTypeID = 20703 WHERE blueprintTypeID = 41634 AND materialTypeID = 41507")
 
         lblTableName.Text = ""
         pgMain.Visible = False
@@ -12028,12 +12018,14 @@ Public Class frmMain
         End If
 
         Dim YAMLBP As New YAMLBlueprints(NewSQLiteDB)
+        Dim YAMLinvNames As New YAMLinvNames(NewSQLiteDB)
 
         ' Load the files
         Me.Cursor = Cursors.WaitCursor
         Application.DoEvents()
 
-        Call YAMLBP.ImportFile(WorkingDirectory & DatabaseName & "\blueprints.yaml", lblTableName, pgMain)
+        'Call YAMLBP.ImportFile(WorkingDirectory & DatabaseName & "\blueprints.yaml", lblTableName, pgMain)
+        Call Yamlinvnames.ImportFile(WorkingDirectory & DatabaseName & "\invNames.yaml", lblTableName, pgMain)
 
         Me.Cursor = Cursors.Default
 
