@@ -720,6 +720,7 @@ Public Class frmMain
         File.Copy(MediaFireDirectory & EXEManifest, FinalBinaryFolderPath & EXEManifest)
         File.Copy(MediaFireDirectory & LatestVersionXML, FinalBinaryFolderPath & LatestVersionXML)
         File.Copy(MediaFireDirectory & LatestVersionXML, FinalBinaryFolderPath & IonicZipFile)
+        File.Copy(MediaFireDirectory & MoreLinqDLL, FinalBinaryFolderPath & MoreLinqDLL)
 
         ' DB
         File.Copy(WorkingDirectory & EVEIPHDB, FinalBinaryFolderPath & EVEIPHDB)
@@ -11908,7 +11909,7 @@ Public Class frmMain
                 writer.WriteEndElement()
 
                 writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", MoreLinqDLLURL)
+                writer.WriteAttributeString("Name", MoreLinqDLL)
                 writer.WriteAttributeString("Version", "1.4")
                 writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & MoreLinqDLL))
                 writer.WriteAttributeString("URL", MoreLinqDLLURL)
@@ -12003,7 +12004,7 @@ Public Class frmMain
                 writer.WriteEndElement()
 
                 writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", MoreLinqDLLURL)
+                writer.WriteAttributeString("Name", MoreLinqDLL)
                 writer.WriteAttributeString("Version", "1.4")
                 writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & MoreLinqDLL))
                 writer.WriteAttributeString("URL", MoreLinqDLLURL)
