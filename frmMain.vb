@@ -54,6 +54,7 @@ Public Class frmMain
     Private EXEManifest As String = "EVE Isk per Hour.exe.manifest"
     Private IonicZipFile As String = "Ionic.Zip.dll"
     Private ImageZipFile As String = "EVEIPH Images.zip"
+    Private MoreLinqDLL As String = "MoreLinq.Portable.dll"
     Private LatestVersionXML As String
     Private LatestTestVersionXML As String
 
@@ -67,6 +68,7 @@ Public Class frmMain
     Private IconicZipFileURL As String = "http://www.mediafire.com/download/6ucs9it1bxjiccv/Ionic.Zip.dll"
     Private EXEManifestURL As String = "http://www.mediafire.com/download/sdlrk28t18gv8z0/EVE_Isk_per_Hour.exe.manifest"
     Private ImageZipFileURL As String = "http://www.mediafire.com/download/duq6nw4d0p59rci/EVEIPH_Images.zip"
+    Private MoreLinqDLLURL As String = "http://www.mediafire.com/download/mckqc8cxljc5p86/MoreLinq.Portable.dll"
 
     Private TestJSONDLLURL As String = "http://www.mediafire.com/download/wmgmu7qu6ha4qag/Newtonsoft.Json.dll"
     Private TestSQLiteDLLURL As String = "http://www.mediafire.com/download/q1bbs5hgp4e18gh/System.Data.SQLite.dll"
@@ -11786,6 +11788,11 @@ Public Class frmMain
             NewFilesAdded = True
         End If
 
+        If MD5CalcFile(RootDirectory & MoreLinqDLL) <> MD5CalcFile(FileDirectory & MoreLinqDLL) Then
+            File.Copy(RootDirectory & MoreLinqDLL, FileDirectory & MoreLinqDLL, True)
+            NewFilesAdded = True
+        End If
+
         On Error GoTo 0
 
         ' Output the Latest XML File if we have updates
@@ -11900,6 +11907,13 @@ Public Class frmMain
                 writer.WriteAttributeString("URL", TestIconicZipFileURL)
                 writer.WriteEndElement()
 
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", MoreLinqDLLURL)
+                writer.WriteAttributeString("Version", "1.4")
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & MoreLinqDLL))
+                writer.WriteAttributeString("URL", MoreLinqDLLURL)
+                writer.WriteEndElement()
+
                 ' End document.
                 writer.WriteEndDocument()
             End Using
@@ -11986,6 +12000,13 @@ Public Class frmMain
                 writer.WriteAttributeString("Version", "1.0")
                 writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & IonicZipFile))
                 writer.WriteAttributeString("URL", IconicZipFileURL)
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", MoreLinqDLLURL)
+                writer.WriteAttributeString("Version", "1.4")
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & MoreLinqDLL))
+                writer.WriteAttributeString("URL", MoreLinqDLLURL)
                 writer.WriteEndElement()
 
                 ' End document.
