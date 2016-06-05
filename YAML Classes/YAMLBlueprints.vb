@@ -137,24 +137,6 @@ Public Class YAMLBlueprints
         '    Call ExecuteSQLiteSQL(SQL)
         'End While
 
-
-        '' Put all the funky data fixes here
-
-        '' Fix a few YAML data issues
-        'Call ExecuteSQLiteSQL("UPDATE industryActivityMaterials SET materialTypeID = 11467 WHERE blueprintTypeID = 12613 AND activityID = 5 AND materialTypeID = 11879")
-
-
-        '' Temp fixes for Citadel data 
-        '' Capital Capacitor Battery - assigns correct productTypeID for invention
-        'Call ExecuteSQLiteSQL("UPDATE industryActivityProducts SET productTypeID = 41641 where blueprintTypeID = 41639 and activityID = 8")
-        '' Capital Capacitor Booster II Blueprint - assigns correct productTyepID (was Heavy capacitor booster II)
-        'Call ExecuteSQLiteSQL("UPDATE industryActivityProducts SET productTypeID = 41493 WHERE blueprintTypeID = 41646 AND activityID = 1")
-
-        '' Fix for Citadel data - Cap Emergency Energizer using capital fernite armor plates when they should be regular
-        'Call ExecuteSQLiteSQL("UPDATE industryActivityMaterials SET materialTypeID = 11542 WHERE blueprintTypeID = 40722 AND materialTypeID = 29049")
-        '' Fix for Capital Shield Booster II - this record ends up deleting the entire item in all_blueprint_materials
-        'Call ExecuteSQLiteSQL("DELETE FROM industryActivityMaterials WHERE blueprintTypeID = 41634 AND materialTypeID = 41507")
-
         LabelRef.Text = ""
         PGRef.Visible = False
 

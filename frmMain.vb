@@ -3,10 +3,8 @@ Imports System.Data.SqlClient ' For SQL Server Connection
 Imports System.Data.SQLite
 Imports System.IO
 Imports System.Xml
-Imports YamlDotNet.Serialization
 
-' This namespace contains ArchiverException class required for error handling
-Imports Ionic.Zip
+Imports YamlDotNet.Serialization
 Imports YamlDotNet.RepresentationModel
 
 Public Class frmMain
@@ -654,19 +652,11 @@ Public Class frmMain
         File.Copy(IECFOlder & "\37135_64.png", EVEIPHImageFolder & "\37135_64.png")    ' Endurance
         File.Copy(IECFOlder & "\37135_64.png", WorkingImageFolder & "\37135_64.png")   ' Endurance
 
+        ' Delete the file if it already exists
+        File.Delete(WorkingDirectory & "EVEIPH Images.zip")
+        ' Compress the images
+        Call ZipFile.CreateFromDirectory(EVEIPHImageFolder, WorkingDirectory & "EVEIPH Images.zip", CompressionLevel.Optimal, False)
 
-
-        File.Delete(DatabasePath & "EVEIPH Images.zip")
-
-        'Open the zip file, create if not exists
-        Using zip = New ZipFile(WorkingDirectory & "EVEIPH Images.zip")
-            'Remove everything, in case the zip already existed
-            zip.RemoveSelectedEntries("*")
-            zip.AddDirectory(EVEIPHImageFolder) 'Adds the *content* of the directory, not the directory itself
-            zip.Save()
-        End Using
-
-        OutputFile.Close()
         pgMain.Visible = False
 
         ' If we didn't output any missing images, delete the output fille
@@ -675,7 +665,6 @@ Public Class frmMain
         End If
 
         ' Leave working folder for use with binary builder
-
         Call CloseDBs()
 
         Me.Cursor = Cursors.Default
@@ -728,14 +717,19 @@ Public Class frmMain
         ' IPH images
         My.Computer.FileSystem.CopyDirectory(WorkingDirectory & ImageFolder, FinalBinaryFolderPath & ImageFolder, True)
 
-        ' Zip the whole folder up for download
-        'Open/create zip file
-        Using zip = New ZipFile(FinalBinaryZipPath)
-            'empty zip file
-            zip.RemoveSelectedEntries("*")
-            zip.AddDirectory(FinalBinaryFolderPath) 'Adds the *content* of the directory, not the directory itself
-            zip.Save()
-        End Using
+        '' Zip the whole folder up for download
+        ''Open/create zip file
+        'Using zip = New ZipFile(FinalBinaryZipPath)
+        '    'empty zip file
+        '    zip.RemoveSelectedEntries("*")
+        '    zip.AddDirectory(FinalBinaryFolderPath) 'Adds the *content* of the directory, not the directory itself
+        '    zip.Save()
+        'End Using
+
+        ' Delete the file if it already exists
+        File.Delete(FinalBinaryZipPath)
+        ' Compress the whole file for download
+        Call ZipFile.CreateFromDirectory(FinalBinaryFolderPath, FinalBinaryZipPath, CompressionLevel.Optimal, False)
 
         File.Delete(MediaFireDirectory & FinalBinaryZip)
 
@@ -2562,6 +2556,8 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Structures','Min Sell', 'The Forge','Jita',0,0)"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Structure Modules','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, SQLiteDB)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Celestials','Min Sell', 'The Forge','Jita',0,0)"
         Call Execute_SQLiteSQL(SQL, SQLiteDB)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Station Parts','Min Sell', 'The Forge','Jita',0,0)"
@@ -3567,7 +3563,116 @@ Public Class frmMain
 
     ' OreRefine
     Private Sub BuildOreRefine()
+        'Dim SQL As String = ""
+
+        'Application.DoEvents()
+
+        '' Build table
+        'SQL = "CREATE TABLE ORE_REFINE ("
+        'SQL = SQL & "OreID INTEGER PRIMARY KEY,"
+        'SQL = SQL & "MineralID INTEGER,"
+        'SQL = SQL & "MineralQuality INTEGER)"
+
+        'Call Execute_SQLiteSQL(SQL, SQLiteDB)
+
+        '' Add Data
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (18,35,213)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES  (18,34,107)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (18,36,107)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (19,34,56000)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (19,35,12050)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (19,36,2100)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (19,37,450)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (20,34,134)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (20,36,267)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (20,37,134)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (21,35,1000)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (21,37,200)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (21,38,100)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (21,39,19)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (22,34,22000)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (22,36,2500)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (22,40,320)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1223,35,12000)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1223,39,450)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1223,40,100)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1224,34,351)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1224,35,25)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1224,36,50)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1224,38,5)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1225,34,21000)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1225,38,760)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1225,39,135)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1226,36,350)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1226,38,75)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1226,39,8)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1227,34,800)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1227,35,100)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1227,37,85)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1228,34,346)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1228,35,173)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1229,35,2200)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1229,36,2400)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1229,37,300)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1230,34,415)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1231,34,2200)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1231,37,100)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1231,38,120)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1231,39,15)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1232,34,10000)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1232,37,1600)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1232,38,120)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (11396,11399,300)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28422,35,213)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28422,34,107)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28422,36,107)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28420,34,56000)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28420,35,12050)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28420,36,2100)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28420,37,450)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28410,34,134)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28410,36,267)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28410,37,134)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28401,35,1000)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28401,37,200)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28401,38,100)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28401,39,19)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28367,34,22000)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28367,36,2500)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28367,40,320)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28388,35,12000)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28388,39,450)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28388,40,100)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28424,34,351)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28424,35,25)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28424,36,50)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28424,38,5)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28391,34,21000)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28391,38,760)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28391,39,135)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28406,36,350)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28406,38,75)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28406,39,8)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28416,34,800)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28416,35,100)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28416,37,85)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28429,34,346)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28429,35,173)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28397,35,2200)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28397,36,2400)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28397,37,300)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28432,34,415)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28403,34,2200)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28403,37,100)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28403,38,120)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28403,39,15)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28394,34,10000)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28394,37,1600)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28394,38,120)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28413,11399,300)", SQLiteDB)
+
         Call Execute_SQLiteSQL(File.OpenText(WorkingDirectory & "\OreRefine.sql").ReadToEnd(), SQLiteDB)
+
     End Sub
 
     ' ORES
@@ -7381,19 +7486,6 @@ Public Class frmMain
         msSQLReader = Nothing
         msSQLQuery = Nothing
 
-        ' Put all the funky data fixes here
-
-        ' Temp fixes for Citadel data 
-        ' Capital Capacitor Battery - assigns correct productTypeID for invention
-        Call Execute_msSQL("UPDATE industryActivityProducts SET productTypeID = 41641 where blueprintTypeID = 41639 and activityID = 8")
-        ' Capital Capacitor Booster II Blueprint - assigns correct productTyepID (was Heavy capacitor booster II)
-        Call Execute_msSQL("UPDATE industryActivityProducts SET productTypeID = 41493 WHERE blueprintTypeID = 41646 AND activityID = 1")
-
-        ' Fix for Citadel data - Cap Emergency Energizer using capital fernite armor plates when they should be regular
-        Call Execute_msSQL("UPDATE industryActivityMaterials SET materialTypeID = 11542 WHERE blueprintTypeID = 40722 AND materialTypeID = 29049")
-        ' Fix for Capital Shield Booster II - this record should be the Cap booster I not II
-        Call Execute_msSQL("UPDATE industryActivityMaterials SET materialTypeID = 20703 WHERE blueprintTypeID = 41634 AND materialTypeID = 41507")
-
         lblTableName.Text = ""
         pgMain.Visible = False
         Application.UseWaitCursor = True
@@ -10768,6 +10860,9 @@ Public Class frmMain
         On Error Resume Next
         While SQLiteReader.Read
             Application.DoEvents()
+            If SQLiteReader.GetValue(0) = 40458667 Then
+                Application.DoEvents()
+            End If
 
             msSQL = "INSERT INTO mapCelestialStatistics VALUES ("
             msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(0)) & ","
@@ -10787,7 +10882,7 @@ Public Class frmMain
             msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(14)) & ","
             msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(15)) & ","
             msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(16)) & ","
-            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(17)) & ","
+            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetDouble(17)) & ","
             msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(18)) & ","
             msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(19)) & ")"
 
