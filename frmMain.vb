@@ -717,15 +717,6 @@ Public Class frmMain
         ' IPH images
         My.Computer.FileSystem.CopyDirectory(WorkingDirectory & ImageFolder, FinalBinaryFolderPath & ImageFolder, True)
 
-        '' Zip the whole folder up for download
-        ''Open/create zip file
-        'Using zip = New ZipFile(FinalBinaryZipPath)
-        '    'empty zip file
-        '    zip.RemoveSelectedEntries("*")
-        '    zip.AddDirectory(FinalBinaryFolderPath) 'Adds the *content* of the directory, not the directory itself
-        '    zip.Save()
-        'End Using
-
         ' Delete the file if it already exists
         File.Delete(FinalBinaryZipPath)
         ' Compress the whole file for download
@@ -7960,6 +7951,10 @@ Public Class frmMain
             End With
             Count += 1
         Next
+
+        ' Bug update
+        SQL = "UPDATE invTypes SET published = 1 WHERE typeID = 12224"
+        Call Execute_msSQL(SQL)
 
         lblTableName.Text = ""
         pgMain.Visible = False
