@@ -109,8 +109,25 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ApplicationEvents.vb" />
-    <Compile Include="Globals.vb" />
-    <Compile Include="YAML Classes\YAMLBlueprints.vb" />
+    <Compile Include="Database Classes\msSQLDBConnection.vb" />
+    <Compile Include="Database Classes\SQLiteDBConnection.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLAgentTypes.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLCrpNPCDivisions.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLCrpNPCCorporationTrades.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLCrpNPCCorporations.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLCharRaces.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLCharFactions.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLCharBloodLines.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLCharAttributes.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLCharAncestries.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLCrpNPCCorporationResearchFields.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLCrpNPCCorporationDivisions.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLResearchAgents.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLCrpActivities.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLAgents.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLTranslations.vb" />
+    <Compile Include="YAML Classes\msSQL\YAMLTranslations_msSQL.vb" />
+    <Compile Include="YAML Classes\msSQL\YAMLBlueprints_msSQL.vb" />
     <Compile Include="frmMain.vb">
       <SubType>Form</SubType>
     </Compile>
@@ -133,7 +150,8 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="YAML Classes\YAMLinvNames.vb" />
+    <Compile Include="YAML Classes\YAMLDocument.vb" />
+    <Compile Include="YAML Classes\msSQL\YAMLinvTypes_msSQL.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="frmMain.resx">
@@ -188,6 +206,7 @@
   <ItemGroup>
     <Content Include="25_64_5.ico" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

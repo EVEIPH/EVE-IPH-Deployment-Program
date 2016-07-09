@@ -4,11 +4,17 @@ Imports System.Data.SQLite
 Imports System.IO
 Imports System.Xml
 
-Imports YamlDotNet.Serialization
-Imports YamlDotNet.RepresentationModel
-
 Public Class frmMain
     Inherits System.Windows.Forms.Form
+
+    Public SQLExpressConnection As SqlConnection
+    Public SQLExpressConnection2 As SqlConnection ' For updating while another connection is open
+    Public SQLExpressConnection3 As SqlConnection ' For updating while another connection is open
+    Public SQLExpressProgressBar As SqlConnection
+    Public SQLExpressConnectionExecute As SqlConnection ' For updating while another connection is open
+
+    Public EVEIPHSQLiteDB As SQLiteDBConnection
+    Public UniverseDB As SQLiteDBConnection
 
     Private Const SettingsFileName As String = "Settings.txt"
 
@@ -583,7 +589,7 @@ Public Class frmMain
 
         ' Get the count first
         SQL = "SELECT COUNT(*) FROM ALL_BLUEPRINTS"
-        DBCommand = New SQLiteCommand(SQL, SQLiteDB)
+        DBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBREf)
         readerBPs = DBCommand.ExecuteReader
         readerBPs.Read()
         ReaderCount = readerBPs.GetValue(0)
@@ -591,7 +597,7 @@ Public Class frmMain
 
         ' Get all the BP ID numbers we use in the program and copy those files to the directory
         SQL = "SELECT BLUEPRINT_ID, BLUEPRINT_NAME FROM ALL_BLUEPRINTS"
-        DBCommand = New SQLiteCommand(SQL, SQLiteDB)
+        DBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBREf)
         readerBPs = DBCommand.ExecuteReader
 
         pgMain.Value = 0
@@ -860,6 +866,123 @@ Public Class frmMain
         PG.Value = PG.Value + 1
     End Sub
 
+    Private Function CheckNull(ByVal inVariable As Object) As Object
+        If IsNothing(inVariable) Then
+            Return "null"
+        ElseIf DBNull.Value.Equals(inVariable) Then
+            Return "null"
+        Else
+            Return inVariable
+        End If
+    End Function
+
+    Public Function FormatDBString(ByVal inStrVar As String) As String
+        ' Anything with quote mark in name it won't correctly load - need to replace with double quotes
+        If InStr(inStrVar, "'") Then
+            inStrVar = Replace(inStrVar, "'", "''")
+        End If
+        Return inStrVar
+    End Function
+
+    ' Formats the value sent to what we want to insert into the table field
+    Public Function BuildInsertFieldString(ByVal inValue As Object) As String
+        Dim CheckNullValue As Object
+        Dim OutputString As String
+
+        ' See if it is null first
+        CheckNullValue = CheckNull(inValue)
+
+        If CStr(CheckNullValue) <> "null" Then
+            ' Not null, so format
+            If CheckNullValue.GetType.Name = "Boolean" Then
+                ' Change these to numeric values
+                If inValue = True Then
+                    OutputString = "1"
+                Else
+                    OutputString = "0"
+                End If
+            ElseIf CheckNullValue.GetType.Name <> "String" Then
+                OutputString = CStr(inValue)
+            Else
+                ' String, so check for appostrophes
+                OutputString = "'" & FormatDBString(inValue) & "'"
+            End If
+        Else
+            OutputString = "null"
+        End If
+
+        Return Trim(OutputString)
+
+    End Function
+
+    Public Sub Execute_SQLiteSQL(ByVal SQL As String, ByRef DBRef As SQLiteConnection)
+        Dim DBExecuteCmd As SQLiteCommand
+
+        DBExecuteCmd = DBRef.CreateCommand
+        DBExecuteCmd.CommandText = SQL
+        DBExecuteCmd.ExecuteNonQuery()
+
+        DBExecuteCmd.Dispose()
+
+    End Sub
+
+    Public Function GetLenSQLExpField(ByVal FieldName As String, ByVal TableName As String) As String
+        Dim SQL As String
+        Dim msSQLQuery As New SqlCommand
+        Dim msSQLReader As SqlDataReader
+        Dim ColumnLength As Integer
+
+        SQL = "SELECT MAX(LEN(" & FieldName & ")) FROM " & TableName
+        msSQLQuery = New SqlCommand(SQL, SQLExpressConnection)
+        msSQLReader = msSQLQuery.ExecuteReader()
+        msSQLReader.Read()
+
+        If IsDBNull(msSQLReader.GetValue(0)) Then
+            ColumnLength = 100
+        Else
+            ColumnLength = msSQLReader.GetValue(0)
+        End If
+
+        msSQLReader.Close()
+
+        Return CStr(ColumnLength)
+
+    End Function
+
+    Public Sub Execute_msSQL(ByVal SQL As String)
+        Dim Command As SqlCommand
+
+        Command = New SqlCommand(SQL, SQLExpressConnectionExecute)
+        Command.ExecuteNonQuery()
+
+        Command = Nothing
+
+    End Sub
+
+    Public Sub ResetTable(TableName As String)
+        ' MS SQL variables
+        Dim msSQLQuery As New SqlCommand
+        Dim msSQLReader As SqlDataReader
+        Dim msSQL As String
+
+        Dim SQL As String
+
+        ' See if the table exists and drop if it does
+        msSQL = "SELECT COUNT(*) FROM sys.tables WHERE name = '" & TableName & "'"
+        msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
+        msSQLReader = msSQLQuery.ExecuteReader()
+        msSQLReader.Read()
+
+        If CInt(msSQLReader.GetValue(0)) = 1 Then
+            SQL = "DROP TABLE " & TableName
+            msSQLReader.Close()
+            Execute_msSQL(SQL)
+        Else
+            msSQLReader.Close()
+        End If
+
+    End Sub
+
 #End Region
 
 #Region "Database Update"
@@ -914,7 +1037,7 @@ Public Class frmMain
         ' Check for SQLite DB
         If File.Exists(DBPathandName & ".s3db") Then
             Try
-                SQLiteDB.Close()
+                EVEIPHSQLiteDB.CloseDB()
             Catch
                 ' Nothing
             End Try
@@ -954,16 +1077,14 @@ Public Class frmMain
 
             ' SQL Lite DB
             If File.Exists(FinalDBPath & ".s3db") Then
-                SQLiteDB.ConnectionString = "Data Source=" & FinalDBPath & ".s3db"
-                SQLiteDB.Open()
+                EVEIPHSQLiteDB = New SQLiteDBConnection(FinalDBPath & ".s3db")
                 ' Set pragma to make this faster
-                Call Execute_SQLiteSQL("PRAGMA synchronous = OFF", SQLiteDB)
+                Call Execute_SQLiteSQL("PRAGMA synchronous = OFF", EVEIPHSQLiteDB.DBREf)
             End If
 
             ' SQL Lite DB for new universe data
             If File.Exists(DatabasePath & "\universeDataDx.db") Then
-                UniverseDB.ConnectionString = "Data Source=" & DatabasePath & "\universeDataDx.db"
-                UniverseDB.Open()
+                UniverseDB = New SQLiteDBConnection(DatabasePath & "\universeDataDx.db")
             End If
 
             btnBuildDatabase.Focus()
@@ -983,8 +1104,8 @@ Public Class frmMain
         SQLExpressConnection3.Close()
         SQLExpressProgressBar.Close()
         SQLExpressConnectionExecute.Close()
-        SQLiteDB.Close()
-        UniverseDB.Close()
+        EVEIPHSQLiteDB.CloseDB()
+        UniverseDB.CloseDB()
         On Error GoTo 0
     End Sub
 
@@ -1006,10 +1127,10 @@ Public Class frmMain
         SQL = "CREATE TABLE DB_VERSION ("
         SQL = SQL & "VERSION_NUMBER VARCHAR(50)"
         SQL = SQL & ")"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Insert the database name for the version
-        Call Execute_SQLiteSQL("INSERT INTO DB_VERSION VALUES ('" & DatabaseName & "')", SQLiteDB)
+        Call Execute_SQLiteSQL("INSERT INTO DB_VERSION VALUES ('" & DatabaseName & "')", EVEIPHSQLiteDB.DBREf)
 
         lblTableName.Text = "Building: OreRefine"
         Call BuildOreRefine()
@@ -1217,7 +1338,7 @@ Public Class frmMain
 
         ' Set null to zero
         SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = 0 WHERE RACE_ID IS NULL "
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' 1 = Caldari
         SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = 1 "
@@ -1228,7 +1349,7 @@ Public Class frmMain
         SQL = SQL & "OR MARKET_GROUP ='Caldari' OR BLUEPRINT_GROUP IN ('Missile Blueprint','Missile Launcher Blueprint') "
         SQL = SQL & "OR BLUEPRINT_NAME LIKE 'Caldari%'  OR BLUEPRINT_NAME LIKE 'Caldari%' "
         SQL = SQL & "AND RACE_ID = 0 "
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' 2 = Minmatar
         SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = 2 "
@@ -1239,7 +1360,7 @@ Public Class frmMain
         SQL = SQL & "OR MARKET_GROUP ='Minmatar' OR BLUEPRINT_GROUP IN ('Projectile Ammo Blueprint','Projectile Weapon Blueprint') "
         SQL = SQL & "OR BLUEPRINT_NAME LIKE 'Republic%'  OR BLUEPRINT_NAME LIKE 'Minmatar%' "
         SQL = SQL & "AND RACE_ID = 0 "
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' 4 = Amarr
         SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = 4 "
@@ -1250,7 +1371,7 @@ Public Class frmMain
         SQL = SQL & "OR MARKET_GROUP ='Amarr' OR BLUEPRINT_GROUP IN ('Energy Weapon Blueprint','Frequency Crystal Blueprint') "
         SQL = SQL & "OR BLUEPRINT_NAME LIKE 'Ammatar%' OR BLUEPRINT_NAME LIKE 'Imperial Navy%' OR BLUEPRINT_NAME LIKE 'Khanid Navy%' OR BLUEPRINT_NAME LIKE 'Amarr%' "
         SQL = SQL & "AND RACE_ID = 0"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' 8 = Gallente
         SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = 8 "
@@ -1261,64 +1382,64 @@ Public Class frmMain
         SQL = SQL & "OR MARKET_GROUP ='Gallente' OR BLUEPRINT_GROUP IN ('Hybrid Charge Blueprint','Hybrid Weapon Blueprint', 'Capacitor Booster Charge Blueprint', 'Bomb Blueprint') "
         SQL = SQL & "OR BLUEPRINT_NAME LIKE 'Federation%' OR BLUEPRINT_NAME LIKE 'Gallente%' "
         SQL = SQL & "AND RACE_ID = 0"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = 15 WHERE MARKET_GROUP = 'Pirate Faction' OR RACE_ID > 15"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = 15 WHERE BLUEPRINT_NAME LIKE 'Serpentis%' OR BLUEPRINT_NAME LIKE 'Angel%' OR BLUEPRINT_NAME LIKE 'Blood%'"
         SQL = SQL & "OR BLUEPRINT_NAME LIKE 'Domination%' OR BLUEPRINT_NAME LIKE 'Dread Guristas%' OR BLUEPRINT_NAME LIKE 'Guristas%' "
         SQL = SQL & "OR BLUEPRINT_NAME LIKE 'True Sansha%' OR BLUEPRINT_NAME LIKE 'Sansha%' OR BLUEPRINT_NAME LIKE 'Shadow%' OR BLUEPRINT_NAME LIKE 'Dark Blood%'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Set all the structures now that are zero
         SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = 1 WHERE RACE_ID <> 15 AND ITEM_CATEGORY = 'Structure' "
         SQL = SQL & "AND ITEM_GROUP IN ('Mobile Missile Sentry')"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = 2 WHERE RACE_ID <> 15 AND ITEM_CATEGORY = 'Structure' "
         SQL = SQL & "AND ITEM_GROUP IN ('Mobile Projectile Sentry')"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = 4 WHERE RACE_ID <> 15 AND ITEM_CATEGORY = 'Structure' "
         SQL = SQL & "AND ITEM_GROUP IN ('Mobile Laser Sentry')"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = 8 WHERE RACE_ID <> 15 AND ITEM_CATEGORY = 'Structure' "
         SQL = SQL & "AND ITEM_GROUP IN ('Mobile Hybrid Sentry')"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Update any remaining by blueprint group
         SQL = "SELECT DISTINCT BLUEPRINT_GROUP, RACE_ID FROM ALL_BLUEPRINTS WHERE RACE_ID <> 0 "
-        SQLiteDBCommand = New SQLiteCommand(SQL, SQLiteDB)
+        SQLiteDBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         While SQLiteReader.Read
             SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = " & SQLiteReader.GetInt32(1) & " "
             SQL = SQL & "WHERE BLUEPRINT_GROUP = '" & SQLiteReader.GetString(0) & "' "
             SQL = SQL & "AND RACE_ID = 0 AND ITEM_CATEGORY IN ('Module', 'Drone')"
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         End While
 
         ' Station Parts should be 'Other'
         SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = 0 WHERE ITEM_GROUP_ID = 536 "
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Fix for Pheobe SDE issues - These were removed from game but haven't been deleted from SDE
         SQL = "DELETE FROM ALL_BLUEPRINT_MATERIALS WHERE MATERIAL_CATEGORY = 'Decryptors'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "DELETE FROM ALL_BLUEPRINT_MATERIALS WHERE BLUEPRINT_NAME LIKE '%Data Interface Blueprint'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "DELETE FROM ALL_BLUEPRINTS WHERE ITEM_GROUP = 'Data Interfaces'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         lblTableName.Text = "Finalizing..."
         Application.DoEvents()
 
         ' Run a vacuum on the new SQL DB
-        Call Execute_SQLiteSQL("VACUUM;", SQLiteDB)
+        Call Execute_SQLiteSQL("VACUUM;", EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -1549,7 +1670,7 @@ Public Class frmMain
         SQL = SQL & "IGNORE INTEGER NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Now select the count of the final query of data
         Call SetProgressBarValues("ALL_BLUEPRINTS")
@@ -1559,7 +1680,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Insert the data into the table
         While msSQLReader.Read
@@ -1591,7 +1712,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(22)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(23)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -1599,22 +1720,22 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
 
         ' Build SQL Lite indexes
         SQL = "CREATE INDEX IDX_AB_ITEM_ID ON ALL_BLUEPRINTS (ITEM_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_AB_BP_NAME ON ALL_BLUEPRINTS (BLUEPRINT_NAME)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_AB_CAT_ITEM ON ALL_BLUEPRINTS (ITEM_CATEGORY)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_AB_GROUP_ITEM ON ALL_BLUEPRINTS (ITEM_GROUP,ITEM_TYPE)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
         Application.DoEvents()
@@ -1681,7 +1802,7 @@ Public Class frmMain
         While msSQLReader.Read
             Call Execute_msSQL("DELETE FROM ALL_BLUEPRINT_MATERIALS WHERE BLUEPRINT_ID = " & CStr(msSQLReader.GetInt64(0)))
             ' This table is already built in sqlite, so delete from there
-            Call Execute_SQLiteSQL("DELETE FROM ALL_BLUEPRINTS WHERE BLUEPRINT_ID = " & CStr(msSQLReader.GetInt64(0)), SQLiteDB)
+            Call Execute_SQLiteSQL("DELETE FROM ALL_BLUEPRINTS WHERE BLUEPRINT_ID = " & CStr(msSQLReader.GetInt64(0)), EVEIPHSQLiteDB.DBREf)
         End While
 
         msSQLReader.Close()
@@ -1701,7 +1822,7 @@ Public Class frmMain
         SQL = SQL & "CONSUME INTEGER NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Now select the count of the final query of data
         Call SetProgressBarValues("ALL_BLUEPRINT_MATERIALS")
@@ -1711,7 +1832,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Insert the data into the new SQLite table
         While msSQLReader.Read
@@ -1728,7 +1849,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(9)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(10)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -1736,19 +1857,19 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
 
         ' Build SQL Lite indexes
         SQL = "CREATE INDEX IDX_ABM_BP_ID_ACTIVITY ON ALL_BLUEPRINT_MATERIALS (BLUEPRINT_ID,ACTIVITY)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_ABM_PRODUCT_ID_ACTIVITY ON ALL_BLUEPRINT_MATERIALS (PRODUCT_ID, ACTIVITY)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_ABM_REQCOMP_ID_PRODUCT ON ALL_BLUEPRINT_MATERIALS (MATERIAL_ID, PRODUCT_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
         Application.DoEvents()
@@ -1775,7 +1896,7 @@ Public Class frmMain
         SQL = SQL & "CATEGORY_ID INTEGER NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Pull new data and insert
         msSQL = "SELECT invTypes.typeID AS ARRAY_TYPE_ID, "
@@ -1819,7 +1940,7 @@ Public Class frmMain
 
         Call SetProgressBarValues(" (" & msSQL & ") AS X ")
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Add to Access table
         While msSQLReader.Read
@@ -1835,7 +1956,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(6)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(7)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -1847,12 +1968,12 @@ Public Class frmMain
 
         ' Finally, index
         SQL = "CREATE INDEX IDX_AA_AID_CID_GID ON ASSEMBLY_ARRAYS (ACTIVITY_ID, CATEGORY_ID, GROUP_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_AA_AN_AID_CID_GID ON ASSEMBLY_ARRAYS (ARRAY_NAME, ACTIVITY_ID, CATEGORY_ID, GROUP_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
     End Sub
 
@@ -1887,7 +2008,7 @@ Public Class frmMain
         SQL = SQL & "OUTPOST INT NOT NULL "
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         Application.DoEvents()
 
@@ -1944,7 +2065,7 @@ Public Class frmMain
 
         Call SetProgressBarValues(" (" & msSQL & ") AS X ")
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         While msSQLReader.Read
             Application.DoEvents()
@@ -1968,7 +2089,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(16)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(17)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -1981,24 +2102,24 @@ Public Class frmMain
 
         ' Finally do indexes
         SQL = "CREATE INDEX IDX_SF_FN_AID ON STATION_FACILITIES (FACILITY_NAME, ACTIVITY_ID);"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_SF_FID_AID_GID_CID ON STATION_FACILITIES (FACILITY_ID, ACTIVITY_ID, GROUP_ID, CATEGORY_ID);"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_SF_OP_FN_AID_CID ON STATION_FACILITIES (OUTPOST, FACILITY_NAME, ACTIVITY_ID, CATEGORY_ID);"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_SF_OP_FN_AID_GID ON STATION_FACILITIES (OUTPOST, FACILITY_NAME, ACTIVITY_ID, GROUP_ID);"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_SF_SSID_AID ON STATION_FACILITIES (SOLAR_SYSTEM_ID, ACTIVITY_ID);"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_SF_OP_AID_GID_CID_RN_SSN ON STATION_FACILITIES (OUTPOST, ACTIVITY_ID, GROUP_ID, CATEGORY_ID, REGION_NAME, SOLAR_SYSTEM_NAME);"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
     End Sub
 
@@ -2091,7 +2212,7 @@ Public Class frmMain
         SQL = SQL & "REPROCESSING_TAX_RATE FLOAT NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         Call SetProgressBarValues("staStations")
 
@@ -2100,7 +2221,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Add to Access table
         While msSQLReader.Read
@@ -2116,7 +2237,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(6)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(7)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -2124,10 +2245,10 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         SQL = "CREATE INDEX IDX_S_FID ON STATIONS (STATION_ID);"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         msSQLReader.Close()
 
@@ -2138,19 +2259,19 @@ Public Class frmMain
         Dim SQL As String
 
         SQL = "CREATE TABLE RACE_IDS (ID INTEGER PRIMARY KEY, RACE VARCHAR(8) NOT NULL)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "INSERT INTO RACE_IDS VALUES (1, 'Caldari')"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "INSERT INTO RACE_IDS VALUES (2, 'Minmatar')"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "INSERT INTO RACE_IDS VALUES (4, 'Amarr')"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "INSERT INTO RACE_IDS VALUES (8, 'Gallente')"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -2159,7 +2280,7 @@ Public Class frmMain
         Dim SQL As String
 
         SQL = "CREATE TABLE FW_SYSTEM_UPGRADES (SOLAR_SYSTEM_ID INTEGER PRIMARY KEY, UPGRADE_LEVEL INTEGER NOT NULL)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -2176,13 +2297,13 @@ Public Class frmMain
         SQL = SQL & "OVERRIDE_SKILL INTEGER NOT NULL,"
         SQL = SQL & "OVERRIDE_LEVEL INTEGER NOT NULL)"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_CSKILLS_CHARACTER_ID ON CHARACTER_SKILLS (CHARACTER_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_CSKILLS_SKILL_TYPE_ID ON CHARACTER_SKILLS (SKILL_TYPE_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -2223,10 +2344,10 @@ Public Class frmMain
         SQL = SQL & "PERCEPTION INTEGER NOT NULL,"
         SQL = SQL & "CHARISMA INTEGER NOT NULL"
         SQL = SQL & ")"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_CSHEET_CHARACTER_ID ON CHARACTER_SHEET (CHARACTER_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -2240,10 +2361,10 @@ Public Class frmMain
         SQL = SQL & "IMPLANT_ID INTEGER NOT NULL,"
         SQL = SQL & "IMPLANT_NAME VARCHAR(100) NOT NULL)"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_CI_CHARACTER_ID ON CHARACTER_IMPLANTS (CHARACTER_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -2259,10 +2380,10 @@ Public Class frmMain
         SQL = SQL & "CLONE_NAME VARCHAR(100)"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_CJD_CHARACTER_ID ON CHARACTER_JUMP_CLONES (CHARACTER_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -2277,10 +2398,10 @@ Public Class frmMain
         SQL = SQL & "ROLE_NAME VARCHAR(100)"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_CCR_CID_RT ON CHARACTER_CORP_ROLES (CHARACTER_ID, ROLE_TYPE)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -2294,10 +2415,10 @@ Public Class frmMain
         SQL = SQL & "TITLE_NAME VARCHAR(100)"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_CCT_CID ON CHARACTER_CORP_TITLES (CHARACTER_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -2314,127 +2435,127 @@ Public Class frmMain
         SQL = SQL & "TRUESEC_BONUS INTEGER NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Since this is all data I created, just do inserts here 
         ' Data from: https://forums.eveonline.com/default.aspx?g=posts&t=418719
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60800,'Colossal','Arkonor',4,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60800,'Colossal','Crimson Arkonor',4,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60800,'Colossal','Prime Arkonor',4,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (114300,'Colossal','Bistot',7,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (114300,'Colossal','Triclinic Bistot',7,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (114300,'Colossal','Monoclinic Bistot',7,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (225200,'Colossal','Crokite',9,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (225200,'Colossal','Sharp Crokite',9,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (225200,'Colossal','Crystalline Crokite',9,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (115000,'Colossal','Dark Ochre',6,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (115000,'Colossal','Onyx Ochre',6,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (115000,'Colossal','Obsidian Ochre',6,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (630000,'Colossal','Gneiss',13,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (630000,'Colossal','Iridescent Gneiss',13,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (630000,'Colossal','Prismatic Gneiss',13,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (736200,'Colossal','Spodumain',14,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (736200,'Colossal','Bright Spodumain',14,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (736200,'Colossal','Gleaming Spodumain',14,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (7000,'Colossal','Mercoxit',5,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (7000,'Colossal','Magma Mercoxit',5,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (7000,'Colossal','Vitreous Mercoxit',5,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (1,'Testing','Vitreous Mercoxit',5,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60800,'Colossal','Arkonor',4,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60800,'Colossal','Crimson Arkonor',4,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60800,'Colossal','Prime Arkonor',4,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (114300,'Colossal','Bistot',7,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (114300,'Colossal','Triclinic Bistot',7,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (114300,'Colossal','Monoclinic Bistot',7,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (225200,'Colossal','Crokite',9,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (225200,'Colossal','Sharp Crokite',9,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (225200,'Colossal','Crystalline Crokite',9,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (115000,'Colossal','Dark Ochre',6,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (115000,'Colossal','Onyx Ochre',6,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (115000,'Colossal','Obsidian Ochre',6,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (630000,'Colossal','Gneiss',13,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (630000,'Colossal','Iridescent Gneiss',13,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (630000,'Colossal','Prismatic Gneiss',13,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (736200,'Colossal','Spodumain',14,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (736200,'Colossal','Bright Spodumain',14,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (736200,'Colossal','Gleaming Spodumain',14,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (7000,'Colossal','Mercoxit',5,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (7000,'Colossal','Magma Mercoxit',5,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (7000,'Colossal','Vitreous Mercoxit',5,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (1,'Testing','Vitreous Mercoxit',5,10)", EVEIPHSQLiteDB.DBREf)
 
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (58000,'Enormous','Arkonor',4,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (58000,'Enormous','Crimson Arkonor',4,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (58000,'Enormous','Prime Arkonor',4,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (86000,'Enormous','Bistot',5,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (86000,'Enormous','Monoclinic Bistot',5,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (86000,'Enormous','Triclinic Bistot',5,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (169000,'Enormous','Crokite',7,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (169000,'Enormous','Sharp Crokite',7,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (169000,'Enormous','Crystalline Crokite',7,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (500000,'Enormous','Dark Ochre',10,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (500000,'Enormous','Obsidian Ochre',10,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (500000,'Enormous','Onyx Ochre',10,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (540000,'Enormous','Gneiss',10,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (540000,'Enormous','Prismatic Gneiss',10,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (540000,'Enormous','Iridescent Gneiss',10,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (578000,'Enormous','Spodumain',10,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (578000,'Enormous','Gleaming Spodumain',10,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (578000,'Enormous','Bright Spodumain',10,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (5200,'Enormous','Mercoxit',4,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (5200,'Enormous','Magma Mercoxit',4,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (5200,'Enormous','Vitreous Mercoxit',4,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (58000,'Enormous','Arkonor',4,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (58000,'Enormous','Crimson Arkonor',4,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (58000,'Enormous','Prime Arkonor',4,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (86000,'Enormous','Bistot',5,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (86000,'Enormous','Monoclinic Bistot',5,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (86000,'Enormous','Triclinic Bistot',5,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (169000,'Enormous','Crokite',7,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (169000,'Enormous','Sharp Crokite',7,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (169000,'Enormous','Crystalline Crokite',7,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (500000,'Enormous','Dark Ochre',10,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (500000,'Enormous','Obsidian Ochre',10,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (500000,'Enormous','Onyx Ochre',10,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (540000,'Enormous','Gneiss',10,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (540000,'Enormous','Prismatic Gneiss',10,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (540000,'Enormous','Iridescent Gneiss',10,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (578000,'Enormous','Spodumain',10,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (578000,'Enormous','Gleaming Spodumain',10,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (578000,'Enormous','Bright Spodumain',10,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (5200,'Enormous','Mercoxit',4,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (5200,'Enormous','Magma Mercoxit',4,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (5200,'Enormous','Vitreous Mercoxit',4,10)", EVEIPHSQLiteDB.DBREf)
 
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (29900,'Large','Arkonor',3,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (29900,'Large','Crimson Arkonor',3,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (29900,'Large','Prime Arkonor',3,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (57000,'Large','Bistot',5,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (57000,'Large','Monoclinic Bistot',5,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (57000,'Large','Triclinic Bistot',5,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (124000,'Large','Crokite',6,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (124000,'Large','Sharp Crokite',6,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (124000,'Large','Crystalline Crokite',6,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60000,'Large','Dark Ochre',4,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60000,'Large','Obsidian Ochre',4,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60000,'Large','Onyx Ochre',4,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (313500,'Large','Gneiss',9,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (313500,'Large','Prismatic Gneiss',9,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (313500,'Large','Iridescent Gneiss',9,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (368100,'Large','Spodumain',9,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (368100,'Large','Gleaming Spodumain',9,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (368100,'Large','Bright Spodumain',9,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (3500,'Large','Mercoxit',3,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (3500,'Large','Magma Mercoxit',3,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (3500,'Large','Vitreous Mercoxit',3,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (29900,'Large','Arkonor',3,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (29900,'Large','Crimson Arkonor',3,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (29900,'Large','Prime Arkonor',3,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (57000,'Large','Bistot',5,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (57000,'Large','Monoclinic Bistot',5,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (57000,'Large','Triclinic Bistot',5,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (124000,'Large','Crokite',6,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (124000,'Large','Sharp Crokite',6,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (124000,'Large','Crystalline Crokite',6,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60000,'Large','Dark Ochre',4,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60000,'Large','Obsidian Ochre',4,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60000,'Large','Onyx Ochre',4,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (313500,'Large','Gneiss',9,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (313500,'Large','Prismatic Gneiss',9,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (313500,'Large','Iridescent Gneiss',9,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (368100,'Large','Spodumain',9,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (368100,'Large','Gleaming Spodumain',9,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (368100,'Large','Bright Spodumain',9,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (3500,'Large','Mercoxit',3,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (3500,'Large','Magma Mercoxit',3,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (3500,'Large','Vitreous Mercoxit',3,10)", EVEIPHSQLiteDB.DBREf)
 
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (28000,'Medium','Arkonor',3,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (28000,'Medium','Crimson Arkonor',3,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (28000,'Medium','Prime Arkonor',3,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (38700,'Medium','Bistot',4,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (38700,'Medium','Monoclinic Bistot',4,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (38700,'Medium','Triclinic Bistot',4,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (84700,'Medium','Crokite',5,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (84700,'Medium','Sharp Crokite',5,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (84700,'Medium','Crystalline Crokite',5,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (31000,'Medium','Dark Ochre',3,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (31000,'Medium','Obsidian Ochre',3,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (31000,'Medium','Onyx Ochre',3,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (340000,'Medium','Gneiss',8,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (340000,'Medium','Prismatic Gneiss',8,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (340000,'Medium','Iridescent Gneiss',8,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (270000,'Medium','Spodumain',8,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (270000,'Medium','Gleaming Spodumain',8,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (270000,'Medium','Bright Spodumain',8,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (2600,'Medium','Mercoxit',2,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (2600,'Medium','Magma Mercoxit',2,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (2600,'Medium','Vitreous Mercoxit',2,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (28000,'Medium','Arkonor',3,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (28000,'Medium','Crimson Arkonor',3,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (28000,'Medium','Prime Arkonor',3,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (38700,'Medium','Bistot',4,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (38700,'Medium','Monoclinic Bistot',4,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (38700,'Medium','Triclinic Bistot',4,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (84700,'Medium','Crokite',5,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (84700,'Medium','Sharp Crokite',5,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (84700,'Medium','Crystalline Crokite',5,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (31000,'Medium','Dark Ochre',3,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (31000,'Medium','Obsidian Ochre',3,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (31000,'Medium','Onyx Ochre',3,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (340000,'Medium','Gneiss',8,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (340000,'Medium','Prismatic Gneiss',8,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (340000,'Medium','Iridescent Gneiss',8,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (270000,'Medium','Spodumain',8,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (270000,'Medium','Gleaming Spodumain',8,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (270000,'Medium','Bright Spodumain',8,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (2600,'Medium','Mercoxit',2,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (2600,'Medium','Magma Mercoxit',2,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (2600,'Medium','Vitreous Mercoxit',2,10)", EVEIPHSQLiteDB.DBREf)
 
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (9700,'Small','Arkonor',3,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (9700,'Small','Crimson Arkonor',3,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (9700,'Small','Prime Arkonor',3,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (12800,'Small','Bistot',3,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (12800,'Small','Monoclinic Bistot',3,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (12800,'Small','Triclinic Bistot',3,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (30000,'Small','Crokite',5,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (30000,'Small','Sharp Crokite',5,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (30000,'Small','Crystalline Crokite',5,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (16000,'Small','Dark Ochre',4,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (16000,'Small','Obsidian Ochre',4,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (16000,'Small','Onyx Ochre',4,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (170000,'Small','Gneiss',6,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (170000,'Small','Prismatic Gneiss',6,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (170000,'Small','Iridescent Gneiss',6,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (300000,'Small','Spodumain',7,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (300000,'Small','Gleaming Spodumain',7,10)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (300000,'Small','Bright Spodumain',7,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (0,'Small','Mercoxit',0,0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (0,'Small','Magma Mercoxit',0,5)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (0,'Small','Vitreous Mercoxit',0,10)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (9700,'Small','Arkonor',3,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (9700,'Small','Crimson Arkonor',3,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (9700,'Small','Prime Arkonor',3,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (12800,'Small','Bistot',3,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (12800,'Small','Monoclinic Bistot',3,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (12800,'Small','Triclinic Bistot',3,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (30000,'Small','Crokite',5,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (30000,'Small','Sharp Crokite',5,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (30000,'Small','Crystalline Crokite',5,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (16000,'Small','Dark Ochre',4,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (16000,'Small','Obsidian Ochre',4,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (16000,'Small','Onyx Ochre',4,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (170000,'Small','Gneiss',6,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (170000,'Small','Prismatic Gneiss',6,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (170000,'Small','Iridescent Gneiss',6,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (300000,'Small','Spodumain',7,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (300000,'Small','Gleaming Spodumain',7,10)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (300000,'Small','Bright Spodumain',7,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (0,'Small','Mercoxit',0,0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (0,'Small','Magma Mercoxit',0,5)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (0,'Small','Vitreous Mercoxit',0,10)", EVEIPHSQLiteDB.DBREf)
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         SQL = "CREATE INDEX IDX_BP_ID_BELT_NAME ON INDUSTRY_UPGRADE_BELTS (BELT_NAME)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
         Application.DoEvents()
@@ -2465,13 +2586,13 @@ Public Class frmMain
         SQL = SQL & "BLUEPRINTS_CACHED_UNTIL VARCHAR(23)" ' Date
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_CAPI_CHARACTER_ID ON API (CHARACTER_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_CAPI_KEY_ID ON API (KEY_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -2489,87 +2610,87 @@ Public Class frmMain
         SQL = SQL & "RAW_MATERIAL INTEGER NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Insert the base data, this will be default until they change it and it's copied in the updater - start with raw, in Jita
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Minerals','Min Sell', 'The Forge','Jita',0,1)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Ice Products','Min Sell', 'The Forge','Jita',0,1)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Gas','Min Sell', 'The Forge','Jita',0,1)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Datacores','Min Sell', 'The Forge','Jita',0,1)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Decryptors','Min Sell', 'The Forge','Jita',0,1)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Planetary','Min Sell', 'The Forge','Jita',0,1)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Asteroids','Min Sell', 'The Forge','Jita',0,1)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Salvage','Min Sell', 'The Forge','Jita',0,1)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Ancient Salvage','Min Sell', 'The Forge','Jita',0,1)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Ancient Relics','Min Sell', 'The Forge','Jita',0,1)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Hybrid Polymers','Min Sell', 'The Forge','Jita',0,1)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Misc.','Min Sell', 'The Forge','Jita',0,1)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Raw Moon Materials','Min Sell', 'The Forge','Jita',0,1)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Processed Moon Materials','Min Sell', 'The Forge','Jita',0,1)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Advanced Moon Materials','Min Sell', 'The Forge','Jita',0,1)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Materials & Compounds','Min Sell', 'The Forge','Jita',0,1)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Rogue Drone Components','Min Sell', 'The Forge','Jita',0,1)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Booster Materials','Min Sell', 'The Forge','Jita',0,1)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Ships','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Charges','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Modules','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Drones','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Rigs','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Deployables','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Subsystems','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Boosters','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Structures','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Structure Modules','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Celestials','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Station Parts','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Adv. Capital Construction Components','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Capital Construction Components','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Construction Components','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Hybrid Tech Components','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Tools','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Fuel Blocks','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Implants','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_PP_ID ON PRICE_PROFILES (ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -2586,7 +2707,7 @@ Public Class frmMain
         SQL = SQL & "CREST_MARKET_PRICES_CACHED_UNTIL VARCHAR(23)" ' Date
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -2604,14 +2725,14 @@ Public Class frmMain
         SQL = SQL & "maxProductionLimit INTEGER NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Pull new data and insert
         msSQL = "SELECT blueprintTypeID, maxProductionLimit FROM industryBlueprints"
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         While msSQLReader.Read
             Application.DoEvents()
@@ -2620,18 +2741,18 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(0)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
         msSQLReader = Nothing
         msSQLQuery = Nothing
 
         SQL = "CREATE INDEX IDX_blueprintTypeID ON industryBlueprints (blueprintTypeID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
         Application.DoEvents()
@@ -2654,7 +2775,7 @@ Public Class frmMain
         SQL = SQL & "PRIMARY KEY (blueprintTypeID, activityID)"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Now select the count of the final query of data
 
@@ -2663,7 +2784,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         While msSQLReader.Read
             Application.DoEvents()
@@ -2673,18 +2794,18 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
         msSQLReader = Nothing
         msSQLQuery = Nothing
 
         SQL = "CREATE INDEX IDX_activityID ON industryActivities (activityID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
         Application.DoEvents()
@@ -2709,7 +2830,7 @@ Public Class frmMain
         SQL = SQL & "consume INTEGER NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Now select the count of the final query of data
 
@@ -2718,7 +2839,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         While msSQLReader.Read
             Application.DoEvents()
@@ -2730,18 +2851,18 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(3)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(4)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
         msSQLReader = Nothing
         msSQLQuery = Nothing
 
         SQL = "CREATE INDEX IDX_BPIDactivityID1 ON industryActivityMaterials (blueprintTypeID, activityID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
         Application.DoEvents()
@@ -2766,7 +2887,7 @@ Public Class frmMain
         SQL = SQL & "probability FLOAT NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Now select the count of the final query of data
 
@@ -2775,7 +2896,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         While msSQLReader.Read
             Application.DoEvents()
@@ -2787,18 +2908,18 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(3)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(4)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
         msSQLReader = Nothing
         msSQLQuery = Nothing
 
         SQL = "CREATE INDEX IDX_IAP_BTID_AID ON INDUSTRY_ACTIVITY_PRODUCTS (blueprintTypeID, activityID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
         Application.DoEvents()
@@ -2822,7 +2943,7 @@ Public Class frmMain
         SQL = SQL & "published INTEGER"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         Call SetProgressBarValues("ramActivities")
 
@@ -2831,7 +2952,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Add to Access table
         While msSQLReader.Read
@@ -2844,7 +2965,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetString(3)) & ","
             SQL = SQL & BuildInsertFieldString(CInt(msSQLReader.GetBoolean(4))) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -2852,12 +2973,12 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
 
         SQL = "CREATE INDEX IDX_ACTIVITY_ID ON RAM_ACTIVITIES (activityID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -2880,7 +3001,7 @@ Public Class frmMain
         SQL = SQL & "regionID INTEGER"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         Call SetProgressBarValues("ramAssemblyLineStations")
 
@@ -2889,7 +3010,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Add to Access table
         While msSQLReader.Read
@@ -2904,7 +3025,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(5)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(6)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -2912,19 +3033,19 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
 
         ' Indexes
         SQL = "CREATE INDEX IDX_RALS_SID ON RAM_ASSEMBLY_LINE_STATIONS (stationID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_RALS_SSID ON RAM_ASSEMBLY_LINE_STATIONS (solarSystemID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_RALS_ALTID ON RAM_ASSEMBLY_LINE_STATIONS (assemblyLineTypeID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -2945,7 +3066,7 @@ Public Class frmMain
         SQL = SQL & "costMultiplier FLOAT"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         Call SetProgressBarValues("ramAssemblyLineTypeDetailPerCategory")
 
@@ -2954,7 +3075,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Add to Access table
         While msSQLReader.Read
@@ -2967,7 +3088,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(3)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(4)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -2975,16 +3096,16 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
 
         ' Indexes
         SQL = "CREATE INDEX IDX_ALC_ALTID ON RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_CATEGORY (assemblyLineTypeID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_ALC_CID ON RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_CATEGORY (categoryID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -3005,7 +3126,7 @@ Public Class frmMain
         SQL = SQL & "costMultiplier FLOAT"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         Call SetProgressBarValues("ramAssemblyLineTypeDetailPerGroup")
 
@@ -3014,7 +3135,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Add to Access table
         While msSQLReader.Read
@@ -3027,7 +3148,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(3)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(4)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -3035,16 +3156,16 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
 
         ' Indexes
         SQL = "CREATE INDEX IDX_ALG_ALTID ON RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_GROUP (assemblyLineTypeID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_ALG_GID ON RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_GROUP (groupID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -3069,7 +3190,7 @@ Public Class frmMain
         SQL = SQL & "minCostPerHour FLOAT"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         Call SetProgressBarValues("ramAssemblyLineTypes")
 
@@ -3078,7 +3199,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Add to Access table
         While msSQLReader.Read
@@ -3095,7 +3216,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(7)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(8)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -3103,16 +3224,16 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
 
         ' Indexes
         SQL = "CREATE INDEX IDX_ALT_ALTID_AID ON RAM_ASSEMBLY_LINE_TYPES (assemblyLineTypeID, activityID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_ALT_AID ON RAM_ASSEMBLY_LINE_TYPES (activityID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -3131,7 +3252,7 @@ Public Class frmMain
         SQL = SQL & "quantity INTEGER"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         Call SetProgressBarValues("ramInstallationTypeContents")
 
@@ -3140,7 +3261,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Add to Access table
         While msSQLReader.Read
@@ -3151,7 +3272,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -3159,16 +3280,16 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
 
         ' Indexes
         SQL = "CREATE INDEX IDX_RITC_ITID_ALTID ON RAM_INSTALLATION_TYPE_CONTENTS (installationTypeID, assemblyLineTypeID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_RITC_ALTID ON RAM_INSTALLATION_TYPE_CONTENTS (assemblyLineTypeID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -3184,13 +3305,13 @@ Public Class frmMain
         SQL = SQL & "STANDING REAL NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_CS_CHARACTER_ID ON CHARACTER_STANDINGS (CHARACTER_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_CS_NPC_TYPE_ID ON CHARACTER_STANDINGS (NPC_TYPE_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -3216,11 +3337,11 @@ Public Class frmMain
         SQL = SQL & "ADDITIONAL_COSTS FLOAT"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Indexes
         SQL = "CREATE INDEX IDX_OBP_USER_ID ON OWNED_BLUEPRINTS (USER_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -3239,7 +3360,7 @@ Public Class frmMain
         SQL = SQL & "raceID INTEGER"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Now select the count of the final query of data
         Call SetProgressBarValues("chrFactions")
@@ -3251,7 +3372,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         While msSQLReader.Read
             Application.DoEvents()
@@ -3260,7 +3381,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -3268,12 +3389,12 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
 
         SQL = "CREATE INDEX IDX_F_FACTION_NAME ON FACTIONS (factionName)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
         Application.DoEvents()
@@ -3295,7 +3416,7 @@ Public Class frmMain
         SQL = SQL & "metaGroupID INTEGER"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         Call SetProgressBarValues("invMetaTypes")
 
@@ -3304,7 +3425,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Add to Access table
         While msSQLReader.Read
@@ -3315,7 +3436,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -3323,7 +3444,7 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
 
@@ -3349,7 +3470,7 @@ Public Class frmMain
         SQL = SQL & "factionID INTEGER"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         Call SetProgressBarValues("invControlTowerResources")
 
@@ -3358,7 +3479,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Add to Access table
         While msSQLReader.Read
@@ -3372,7 +3493,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(4)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(5)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -3380,16 +3501,16 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
 
         ' Build SQL Lite indexes
         SQL = "CREATE INDEX IDX_CT_TYPE_ID ON CONTROL_TOWER_RESOURCES (controlTowerTypeID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_RESOURCE_TYPE_ID ON CONTROL_TOWER_RESOURCES (resourceTypeID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
 
@@ -3438,7 +3559,7 @@ Public Class frmMain
         Next
         SQL = SQL.Substring(0, Len(SQL) - 1) & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -3457,7 +3578,7 @@ Public Class frmMain
         SQL = SQL & "displayName VARCHAR(" & GetLenSQLExpField("displayName", "dgmAttributeTypes") & ")"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         Call SetProgressBarValues("dgmAttributeTypes")
 
@@ -3466,7 +3587,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Add to Access table
         While msSQLReader.Read
@@ -3477,7 +3598,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -3485,7 +3606,7 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
 
@@ -3509,7 +3630,7 @@ Public Class frmMain
         SQL = SQL & "valueFloat REAL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         Call SetProgressBarValues("dgmTypeAttributes")
 
@@ -3518,7 +3639,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Add to Access table
         While msSQLReader.Read
@@ -3530,7 +3651,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(3)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -3538,15 +3659,15 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
 
         SQL = "CREATE INDEX IDX_TA_ATTRIBUTE_ID ON TYPE_ATTRIBUTES (attributeID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_TA_TYPE_ID ON TYPE_ATTRIBUTES (typeID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
 
@@ -3564,105 +3685,105 @@ Public Class frmMain
         'SQL = SQL & "MineralID INTEGER,"
         'SQL = SQL & "MineralQuality INTEGER)"
 
-        'Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        'Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         '' Add Data
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (18,35,213)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES  (18,34,107)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (18,36,107)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (19,34,56000)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (19,35,12050)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (19,36,2100)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (19,37,450)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (20,34,134)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (20,36,267)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (20,37,134)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (21,35,1000)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (21,37,200)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (21,38,100)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (21,39,19)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (22,34,22000)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (22,36,2500)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (22,40,320)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1223,35,12000)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1223,39,450)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1223,40,100)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1224,34,351)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1224,35,25)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1224,36,50)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1224,38,5)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1225,34,21000)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1225,38,760)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1225,39,135)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1226,36,350)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1226,38,75)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1226,39,8)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1227,34,800)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1227,35,100)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1227,37,85)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1228,34,346)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1228,35,173)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1229,35,2200)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1229,36,2400)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1229,37,300)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1230,34,415)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1231,34,2200)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1231,37,100)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1231,38,120)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1231,39,15)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1232,34,10000)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1232,37,1600)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1232,38,120)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (11396,11399,300)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28422,35,213)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28422,34,107)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28422,36,107)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28420,34,56000)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28420,35,12050)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28420,36,2100)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28420,37,450)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28410,34,134)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28410,36,267)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28410,37,134)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28401,35,1000)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28401,37,200)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28401,38,100)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28401,39,19)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28367,34,22000)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28367,36,2500)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28367,40,320)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28388,35,12000)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28388,39,450)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28388,40,100)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28424,34,351)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28424,35,25)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28424,36,50)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28424,38,5)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28391,34,21000)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28391,38,760)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28391,39,135)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28406,36,350)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28406,38,75)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28406,39,8)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28416,34,800)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28416,35,100)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28416,37,85)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28429,34,346)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28429,35,173)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28397,35,2200)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28397,36,2400)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28397,37,300)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28432,34,415)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28403,34,2200)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28403,37,100)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28403,38,120)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28403,39,15)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28394,34,10000)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28394,37,1600)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28394,38,120)", SQLiteDB)
-        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28413,11399,300)", SQLiteDB)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (18,35,213)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES  (18,34,107)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (18,36,107)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (19,34,56000)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (19,35,12050)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (19,36,2100)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (19,37,450)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (20,34,134)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (20,36,267)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (20,37,134)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (21,35,1000)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (21,37,200)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (21,38,100)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (21,39,19)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (22,34,22000)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (22,36,2500)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (22,40,320)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1223,35,12000)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1223,39,450)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1223,40,100)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1224,34,351)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1224,35,25)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1224,36,50)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1224,38,5)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1225,34,21000)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1225,38,760)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1225,39,135)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1226,36,350)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1226,38,75)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1226,39,8)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1227,34,800)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1227,35,100)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1227,37,85)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1228,34,346)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1228,35,173)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1229,35,2200)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1229,36,2400)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1229,37,300)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1230,34,415)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1231,34,2200)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1231,37,100)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1231,38,120)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1231,39,15)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1232,34,10000)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1232,37,1600)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (1232,38,120)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (11396,11399,300)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28422,35,213)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28422,34,107)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28422,36,107)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28420,34,56000)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28420,35,12050)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28420,36,2100)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28420,37,450)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28410,34,134)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28410,36,267)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28410,37,134)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28401,35,1000)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28401,37,200)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28401,38,100)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28401,39,19)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28367,34,22000)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28367,36,2500)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28367,40,320)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28388,35,12000)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28388,39,450)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28388,40,100)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28424,34,351)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28424,35,25)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28424,36,50)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28424,38,5)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28391,34,21000)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28391,38,760)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28391,39,135)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28406,36,350)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28406,38,75)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28406,39,8)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28416,34,800)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28416,35,100)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28416,37,85)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28429,34,346)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28429,35,173)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28397,35,2200)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28397,36,2400)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28397,37,300)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28432,34,415)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28403,34,2200)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28403,37,100)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28403,38,120)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28403,39,15)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28394,34,10000)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28394,37,1600)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28394,38,120)", EVEIPHSQLiteDB.DBREf)
+        'Call Execute_SQLiteSQL("INSERT INTO ORE_REFINE (OreID,MineralID,MineralQuantity) VALUES (28413,11399,300)", EVEIPHSQLiteDB.DBREf)
 
-        Call Execute_SQLiteSQL(File.OpenText(WorkingDirectory & "\OreRefine.sql").ReadToEnd(), SQLiteDB)
+        Call Execute_SQLiteSQL(File.OpenText(WorkingDirectory & "\OreRefine.sql").ReadToEnd(), EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -3685,7 +3806,7 @@ Public Class frmMain
         SQL = SQL & "BELT_TYPE VARCHAR(3),"
         SQL = SQL & "HIGH_YIELD_ORE INTEGER)"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Pull new data and insert
         msSQL = "SELECT invTypes.typeID, invTypes.typeName, invTypes.volume, invTypes.portionSize, "
@@ -3707,7 +3828,7 @@ Public Class frmMain
         msSQLQuery.CommandTimeout = 300
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Add to Access table
         While msSQLReader.Read
@@ -3721,82 +3842,82 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(4)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(5)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
 
         ' Now set the 5%/10% flag
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Crimson Arkonor'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Triclinic Bistot'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Sharp Crokite'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Onyx Ochre'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Vitric Hedbergite'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Vivid Hemorphite'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Pure Jaspet'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Luminous Kernite'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Azure Plagioclase'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Solid Pyroxeres'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Condensed Scordite'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Bright Spodumain'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Concentrated Veldspar'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Iridescent Gneiss'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Magma Mercoxit'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Silvery Omber'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Prime Arkonor'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Monoclinic Bistot'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Crystalline Crokite'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Obsidian Ochre'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Glazed Hedbergite'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Radiant Hemorphite'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Pristine Jaspet'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Fiery Kernite'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Rich Plagioclase'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Viscous Pyroxeres'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Massive Scordite'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Gleaming Spodumain'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Dense Veldspar'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Prismatic Gneiss'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Vitreous Mercoxit'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Golden Omber'"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_ORES_ORE_ID ON ORES (ORE_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
 
@@ -3818,975 +3939,975 @@ Public Class frmMain
         SQL = SQL & "HIGH_YIELD_ORE INTEGER NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         ' Now open the saved table and insert all the values into this new table
 
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'Null Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'High Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'Low Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'Null Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'High Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'Low Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'Null Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'High Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'Low Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'Null Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'Null Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'Null Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'Null Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'Null Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'High Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'Low Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'Null Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'Null Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'Low Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'Null Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'Low Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'Null Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'Null Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'Null Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'Low Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'Null Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'Low Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'Null Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'Null Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'Null Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'Null Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'Null Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'Null Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'Null Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'Null Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'Null Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'Null Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'High Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'Low Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'Null Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'Null Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'High Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'Low Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'Null Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'Null Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'Null Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'Null Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'Null Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'Null Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'Null Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'Low Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'Null Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'Null Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'Null Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'Null Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'Low Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'Null Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'Null Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'Null Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'High Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'Low Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'Null Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'High Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'Low Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'Null Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'High Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Low Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Null Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Null Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'High Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Low Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Null Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'High Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Low Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Null Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'High Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Low Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Null Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'Null Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'Null Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'Null Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'Null Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'High Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Low Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Null Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Null Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'High Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Low Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Null Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'High Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Low Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Null Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'High Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Low Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Null Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'Low Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'Null Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'Null Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'Null Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'Null Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'Low Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'Null Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'Null Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'Null Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'Null Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'Null Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C1','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C2','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'Null Sec','Amarr',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'Null Sec','Caldari',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'Null Sec','Minmatar',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'Null Sec','Gallente',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'C5','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'C6','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'C3','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'C4','WH',0)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16262,'High Sec','Amarr',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16262,'Low Sec','Amarr',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16262,'Null Sec','Amarr',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16262,'Null Sec','Amarr',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16263,'High Sec','Minmatar',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16263,'Low Sec','Minmatar',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16263,'Null Sec','Minmatar',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16263,'Low Sec','Minmatar',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16263,'Null Sec','Minmatar',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16264,'High Sec','Gallente',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16264,'Low Sec','Gallente',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16264,'High Sec','Gallente',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16264,'Null Sec','Gallente',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16265,'High Sec','Caldari',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16265,'Low Sec','Caldari',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16265,'Null Sec','Caldari',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16265,'Low Sec','Caldari',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16265,'Null Sec','Caldari',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Low Sec','Amarr',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Null Sec','Amarr',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Null Sec','Amarr',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Low Sec','Caldari',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Null Sec','Caldari',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Null Sec','Caldari',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Low Sec','Gallente',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Null Sec','Gallente',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Null Sec','Gallente',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Low Sec','Minmatar',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Null Sec','Minmatar',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Null Sec','Minmatar',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Low Sec','Amarr',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Null Sec','Amarr',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Null Sec','Amarr',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Low Sec','Caldari',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Null Sec','Caldari',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Null Sec','Caldari',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Low Sec','Gallente',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Null Sec','Gallente',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Null Sec','Gallente',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Low Sec','Minmatar',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Null Sec','Minmatar',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Null Sec','Minmatar',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16268,'Null Sec','Amarr',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16268,'Null Sec','Caldari',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16268,'Null Sec','Gallente',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16268,'Null Sec','Minmatar',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16269,'Null Sec','Caldari',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16269,'Null Sec','Gallente',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16269,'Null Sec','Minmatar',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17425,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17425,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17425,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17425,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17426,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17426,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17426,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17426,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17428,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17428,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17428,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17428,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17429,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17429,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17429,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17429,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17432,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17432,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17432,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17432,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17433,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17433,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17433,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17433,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17436,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17436,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17436,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17436,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17437,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17437,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17437,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17437,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17440,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17440,'Low Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17440,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17440,'Low Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17440,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17440,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17441,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17441,'Low Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17441,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17441,'Low Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17441,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17441,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17444,'Low Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17444,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17444,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17444,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17444,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17444,'Low Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17444,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17445,'Low Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17445,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17445,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17445,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17445,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17445,'Low Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17445,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17448,'Low Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17448,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17448,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17448,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17448,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17448,'Low Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17448,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17449,'Low Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17449,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17449,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17449,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17449,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17449,'Low Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17449,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'High Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'Low Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'Low Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'Low Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'High Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'Low Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'Low Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'Low Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'High Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'Low Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'High Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'Low Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'High Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'Low Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'High Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'Low Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'High Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'Low Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'High Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'Low Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'High Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'Low Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'High Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'Low Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'High Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'Low Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'High Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'Low Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'High Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Low Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'High Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Low Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'High Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Low Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'High Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Low Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'High Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Low Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'High Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Low Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'High Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Low Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'High Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Low Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17466,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17466,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17466,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17466,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17467,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17467,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17467,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17467,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'High Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Low Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'High Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Low Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'High Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Low Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'High Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Low Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'High Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Low Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'High Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Low Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'High Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Low Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'High Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Low Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17865,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17865,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17865,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17865,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17866,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17866,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17866,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17866,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17867,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17867,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17867,'High Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17867,'Low Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17867,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17867,'High Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17867,'Low Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17867,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17868,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17868,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17868,'High Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17868,'Low Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17868,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17868,'High Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17868,'Low Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17868,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17869,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17869,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17869,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17869,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17870,'Null Sec','Amarr',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17870,'Null Sec','Caldari',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17870,'Null Sec','Minmatar',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17870,'Null Sec','Gallente',1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17975,'Null Sec','Gallente',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17976,'Null Sec','Caldari',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17977,'Null Sec','Minmatar',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17978,'Null Sec','Amarr',-1)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25268,'Low Sec','Caldari',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25268,'Null Sec','Caldari',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25268,'Null Sec','Caldari',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25273,'Low Sec','Caldari',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25273,'Null Sec','Caldari',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25273,'Null Sec','Caldari',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25273,'Null Sec','Caldari',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25273,'Null Sec','Caldari',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25274,'Null Sec','Gallente',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25274,'Low Sec','Gallente',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25275,'Null Sec','Gallente',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25275,'Null Sec','Gallente',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25275,'Null Sec','Gallente',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25275,'Null Sec','Gallente',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25275,'Low Sec','Gallente',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25276,'Low Sec','Amarr',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25276,'Null Sec','Amarr',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25277,'Null Sec','Amarr',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25277,'Low Sec','Amarr',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25278,'Null Sec','Minmatar',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25278,'Null Sec','Minmatar',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25278,'Low Sec','Minmatar',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25279,'Low Sec','Minmatar',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28694,'Low Sec','Caldari',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28694,'Low Sec','Caldari',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28695,'Low Sec','Minmatar',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28695,'Low Sec','Minmatar',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28696,'High Sec','Gallente',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28696,'High Sec','Gallente',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28697,'Low Sec','Caldari',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28697,'High Sec','Caldari',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28698,'Low Sec','Amarr',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28699,'High Sec','Amarr',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28700,'High Sec','Minmatar',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28700,'High Sec','Minmatar',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28701,'Low Sec','Gallente',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28701,'Low Sec','Gallente',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30370,'C1','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30370,'C2','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30370,'C3','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30370,'C4','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30370,'C5','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30370,'C6','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30371,'C1','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30371,'C2','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30371,'C3','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30371,'C4','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30371,'C5','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30371,'C6','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30372,'C1','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30372,'C2','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30372,'C3','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30372,'C4','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30372,'C5','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30372,'C6','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30373,'C1','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30373,'C2','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30373,'C3','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30373,'C4','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30373,'C5','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30373,'C6','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30374,'C1','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30374,'C2','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30374,'C3','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30374,'C4','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30374,'C5','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30374,'C6','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30375,'C3','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30375,'C4','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30375,'C5','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30375,'C6','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30376,'C3','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30376,'C4','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30376,'C5','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30376,'C6','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30377,'C5','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30377,'C6','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30378,'C5','WH',-2)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30378,'C6','WH',-2)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C1','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C2','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'C5','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'C6','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'C3','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'C4','WH',0)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16262,'High Sec','Amarr',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16262,'Low Sec','Amarr',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16262,'Null Sec','Amarr',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16262,'Null Sec','Amarr',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16263,'High Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16263,'Low Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16263,'Null Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16263,'Low Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16263,'Null Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16264,'High Sec','Gallente',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16264,'Low Sec','Gallente',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16264,'High Sec','Gallente',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16264,'Null Sec','Gallente',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16265,'High Sec','Caldari',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16265,'Low Sec','Caldari',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16265,'Null Sec','Caldari',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16265,'Low Sec','Caldari',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16265,'Null Sec','Caldari',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Low Sec','Amarr',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Null Sec','Amarr',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Null Sec','Amarr',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Low Sec','Caldari',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Null Sec','Caldari',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Null Sec','Caldari',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Low Sec','Gallente',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Null Sec','Gallente',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Null Sec','Gallente',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Low Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Null Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Null Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Low Sec','Amarr',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Null Sec','Amarr',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Null Sec','Amarr',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Low Sec','Caldari',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Null Sec','Caldari',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Null Sec','Caldari',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Low Sec','Gallente',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Null Sec','Gallente',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Null Sec','Gallente',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Low Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Null Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Null Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16268,'Null Sec','Amarr',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16268,'Null Sec','Caldari',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16268,'Null Sec','Gallente',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16268,'Null Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16269,'Null Sec','Caldari',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16269,'Null Sec','Gallente',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16269,'Null Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17425,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17425,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17425,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17425,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17426,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17426,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17426,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17426,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17428,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17428,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17428,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17428,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17429,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17429,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17429,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17429,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17432,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17432,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17432,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17432,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17433,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17433,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17433,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17433,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17436,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17436,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17436,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17436,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17437,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17437,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17437,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17437,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17440,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17440,'Low Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17440,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17440,'Low Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17440,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17440,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17441,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17441,'Low Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17441,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17441,'Low Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17441,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17441,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17444,'Low Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17444,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17444,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17444,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17444,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17444,'Low Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17444,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17445,'Low Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17445,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17445,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17445,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17445,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17445,'Low Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17445,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17448,'Low Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17448,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17448,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17448,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17448,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17448,'Low Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17448,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17449,'Low Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17449,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17449,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17449,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17449,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17449,'Low Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17449,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'High Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'Low Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'Low Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'Low Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'High Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'Low Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'Low Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'Low Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'High Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'Low Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'High Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'Low Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'High Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'Low Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'High Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'Low Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'High Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'Low Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'High Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'Low Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'High Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'Low Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'High Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'Low Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'High Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'Low Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'High Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'Low Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'High Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Low Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'High Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Low Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'High Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Low Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'High Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Low Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'High Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Low Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'High Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Low Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'High Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Low Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'High Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Low Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17466,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17466,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17466,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17466,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17467,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17467,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17467,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17467,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'High Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Low Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'High Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Low Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'High Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Low Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'High Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Low Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'High Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Low Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'High Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Low Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'High Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Low Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'High Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Low Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17865,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17865,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17865,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17865,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17866,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17866,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17866,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17866,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17867,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17867,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17867,'High Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17867,'Low Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17867,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17867,'High Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17867,'Low Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17867,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17868,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17868,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17868,'High Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17868,'Low Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17868,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17868,'High Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17868,'Low Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17868,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17869,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17869,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17869,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17869,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17870,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17870,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17870,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17870,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17975,'Null Sec','Gallente',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17976,'Null Sec','Caldari',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17977,'Null Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17978,'Null Sec','Amarr',-1)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25268,'Low Sec','Caldari',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25268,'Null Sec','Caldari',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25268,'Null Sec','Caldari',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25273,'Low Sec','Caldari',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25273,'Null Sec','Caldari',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25273,'Null Sec','Caldari',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25273,'Null Sec','Caldari',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25273,'Null Sec','Caldari',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25274,'Null Sec','Gallente',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25274,'Low Sec','Gallente',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25275,'Null Sec','Gallente',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25275,'Null Sec','Gallente',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25275,'Null Sec','Gallente',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25275,'Null Sec','Gallente',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25275,'Low Sec','Gallente',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25276,'Low Sec','Amarr',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25276,'Null Sec','Amarr',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25277,'Null Sec','Amarr',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25277,'Low Sec','Amarr',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25278,'Null Sec','Minmatar',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25278,'Null Sec','Minmatar',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25278,'Low Sec','Minmatar',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25279,'Low Sec','Minmatar',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28694,'Low Sec','Caldari',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28694,'Low Sec','Caldari',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28695,'Low Sec','Minmatar',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28695,'Low Sec','Minmatar',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28696,'High Sec','Gallente',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28696,'High Sec','Gallente',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28697,'Low Sec','Caldari',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28697,'High Sec','Caldari',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28698,'Low Sec','Amarr',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28699,'High Sec','Amarr',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28700,'High Sec','Minmatar',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28700,'High Sec','Minmatar',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28701,'Low Sec','Gallente',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28701,'Low Sec','Gallente',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30370,'C1','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30370,'C2','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30370,'C3','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30370,'C4','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30370,'C5','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30370,'C6','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30371,'C1','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30371,'C2','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30371,'C3','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30371,'C4','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30371,'C5','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30371,'C6','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30372,'C1','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30372,'C2','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30372,'C3','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30372,'C4','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30372,'C5','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30372,'C6','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30373,'C1','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30373,'C2','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30373,'C3','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30373,'C4','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30373,'C5','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30373,'C6','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30374,'C1','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30374,'C2','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30374,'C3','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30374,'C4','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30374,'C5','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30374,'C6','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30375,'C3','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30375,'C4','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30375,'C5','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30375,'C6','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30376,'C3','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30376,'C4','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30376,'C5','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30376,'C6','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30377,'C5','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30377,'C6','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30378,'C5','WH',-2)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30378,'C6','WH',-2)", EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_ORE_LOCS_ORE_ID ON ORE_LOCATIONS (ORE_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
 
@@ -4818,7 +4939,7 @@ Public Class frmMain
 
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         msSQL = "SELECT invTypes.typeID, invTypes.typeName, invTypes.volume, "
         msSQL = msSQL & "invTypes.portionSize, invTypes_1.typeID, invTypes_1.typeName, "
@@ -4842,7 +4963,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL & msSQL2, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Add to Access table
         While msSQLReader.Read
@@ -4859,7 +4980,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(7)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(8)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -4867,12 +4988,12 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
 
         SQL = "CREATE INDEX IDX_REPRO_ITEM_MAT_ID ON REPROCESSING (ITEM_ID, REFINED_MATERIAL_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
 
@@ -4904,7 +5025,7 @@ Public Class frmMain
         SQL = SQL & "MATERIAL_VOLUME REAL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Pull new data and insert
         msSQL = "SELECT invTypeReactions.reactionTypeID, "
@@ -4938,7 +5059,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL & msSQL2, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Add to Access table
         While msSQLReader.Read
@@ -4956,7 +5077,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(8)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(9)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -4964,15 +5085,15 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
 
         SQL = "CREATE INDEX IDX_REACTION_MAT_TYPE_ID ON REACTIONS (MATERIAL_TYPE_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_REACTION_MAT_GROUP ON REACTIONS (MATERIAL_GROUP)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
 
@@ -4991,13 +5112,13 @@ Public Class frmMain
         SQL = SQL & "CHARACTER_ID INTEGER NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_CRA_AGENTID ON CURRENT_RESEARCH_AGENTS (AGENT_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_CRA_CHARID ON CURRENT_RESEARCH_AGENTS (CHARACTER_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -5020,7 +5141,7 @@ Public Class frmMain
         SQL = SQL & "SKILL_GROUP VARCHAR(100)"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Pull new data and insert
         msSQL = "SELECT invTypes.typeID, invTypes.typeName, invGroups.groupName "
@@ -5040,7 +5161,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL & msSQL2, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Add to Access table
         While msSQLReader.Read
@@ -5051,7 +5172,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -5059,7 +5180,7 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
 
@@ -5096,7 +5217,7 @@ Public Class frmMain
         SQL = SQL & "STATION VARCHAR(100)"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Pull new data and insert
         msSQL = "SELECT chrFactions.factionName, agtAgents.corporationID, "
@@ -5138,7 +5259,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL & msSQL2, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Add to Access table
         While msSQLReader.Read
@@ -5161,7 +5282,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(13)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(14)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -5169,15 +5290,15 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
 
         SQL = "CREATE INDEX IDX_RA_TYPE_CORP_ID ON RESEARCH_AGENTS (RESEARCH_TYPE, CORPORATION_NAME)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_RA_REGION_ID ON RESEARCH_AGENTS (REGION_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
 
@@ -5222,7 +5343,7 @@ Public Class frmMain
         SQL = SQL & "JobType INTEGER "
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -5241,13 +5362,13 @@ Public Class frmMain
         SQL = SQL & "RawQuantity INTEGER NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_ITEM_ASSET_LOC ON ASSETS (LocationID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_ITEM_TYPEID_ID ON ASSETS (TypeID, ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -5262,13 +5383,13 @@ Public Class frmMain
         SQL = SQL & "FlagID INTEGER NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_ITEM_ASSET_LOC_TYPE_ACCID ON ASSET_LOCATIONS (EnumAssetType, ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_ITEM_ASSET_LOC_ACCOUNT_ID ON ASSET_LOCATIONS (ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -5287,7 +5408,7 @@ Public Class frmMain
         SQL = SQL & "factionID INTEGER"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB) ' SQLite table
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf) ' SQLite table
 
         Application.DoEvents()
 
@@ -5295,7 +5416,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         While msSQLReader.Read
             Application.DoEvents()
@@ -5308,23 +5429,23 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
         msSQLReader = Nothing
         msSQLQuery = Nothing
 
         SQL = "CREATE INDEX IDX_R_REGION_NAME ON REGIONS (regionName)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_R_REGION_ID ON REGIONS (regionID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_R_FID ON REGIONS (factionID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
         Application.DoEvents()
@@ -5346,14 +5467,14 @@ Public Class frmMain
         SQL = SQL & "constellationName VARCHAR(20) NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Pull new data and insert
         msSQL = "SELECT regionID, constellationID, constellationName FROM mapConstellations"
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         While msSQLReader.Read
             Application.DoEvents()
@@ -5363,11 +5484,11 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
 
         msSQLReader.Close()
@@ -5375,7 +5496,7 @@ Public Class frmMain
         msSQLQuery = Nothing
 
         SQL = "CREATE INDEX IDX_C_REGION_ID ON CONSTELLATIONS (regionID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -5397,7 +5518,7 @@ Public Class frmMain
         SQL = SQL & "factionWarzone INTEGER NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Pull new data and insert
         msSQL = "SELECT regionID, constellationID, solarSystemID, solarSystemName, security, "
@@ -5406,7 +5527,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         While msSQLReader.Read
             Application.DoEvents()
@@ -5419,11 +5540,11 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(4)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(5)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
         msSQLReader = Nothing
@@ -5432,16 +5553,16 @@ Public Class frmMain
         ' Now index and PK the table
 
         SQL = "CREATE INDEX IDX_SS_REGION_ID ON SOLAR_SYSTEMS (regionID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_SS_SS_ID ON SOLAR_SYSTEMS (solarSystemID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_SS_CONSTELLATION_ID ON SOLAR_SYSTEMS (constellationID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_SS_SYSTEM_NAME ON SOLAR_SYSTEMS (solarSystemName)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
         Application.DoEvents()
@@ -5482,7 +5603,7 @@ Public Class frmMain
         SQL = SQL & "sofDnaAddition INTEGER"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         Call SetProgressBarValues("invTypes")
 
@@ -5491,7 +5612,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Add to Access table
         While msSQLReader.Read
@@ -5519,7 +5640,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(18)) & "," ' sofFactionName
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(19)) & ")" ' sofDnaAddition
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -5527,18 +5648,18 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
 
         SQL = "CREATE INDEX IDX_IT_GROUP_ID ON INVENTORY_TYPES (groupID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_IT_TYPE_NAME_ID ON INVENTORY_TYPES (typeName)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_IT_TYPE_ID ON INVENTORY_TYPES (typeID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
 
@@ -5565,7 +5686,7 @@ Public Class frmMain
         SQL = SQL & "published INTEGER"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         Call SetProgressBarValues("invGroups")
 
@@ -5574,7 +5695,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Add to Access table
         While msSQLReader.Read
@@ -5591,7 +5712,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(7)) & "," ' fittableNonSingleton
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(8)) & ")" ' published
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -5599,15 +5720,15 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
 
         SQL = "CREATE INDEX IDX_IG_GROUP_ID ON INVENTORY_GROUPS (groupID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_IG_CATEGORY_ID ON INVENTORY_GROUPS (categoryID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
 
@@ -5628,7 +5749,7 @@ Public Class frmMain
         SQL = SQL & "published INTEGER"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         Call SetProgressBarValues("invCategories")
 
@@ -5637,7 +5758,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Add to Access table
         While msSQLReader.Read
@@ -5648,7 +5769,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ","
             SQL = SQL & BuildInsertFieldString(CInt(msSQLReader.GetValue(2))) & ")" ' A bit value, but reads as a boolean for some reason
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -5656,10 +5777,10 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         SQL = "CREATE INDEX IDX_IC_CATEGORY_ID ON INVENTORY_GROUPS (categoryID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         msSQLReader.Close()
 
@@ -5684,7 +5805,7 @@ Public Class frmMain
         SQL = SQL & "OrderID INTEGER NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         Call SetProgressBarValues("invFlags")
 
@@ -5693,7 +5814,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Add to Access table
         While msSQLReader.Read
@@ -5719,7 +5840,7 @@ Public Class frmMain
                     SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(3)) & ")"
             End Select
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -5730,14 +5851,14 @@ Public Class frmMain
         ' Add a final flag for space
         SQL = "INSERT INTO INVENTORY_FLAGS VALUES (" & CStr(SpaceFlagCode) & ",'Space','Space',0)"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
 
         SQL = "CREATE INDEX IDX_ITEM_FLAG_ID ON INVENTORY_FLAGS (FlagID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -5923,7 +6044,7 @@ Public Class frmMain
         SQL = SQL & "AVERAGE_PRICE FLOAT NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Now select the count of the final query of data
         Call SetProgressBarValues("ITEM_PRICES_UNION")
@@ -5934,7 +6055,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         ' Insert the data into the table
         While msSQLReader.Read
@@ -5949,7 +6070,7 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(7)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(8)) & ",0,0)" ' For Adjusted market price and Average market price from CREST
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
@@ -5957,23 +6078,23 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
 
         ' Update the item types fields to make sure they are all able to be found
         SQL = "UPDATE ITEM_PRICES SET ITEM_TYPE = 1 WHERE ITEM_TYPE = 0 AND TECH_LEVEL = 1"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Build SQL Lite indexes
         SQL = "CREATE INDEX IDX_IP_GROUP ON ITEM_PRICES (ITEM_GROUP)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_IP_TYPE ON ITEM_PRICES (ITEM_TYPE)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_IP_CATEGORY ON ITEM_PRICES (ITEM_CATEGORY)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
         Application.DoEvents()
@@ -6011,13 +6132,13 @@ Public Class frmMain
         SQL = SQL & "UpdateDate VARCHAR(23) NOT NULL" ' Date
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_IPC_TYPEID ON ITEM_PRICES_CACHE (typeID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_IPC_ID_REGION ON ITEM_PRICES_CACHE (typeID, RegionList)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -6036,10 +6157,10 @@ Public Class frmMain
         SQL = SQL & "TOTAL_VOLUME_FILLED INTEGER"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE UNIQUE INDEX IDX_EMD_HISTORY ON EMD_ITEM_PRICE_HISTORY (TYPE_ID, REGION_ID, PRICE_HISTORY_DATE)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -6054,10 +6175,10 @@ Public Class frmMain
         SQL = SQL & "UPDATE_LAST_RAN VARCHAR(23)" ' Date
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE UNIQUE INDEX IDX_EMD_U_HISTORY ON EMD_UPDATE_HISTORY (TYPE_ID, DAYS, REGION_ID, UPDATE_LAST_RAN)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -6076,10 +6197,10 @@ Public Class frmMain
         SQL = SQL & "TOTAL_VOLUME_FILLED INTEGER"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE UNIQUE INDEX IDX_MH_TID_RID ON MARKET_HISTORY (TYPE_ID, REGION_ID, PRICE_HISTORY_DATE)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -6093,10 +6214,10 @@ Public Class frmMain
         SQL = SQL & "CACHE_DATE VARCHAR(23)"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE UNIQUE INDEX IDX_MHUC_TID_RID ON MARKET_HISTORY_UPDATE_CACHE (TYPE_ID, REGION_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -6117,10 +6238,10 @@ Public Class frmMain
         SQL = SQL & "VOLUME_REMAINING INTEGER"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_MO_TID_RID_SID ON MARKET_ORDERS (TYPE_ID, REGION_ID, SOLAR_SYSTEM_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -6134,10 +6255,10 @@ Public Class frmMain
         SQL = SQL & "CACHE_DATE VARCHAR(23)"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE UNIQUE INDEX IDX_MOUC_TID_RID ON MARKET_ORDERS_UPDATE_CACHE (TYPE_ID, REGION_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -6156,20 +6277,20 @@ Public Class frmMain
         SQL = SQL & "SPECIALTY_GROUP_NAME VARCHAR(100) NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_SGID_GID ON INDUSTRY_GROUP_SPECIALTIES (SPECIALTY_GROUP_ID, GROUP_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE TABLE INDUSTRY_CATEGORY_SPECIALTIES ("
         SQL = SQL & "SPECIALTY_CATEGORY_ID INTEGER NOT NULL,"
         SQL = SQL & "SPECIALTY_CATEGORY_NAME VARCHAR(100) NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_CAT_ID ON INDUSTRY_CATEGORY_SPECIALTIES (SPECIALTY_CATEGORY_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -6190,16 +6311,16 @@ Public Class frmMain
         SQL = SQL & "SPECIALTY_CATEGORY_ID INTEGER NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_TEAMS_TEAM_ID ON INDUSTRY_TEAMS (TEAM_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_TEAMS_ACTIVITY_ID ON INDUSTRY_TEAMS (TEAM_ACTIVITY_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_TEAMS_TEAM_NAME ON INDUSTRY_TEAMS (TEAM_NAME)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE TABLE INDUSTRY_TEAMS_BONUSES ("
         SQL = SQL & "TEAM_ID INTEGER NOT NULL,"
@@ -6210,13 +6331,13 @@ Public Class frmMain
         SQL = SQL & "SPECIALTY_GROUP_ID INTEGER NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_BONUSES_ID_GID ON INDUSTRY_TEAMS_BONUSES (TEAM_ID, SPECIALTY_GROUP_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_BONUSES_NAME_GID ON INDUSTRY_TEAMS_BONUSES (TEAM_NAME, SPECIALTY_GROUP_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -6237,19 +6358,19 @@ Public Class frmMain
         SQL = SQL & "AUCTION_ID INTEGER NOT NULL PRIMARY KEY"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_AUCTIONS_TEAM_ID ON INDUSTRY_TEAMS_AUCTIONS (TEAM_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_AUCTIONS_CTIVITY_ID ON INDUSTRY_TEAMS_AUCTIONS (TEAM_ACTIVITY_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_AUCTIONS_TEAM_NAME ON INDUSTRY_TEAMS_AUCTIONS (TEAM_NAME)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_AUCTIONS_AUCTION_ID ON INDUSTRY_TEAMS_AUCTIONS (AUCTION_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Make the Bids table too
         SQL = "CREATE TABLE INDUSTRY_TEAMS_AUCTIONS_BIDS ("
@@ -6263,10 +6384,10 @@ Public Class frmMain
         SQL = SQL & "CHARACTER_BID FLOAT NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_BIDS_AUCTION_ID ON INDUSTRY_TEAMS_AUCTIONS_BIDS (AUCTION_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -6282,10 +6403,10 @@ Public Class frmMain
         SQL = SQL & "COST_INDEX FLOAT NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_ISCI_SSID_AID ON INDUSTRY_SYSTEMS_COST_INDICIES (SOLAR_SYSTEM_ID, ACTIVITY_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -6303,16 +6424,16 @@ Public Class frmMain
         SQL = SQL & "OWNER_ID INTEGER NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_IF_MAIN ON INDUSTRY_FACILITIES (FACILITY_TYPE_ID, REGION_ID, SOLAR_SYSTEM_ID, FACILITY_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_IF_SSID ON INDUSTRY_FACILITIES (SOLAR_SYSTEM_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_IF_FTID ON INDUSTRY_FACILITIES (FACILITY_TYPE_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     End Sub
 
@@ -6328,56 +6449,56 @@ Public Class frmMain
         SQL = SQL & "RESOURCE_TYPE_ID INTEGER NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2016,2073)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (11,2073)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2014,2073)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (12,2073)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2016,2267)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (13,2267)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2015,2267)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2017,2267)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2063,2267)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2016,2268)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (13,2268)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2017,2268)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (11,2268)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2014,2268)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (12,2268)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2016,2270)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2063,2270)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2015,2272)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2063,2272)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (12,2272)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2014,2286)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (12,2286)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (11,2287)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2014,2287)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2016,2288)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (11,2288)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2014,2288)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (11,2305)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2015,2306)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2063,2306)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2015,2307)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2015,2308)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2017,2308)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2063,2308)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (13,2309)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2017,2309)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2016,2310)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (13,2310)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2017,2310)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (12,2310)", SQLiteDB)
-        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (13,2311)", SQLiteDB)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2016,2073)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (11,2073)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2014,2073)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (12,2073)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2016,2267)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (13,2267)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2015,2267)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2017,2267)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2063,2267)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2016,2268)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (13,2268)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2017,2268)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (11,2268)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2014,2268)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (12,2268)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2016,2270)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2063,2270)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2015,2272)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2063,2272)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (12,2272)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2014,2286)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (12,2286)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (11,2287)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2014,2287)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2016,2288)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (11,2288)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2014,2288)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (11,2305)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2015,2306)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2063,2306)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2015,2307)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2015,2308)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2017,2308)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2063,2308)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (13,2309)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2017,2309)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2016,2310)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (13,2310)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (2017,2310)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (12,2310)", EVEIPHSQLiteDB.DBREf)
+        Execute_SQLiteSQL("INSERT INTO PLANET_RESOURCES VALUES (13,2311)", EVEIPHSQLiteDB.DBREf)
 
         ' Indexes
         SQL = "CREATE INDEX IDX_PR_PTID_RTID ON PLANET_RESOURCES (PLANET_TYPE_ID, RESOURCE_TYPE_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_PR_PTID ON PLANET_RESOURCES (PLANET_TYPE_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
         Application.DoEvents()
@@ -6399,7 +6520,7 @@ Public Class frmMain
         SQL = SQL & "cycleTime INTEGER NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Now select the count of the final query of data
 
@@ -6408,7 +6529,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         While msSQLReader.Read
             Application.DoEvents()
@@ -6418,11 +6539,11 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
         msSQLReader = Nothing
@@ -6431,7 +6552,7 @@ Public Class frmMain
         ' Now index and PK the table
 
         SQL = "CREATE INDEX IDX_SCHEMATIC_ID ON PLANET_SCHEMATICS (schematicID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
         Application.DoEvents()
@@ -6455,7 +6576,7 @@ Public Class frmMain
         SQL = SQL & "PRIMARY KEY (schematicID, typeID)"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Now select the count of the final query of data
 
@@ -6464,7 +6585,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         While msSQLReader.Read
             Application.DoEvents()
@@ -6475,11 +6596,11 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(3)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
         msSQLReader = Nothing
@@ -6488,7 +6609,7 @@ Public Class frmMain
         ' Now index and PK the table
 
         SQL = "CREATE INDEX IDX_SCHEMATIC_ID_TMAP ON PLANET_SCHEMATICS_TYPE_MAP (schematicID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
         Application.DoEvents()
@@ -6510,7 +6631,7 @@ Public Class frmMain
         SQL = SQL & "PRIMARY KEY (schematicID, pintypeID)"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Now select the count of the final query of data
 
@@ -6519,7 +6640,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         While msSQLReader.Read
             Application.DoEvents()
@@ -6528,11 +6649,11 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(0)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
         msSQLReader = Nothing
@@ -6541,7 +6662,7 @@ Public Class frmMain
         ' Now index and PK the table
 
         SQL = "CREATE INDEX IDX_SCHEMATIC_ID_PIN_MAP ON PLANET_SCHEMATICS_PIN_MAP (schematicID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
         Application.DoEvents()
@@ -6567,7 +6688,7 @@ Public Class frmMain
         SQL = SQL & "REQ_QUANTITY INTEGER NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Now select the count of the final query of data
 
@@ -6576,7 +6697,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         While msSQLReader.Read
             Application.DoEvents()
@@ -6586,11 +6707,11 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
         msSQLReader = Nothing
@@ -6598,10 +6719,10 @@ Public Class frmMain
 
         ' Now index and PK the table
         SQL = "CREATE INDEX IDX_LO_OID_RTID ON LP_OFFER_REQUIREMENTS (OFFER_ID, REQ_TYPE_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_LO_RTID ON LP_OFFER_REQUIREMENTS (REQ_TYPE_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
         Application.DoEvents()
@@ -6625,7 +6746,7 @@ Public Class frmMain
     '    SQL = SQL & "iskCost FLOAT NOT NULL"
     '    SQL = SQL & ")"
 
-    '    Call Execute_SQLiteSQL(SQL, SQLiteDB)
+    '    Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     '    ' Now select the count of the final query of data
 
@@ -6634,7 +6755,7 @@ Public Class frmMain
     '    msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
     '    msSQLReader = msSQLQuery.ExecuteReader()
 
-    '    Call BeginSQLiteTransaction(SQLiteDB)
+    '    Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
     '    While msSQLReader.Read
     '        Application.DoEvents()
@@ -6646,11 +6767,11 @@ Public Class frmMain
     '        SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(3)) & ","
     '        SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(4)) & ")"
 
-    '        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+    '        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     '    End While
 
-    '    Call CommitSQLiteTransaction(SQLiteDB)
+    '    Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
     '    msSQLReader.Close()
     '    msSQLReader = Nothing
@@ -6658,7 +6779,7 @@ Public Class frmMain
 
     '    ' Now index and PK the table
     '    SQL = "CREATE INDEX IDX_LO_OID ON LP_OFFERS (offerID)"
-    '    Call Execute_SQLiteSQL(SQL, SQLiteDB)
+    '    Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     '    pgMain.Visible = False
     '    Application.DoEvents()
@@ -6686,7 +6807,7 @@ Public Class frmMain
         SQL = SQL & "RACE_ID INTEGER NOT NULL"
         SQL = SQL & ")"
 
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         ' Now select the count of the final query of data
 
@@ -6704,7 +6825,7 @@ Public Class frmMain
         msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
         msSQLReader = msSQLQuery.ExecuteReader()
 
-        Call BeginSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
         While msSQLReader.Read
             Application.DoEvents()
@@ -6720,11 +6841,11 @@ Public Class frmMain
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(7)) & ","
             SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(8)) & ")"
 
-            Call Execute_SQLiteSQL(SQL, SQLiteDB)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         End While
 
-        Call CommitSQLiteTransaction(SQLiteDB)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         msSQLReader.Close()
         msSQLReader = Nothing
@@ -6732,13 +6853,13 @@ Public Class frmMain
 
         ' Now index and PK the table
         SQL = "CREATE INDEX IDX_LS_OID ON LP_STORE (OFFER_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_LS_CID ON LP_STORE (CORP_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_LS_IID ON LP_STORE (ITEM_ID)"
-        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
         Application.DoEvents()
@@ -6760,7 +6881,7 @@ Public Class frmMain
     '    SQL = SQL & "verifiedWith INTEGER"
     '    SQL = SQL & ")"
 
-    '    Call Execute_SQLiteSQL(SQL, SQLiteDB)
+    '    Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     '    ' Now select the count of the final query of data
 
@@ -6769,7 +6890,7 @@ Public Class frmMain
     '    msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
     '    msSQLReader = msSQLQuery.ExecuteReader()
 
-    '    Call BeginSQLiteTransaction(SQLiteDB)
+    '    Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
     '    While msSQLReader.Read
     '        Application.DoEvents()
@@ -6779,11 +6900,11 @@ Public Class frmMain
     '        SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ","
     '        SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ")"
 
-    '        Call Execute_SQLiteSQL(SQL, SQLiteDB)
+    '        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     '    End While
 
-    '    Call CommitSQLiteTransaction(SQLiteDB)
+    '    Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
     '    msSQLReader.Close()
     '    msSQLReader = Nothing
@@ -6791,7 +6912,7 @@ Public Class frmMain
 
     '    ' Now index and PK the table
     '    SQL = "CREATE INDEX IDX_LO_COID ON LP_VERIFIED (corporationID)"
-    '    Call Execute_SQLiteSQL(SQL, SQLiteDB)
+    '    Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
     '    pgMain.Visible = False
     '    Application.DoEvents()
@@ -6804,6 +6925,8 @@ Public Class frmMain
 
     ' Copies all the data from the universe DB into the MSSQL DB
     Private Sub btnBuildSQLServerDB_Click(sender As System.Object, e As System.EventArgs) Handles btnBuildSQLServerDB.Click
+        Dim YAMLBP As New YAMLBlueprints_msSQL(DatabaseName, SQLInstance)
+        Dim YAMLTypes As New YAMLinvTypes_msSQL(DatabaseName, SQLInstance)
 
         ' Make sure we have a DB first
         If DatabaseName = "" Then
@@ -6827,11 +6950,10 @@ Public Class frmMain
         End If
 
         ' First load the YMAL tables and data (need to add all ymal's to keep db updated to current)
-        Call Load_YMAL_Blueprints()
-        Call Load_YMAL_invTypes()
+        Call YAMLBP.ImportFile(WorkingDirectory & DatabaseName & "\blueprints.yaml", lblTableName, pgMain) ' New logic
+        Call YAMLTypes.ImportFile(WorkingDirectory & DatabaseName & "\typeIDs.yaml", lblTableName, pgMain) ' New logic
         Call Load_YMAL_invGroups()
         Call Load_YMAL_invCategories()
-
         Call Load_YMAL_Icons()
 
         'Do all random updates here first
@@ -7212,279 +7334,280 @@ Public Class frmMain
     End Function
 
     ' Loads the blueprints table from the YMAL file
-    Private Sub Load_YMAL_Blueprints()
-        ' Use the tree node object with vb, Name is the node name, text is the value of the node - all we need to use here
-        Dim BlueprintsTree As New TreeNode
-        Dim BPNode As New TreeNode
-        Dim ActivitiesNode As New TreeNode
-        Dim ActivityNode As New TreeNode
-        Dim MaterialNode() As TreeNode
-        Dim SequenceNode() As TreeNode
-        Dim ProductsNode() As TreeNode
-        Dim SkillsNode() As TreeNode
+    'Private Sub Load_YMAL_Blueprints()
+    '    ' Use the tree node object with vb, Name is the node name, text is the value of the node - all we need to use here
+    '    Dim BlueprintsTree As New TreeNode
+    '    Dim BPNode As New TreeNode
+    '    Dim ActivitiesNode As New TreeNode
+    '    Dim ActivityNode As New TreeNode
+    '    Dim MaterialNode() As TreeNode
+    '    Dim SequenceNode() As TreeNode
+    '    Dim ProductsNode() As TreeNode
+    '    Dim SkillsNode() As TreeNode
 
-        Dim i As Integer
+    '    Dim i As Integer
 
-        Dim blueprintTypeID As String
-        Dim maxProductionLimit As String
+    '    Dim blueprintTypeID As String
+    '    Dim maxProductionLimit As String
 
-        Dim activityID As String
-        Dim activityName As String
-        Dim time As String
+    '    Dim activityID As String
+    '    Dim activityName As String
+    '    Dim time As String
 
-        ' Use for materials and skills
-        Dim materialID As String
-        Dim materialQuantity As String
-        Dim consume As String
+    '    ' Use for materials and skills
+    '    Dim materialID As String
+    '    Dim materialQuantity As String
+    '    Dim consume As String
 
-        Dim productTypeID As String
-        Dim probability As String
+    '    Dim productTypeID As String
+    '    Dim probability As String
 
-        Dim SQL As String
-        Dim Count As Integer
+    '    Dim SQL As String
+    '    Dim Count As Integer
 
-        ' industryBlueprints
-        Call ResetTable("industryBlueprints")
-        ' Build table
-        SQL = "CREATE TABLE industryBlueprints (blueprintTypeID bigint NOT NULL PRIMARY KEY, maxProductionLimit bigint NOT NULL)"
-        Call Execute_msSQL(SQL)
+    '    ' industryBlueprints
+    '    Call ResetTable("industryBlueprints")
+    '    ' Build table
+    '    SQL = "CREATE TABLE industryBlueprints (blueprintTypeID bigint NOT NULL PRIMARY KEY, maxProductionLimit bigint NOT NULL)"
+    '    Call Execute_msSQL(SQL)
 
-        ' industryActivities
-        Call ResetTable("industryActivities")
-        ' Build table
-        SQL = "CREATE TABLE industryActivities (blueprintTypeID bigint NOT NULL, activityID int NOT NULL, time int NOT NULL, "
-        SQL = SQL & "PRIMARY KEY (blueprintTypeID, activityID))"
-        Call Execute_msSQL(SQL)
-        ' Create index
-        SQL = "CREATE INDEX IDX_activityID ON industryActivities (activityID)"
-        Call Execute_msSQL(SQL)
+    '    ' industryActivities
+    '    Call ResetTable("industryActivities")
+    '    ' Build table
+    '    SQL = "CREATE TABLE industryActivities (blueprintTypeID bigint NOT NULL, activityID int NOT NULL, time int NOT NULL, "
+    '    SQL = SQL & "PRIMARY KEY (blueprintTypeID, activityID))"
+    '    Call Execute_msSQL(SQL)
+    '    ' Create index
+    '    SQL = "CREATE INDEX IDX_activityID ON industryActivities (activityID)"
+    '    Call Execute_msSQL(SQL)
 
-        ' industryActivityMaterials (mats and skills)
-        Call ResetTable("industryActivityMaterials")
-        ' Build table
-        SQL = "CREATE TABLE industryActivityMaterials (blueprintTypeID bigint NOT NULL, activityID int NOT NULL, materialTypeID bigint NOT NULL, "
-        SQL = SQL & "quantity bigint NOT NULL, consume tinyint NOT NULL)"
-        Call Execute_msSQL(SQL)
-        ' Create index
-        SQL = "CREATE INDEX IDX_BPIDactivityID1 ON industryActivityMaterials (blueprintTypeID, activityID)"
-        Call Execute_msSQL(SQL)
+    '    ' industryActivityMaterials (mats and skills)
+    '    Call ResetTable("industryActivityMaterials")
+    '    ' Build table
+    '    SQL = "CREATE TABLE industryActivityMaterials (blueprintTypeID bigint NOT NULL, activityID int NOT NULL, materialTypeID bigint NOT NULL, "
+    '    SQL = SQL & "quantity bigint NOT NULL, consume tinyint NOT NULL)"
+    '    Call Execute_msSQL(SQL)
+    '    ' Create index
+    '    SQL = "CREATE INDEX IDX_BPIDactivityID1 ON industryActivityMaterials (blueprintTypeID, activityID)"
+    '    Call Execute_msSQL(SQL)
 
-        ' industryActivityProducts 
-        Call ResetTable("industryActivityProducts")
-        ' Build table
-        SQL = "CREATE TABLE industryActivityProducts (blueprintTypeID bigint NOT NULL, activityID int NOT NULL, productTypeID bigint NOT NULL, "
-        SQL = SQL & "quantity bigint NOT NULL, probability float NOT NULL)"
-        Call Execute_msSQL(SQL)
-        ' Create index
-        SQL = "CREATE INDEX IDX_BPIDactivityID2 ON industryActivityProducts (blueprintTypeID, activityID)"
-        Call Execute_msSQL(SQL)
+    '    ' industryActivityProducts 
+    '    Call ResetTable("industryActivityProducts")
+    '    ' Build table
+    '    SQL = "CREATE TABLE industryActivityProducts (blueprintTypeID bigint NOT NULL, activityID int NOT NULL, productTypeID bigint NOT NULL, "
+    '    SQL = SQL & "quantity bigint NOT NULL, probability float NOT NULL)"
+    '    Call Execute_msSQL(SQL)
+    '    ' Create index
+    '    SQL = "CREATE INDEX IDX_BPIDactivityID2 ON industryActivityProducts (blueprintTypeID, activityID)"
+    '    Call Execute_msSQL(SQL)
 
-        ' Get the data from the YAML file
-        BlueprintsTree = ParseYMALFile(DatabasePath & "\" & YAMLBlueprints)
+    '    ' Get the data from the YAML file
+    '    BlueprintsTree = ParseYMALFile(DatabasePath & "\" & YAMLBlueprints)
 
-        Count = 0
-        pgMain.Minimum = Count
-        pgMain.Maximum = BlueprintsTree.GetNodeCount(False)
-        pgMain.Visible = True
+    '    Count = 0
+    '    pgMain.Minimum = Count
+    '    pgMain.Maximum = BlueprintsTree.GetNodeCount(False)
+    '    pgMain.Visible = True
 
-        For Each BPNode In BlueprintsTree.Nodes
+    '    For Each BPNode In BlueprintsTree.Nodes
 
-            ' Update form
-            lblTableName.Text = "Saving BP:  " & BPNode.Name
-            pgMain.Value = Count
-            Application.UseWaitCursor = True
-            Application.DoEvents()
+    '        ' Update form
+    '        lblTableName.Text = "Saving BP:  " & BPNode.Name
+    '        pgMain.Value = Count
+    '        Application.UseWaitCursor = True
+    '        Application.DoEvents()
 
-            ' blueprintTypeID = BPNode.Nodes.Find("blueprintTypeID", True)(0).Text
-            blueprintTypeID = BPNode.Text
-            maxProductionLimit = BPNode.Nodes.Find("maxProductionLimit", True)(0).Text
+    '        ' blueprintTypeID = BPNode.Nodes.Find("blueprintTypeID", True)(0).Text
+    '        blueprintTypeID = BPNode.Text
+    '        maxProductionLimit = BPNode.Nodes.Find("maxProductionLimit", True)(0).Text
 
-            ' Insert this industryBlueprints record
-            Call Execute_msSQL("INSERT INTO industryBlueprints VALUES (" & blueprintTypeID & "," & maxProductionLimit & ")")
+    '        ' Insert this industryBlueprints record
+    '        Call Execute_msSQL("INSERT INTO industryBlueprints VALUES (" & blueprintTypeID & "," & maxProductionLimit & ")")
 
-            ActivitiesNode = BPNode.Nodes.Find("activities", True)(0)
+    '        ActivitiesNode = BPNode.Nodes.Find("activities", True)(0)
 
-            For Each Activity In ActivitiesNode.Nodes
-                time = Activity.Nodes.Find("time", True)(0).Text
-                activityName = Activity.Name
-                ' Set the activity
-                Select Case activityName
-                    Case "manufacturing"
-                        activityID = "1"
-                    Case "copying"
-                        activityID = "5"
-                    Case "invention"
-                        activityID = "8"
-                    Case "reverse_engineering"
-                        activityID = "7"
-                    Case "research_material"
-                        activityID = "4"
-                    Case "research_time"
-                        activityID = "3"
-                    Case Else
-                        activityID = "0"
-                End Select
+    '        For Each Activity In ActivitiesNode.Nodes
+    '            time = Activity.Nodes.Find("time", True)(0).Text
+    '            activityName = Activity.Name
+    '            ' Set the activity
+    '            Select Case activityName
+    '                Case "manufacturing"
+    '                    activityID = "1"
+    '                Case "copying"
+    '                    activityID = "5"
+    '                Case "invention"
+    '                    activityID = "8"
+    '                Case "reverse_engineering"
+    '                    activityID = "7"
+    '                Case "research_material"
+    '                    activityID = "4"
+    '                Case "research_time"
+    '                    activityID = "3"
+    '                Case Else
+    '                    activityID = "0"
+    '            End Select
 
-                ' insert into industryActivities table
-                Call Execute_msSQL("INSERT INTO industryActivities VALUES (" & blueprintTypeID & "," & activityID & "," & time & ")")
+    '            ' insert into industryActivities table
+    '            Call Execute_msSQL("INSERT INTO industryActivities VALUES (" & blueprintTypeID & "," & activityID & "," & time & ")")
 
-                ' Get the materials, products and skills for this activity
-                MaterialNode = Activity.Nodes.Find("materials", True)
+    '            ' Get the materials, products and skills for this activity
+    '            MaterialNode = Activity.Nodes.Find("materials", True)
 
-                If MaterialNode.Count <> 0 Then
-                    ' Look at each sequence in the nodes
-                    For i = 1 To MaterialNode(0).Nodes.Count
-                        consume = 1 ' Always default to consumed if not given
-                        materialID = "0"
-                        materialQuantity = "0"
+    '            If MaterialNode.Count <> 0 Then
+    '                ' Look at each sequence in the nodes
+    '                For i = 1 To MaterialNode(0).Nodes.Count
+    '                    consume = 1 ' Always default to consumed if not given
+    '                    materialID = "0"
+    '                    materialQuantity = "0"
 
-                        SequenceNode = MaterialNode(0).Nodes.Find(SequenceLabel & " " & CStr(i), True)
+    '                    SequenceNode = MaterialNode(0).Nodes.Find(SequenceLabel & " " & CStr(i), True)
 
-                        For Each Material In SequenceNode(0).Nodes
-                            ' Values are stored in the text of the tree node
-                            Select Case Material.name
-                                Case "quantity"
-                                    materialQuantity = Material.text
-                                Case "typeID"
-                                    materialID = Material.text
-                                Case "consume"
-                                    consume = Material.text
-                            End Select
-                        Next
-                        ' Insert material record into industryActivityMaterials
-                        SQL = "INSERT INTO industryActivityMaterials VALUES (" & blueprintTypeID & "," & activityID & ","
-                        SQL = SQL & materialID & "," & materialQuantity & "," & consume & ")"
-                        Call Execute_msSQL(SQL)
-                    Next
-                End If
+    '                    For Each Material In SequenceNode(0).Nodes
+    '                        ' Values are stored in the text of the tree node
+    '                        Select Case Material.name
+    '                            Case "quantity"
+    '                                materialQuantity = Material.text
+    '                            Case "typeID"
+    '                                materialID = Material.text
+    '                            Case "consume"
+    '                                consume = Material.text
+    '                        End Select
+    '                    Next
+    '                    ' Insert material record into industryActivityMaterials
+    '                    SQL = "INSERT INTO industryActivityMaterials VALUES (" & blueprintTypeID & "," & activityID & ","
+    '                    SQL = SQL & materialID & "," & materialQuantity & "," & consume & ")"
+    '                    Call Execute_msSQL(SQL)
+    '                Next
+    '            End If
 
-                ' Get the skills for this activity
-                SkillsNode = Activity.nodes.find("skills", True)
+    '            ' Get the skills for this activity
+    '            SkillsNode = Activity.nodes.find("skills", True)
 
-                If SkillsNode.Count <> 0 Then
-                    ' Look up all the sequences
-                    For i = 1 To SkillsNode(0).Nodes.Count
-                        materialID = 0
-                        materialQuantity = 0
-                        consume = 0 ' Skills are never consumed
+    '            If SkillsNode.Count <> 0 Then
+    '                ' Look up all the sequences
+    '                For i = 1 To SkillsNode(0).Nodes.Count
+    '                    materialID = 0
+    '                    materialQuantity = 0
+    '                    consume = 0 ' Skills are never consumed
 
-                        SequenceNode = SkillsNode(0).Nodes.Find(SequenceLabel & " " & CStr(i), True)
+    '                    SequenceNode = SkillsNode(0).Nodes.Find(SequenceLabel & " " & CStr(i), True)
 
-                        For Each Skill In SequenceNode(0).Nodes
-                            ' Values are stored in the text of the tree node
-                            Select Case Skill.name
-                                Case "level"
-                                    materialQuantity = Skill.text
-                                Case "typeID"
-                                    materialID = Skill.text
-                            End Select
-                        Next
+    '                    For Each Skill In SequenceNode(0).Nodes
+    '                        ' Values are stored in the text of the tree node
+    '                        Select Case Skill.name
+    '                            Case "level"
+    '                                materialQuantity = Skill.text
+    '                            Case "typeID"
+    '                                materialID = Skill.text
+    '                        End Select
+    '                    Next
 
-                        ' Insert material record into industryActivityMaterials
-                        SQL = "INSERT INTO industryActivityMaterials VALUES (" & blueprintTypeID & "," & activityID & ","
-                        SQL = SQL & materialID & "," & materialQuantity & "," & consume & ")"
-                        Call Execute_msSQL(SQL)
-                    Next
-                End If
+    '                    ' Insert material record into industryActivityMaterials
+    '                    SQL = "INSERT INTO industryActivityMaterials VALUES (" & blueprintTypeID & "," & activityID & ","
+    '                    SQL = SQL & materialID & "," & materialQuantity & "," & consume & ")"
+    '                    Call Execute_msSQL(SQL)
+    '                Next
+    '            End If
 
-                ' Get the products for this activity
-                ProductsNode = Activity.nodes.find("products", True)
+    '            ' Get the products for this activity
+    '            ProductsNode = Activity.nodes.find("products", True)
 
-                If ProductsNode.Count <> 0 Then
-                    ' Look up all the sequences
-                    For i = 1 To ProductsNode(0).Nodes.Count
-                        productTypeID = "0"
-                        materialQuantity = "0"
-                        probability = 1 ' Always default to 1 if not given - 100%
+    '            If ProductsNode.Count <> 0 Then
+    '                ' Look up all the sequences
+    '                For i = 1 To ProductsNode(0).Nodes.Count
+    '                    productTypeID = "0"
+    '                    materialQuantity = "0"
+    '                    probability = 1 ' Always default to 1 if not given - 100%
 
-                        SequenceNode = ProductsNode(0).Nodes.Find(SequenceLabel & " " & CStr(i), True)
+    '                    SequenceNode = ProductsNode(0).Nodes.Find(SequenceLabel & " " & CStr(i), True)
 
-                        For Each Product In SequenceNode(0).Nodes
-                            ' Values are stored in the text of the tree node
-                            Select Case Product.name
-                                Case "quantity"
-                                    materialQuantity = Product.text
-                                Case "typeID" ' productTypeID
-                                    productTypeID = Product.text
-                                Case "probability"
-                                    probability = Product.text
-                            End Select
-                        Next
+    '                    For Each Product In SequenceNode(0).Nodes
+    '                        ' Values are stored in the text of the tree node
+    '                        Select Case Product.name
+    '                            Case "quantity"
+    '                                materialQuantity = Product.text
+    '                            Case "typeID" ' productTypeID
+    '                                productTypeID = Product.text
+    '                            Case "probability"
+    '                                probability = Product.text
+    '                        End Select
+    '                    Next
 
-                        ' Insert material record into industryActivityProducts
-                        SQL = "INSERT INTO industryActivityProducts VALUES (" & blueprintTypeID & "," & activityID & ","
-                        SQL = SQL & productTypeID & "," & materialQuantity & "," & probability & ")"
-                        Call Execute_msSQL(SQL)
-                    Next
-                End If
+    '                    ' Insert material record into industryActivityProducts
+    '                    SQL = "INSERT INTO industryActivityProducts VALUES (" & blueprintTypeID & "," & activityID & ","
+    '                    SQL = SQL & productTypeID & "," & materialQuantity & "," & probability & ")"
+    '                    Call Execute_msSQL(SQL)
+    '                Next
+    '            End If
 
-            Next
-            Count += 1
-        Next
+    '        Next
+    '        Count += 1
+    '    Next
 
-        ' Fix a few YAML data issues
-        Call Execute_msSQL("UPDATE industryActivityMaterials SET materialTypeID = 11467 WHERE blueprintTypeID = 12613 AND activityID = 5 AND materialTypeID = 11879")
+    '    ' Fix a few YAML data issues
+    '    Call Execute_msSQL("UPDATE industryActivityMaterials SET materialTypeID = 11467 WHERE blueprintTypeID = 12613 AND activityID = 5 AND materialTypeID = 11879")
 
-        ' Now that this is all imported, check the industryActivityMaterials table for activites that aren't in industryActivityProducts and insert
-        ' setting the productID = blueprintID. This is so we can get materials for ME/TE and copying - ie, skills are needed to do ME/TE and copying, no mats then no activity possible
-        Dim msSQLQuery As New SqlCommand
-        Dim msSQLReader As SqlDataReader
-        Dim msSQL As String
-        Dim mySQLQuery2 As New SqlCommand
-        Dim mySQLReader2 As SqlDataReader
-        Dim msSQL2 As String
+    '    ' Now that this is all imported, check the industryActivityMaterials table for activites that aren't in industryActivityProducts and insert
+    '    ' setting the productID = blueprintID. This is so we can get materials for ME/TE and copying - ie, skills are needed to do ME/TE and copying, no mats then no activity possible
+    '    Dim msSQLQuery As New SqlCommand
+    '    Dim msSQLReader As SqlDataReader
+    '    Dim msSQL As String
+    '    Dim mySQLQuery2 As New SqlCommand
+    '    Dim mySQLReader2 As SqlDataReader
+    '    Dim msSQL2 As String
 
-        ' Pull distinct bps and activities from materials
-        msSQL = "SELECT distinct blueprintTypeID, activityID FROM industryActivityMaterials"
-        msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
-        msSQLReader = msSQLQuery.ExecuteReader()
+    '    ' Pull distinct bps and activities from materials
+    '    msSQL = "SELECT distinct blueprintTypeID, activityID FROM industryActivityMaterials"
+    '    msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
+    '    msSQLReader = msSQLQuery.ExecuteReader()
 
-        While msSQLReader.Read
-            ' Check each one and see if there is the bp with that activity, if not add the record
-            msSQL2 = "SELECT 'X' FROM industryActivityProducts WHERE blueprintTypeID = " & msSQLReader.GetInt64(0) & " AND activityID = " & msSQLReader.GetInt32(1)
-            mySQLQuery2 = New SqlCommand(msSQL2, SQLExpressConnection2)
-            mySQLReader2 = mySQLQuery2.ExecuteReader()
+    '    While msSQLReader.Read
+    '        ' Check each one and see if there is the bp with that activity, if not add the record
+    '        msSQL2 = "SELECT 'X' FROM industryActivityProducts WHERE blueprintTypeID = " & msSQLReader.GetInt64(0) & " AND activityID = " & msSQLReader.GetInt32(1)
+    '        mySQLQuery2 = New SqlCommand(msSQL2, SQLExpressConnection2)
+    '        mySQLReader2 = mySQLQuery2.ExecuteReader()
 
-            If Not mySQLReader2.Read Then
-                ' Need to add this record - productTypeID is the blueprintTypeID
-                SQL = "INSERT INTO industryActivityProducts VALUES (" & msSQLReader.GetInt64(0) & "," & msSQLReader.GetInt32(1) & ","
-                SQL = SQL & msSQLReader.GetInt64(0) & ",1,1)"
-                Call Execute_msSQL(SQL)
-            End If
+    '        If Not mySQLReader2.Read Then
+    '            ' Need to add this record - productTypeID is the blueprintTypeID
+    '            SQL = "INSERT INTO industryActivityProducts VALUES (" & msSQLReader.GetInt64(0) & "," & msSQLReader.GetInt32(1) & ","
+    '            SQL = SQL & msSQLReader.GetInt64(0) & ",1,1)"
+    '            Call Execute_msSQL(SQL)
+    '        End If
 
-            mySQLReader2.Close()
-            mySQLReader2 = Nothing
-            mySQLQuery2 = Nothing
-        End While
+    '        mySQLReader2.Close()
+    '        mySQLReader2 = Nothing
+    '        mySQLQuery2 = Nothing
+    '    End While
 
-        msSQLReader.Close()
-        msSQLReader = Nothing
-        msSQLQuery = Nothing
+    '    msSQLReader.Close()
+    '    msSQLReader = Nothing
+    '    msSQLQuery = Nothing
 
-        ' For all invention jobs, we need a BPC or Relic BPC to invent the blueprint so add the BPC to the list of materials
-        msSQL = "SELECT blueprintTypeID FROM industryActivityMaterials WHERE activityID = 8 GROUP BY blueprintTypeID"
-        msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
-        msSQLReader = msSQLQuery.ExecuteReader()
+    '    ' For all invention jobs, we need a BPC or Relic BPC to invent the blueprint so add the BPC to the list of materials
+    '    msSQL = "SELECT blueprintTypeID FROM industryActivityMaterials WHERE activityID = 8 GROUP BY blueprintTypeID"
+    '    msSQLQuery = New SqlCommand(msSQL, SQLExpressConnection)
+    '    msSQLReader = msSQLQuery.ExecuteReader()
 
-        While msSQLReader.Read
-            ' Insert each record as a consumable with the same material type id as the bptypeid
-            SQL = "INSERT INTO industryActivityMaterials VALUES (" & msSQLReader.GetInt64(0) & ",8,"
-            SQL = SQL & msSQLReader.GetInt64(0) & ",1,1)"
-            Call Execute_msSQL(SQL)
-        End While
+    '    While msSQLReader.Read
+    '        ' Insert each record as a consumable with the same material type id as the bptypeid
+    '        SQL = "INSERT INTO industryActivityMaterials VALUES (" & msSQLReader.GetInt64(0) & ",8,"
+    '        SQL = SQL & msSQLReader.GetInt64(0) & ",1,1)"
+    '        Call Execute_msSQL(SQL)
+    '    End While
 
-        msSQLReader.Close()
-        msSQLReader = Nothing
-        msSQLQuery = Nothing
+    '    msSQLReader.Close()
+    '    msSQLReader = Nothing
+    '    msSQLQuery = Nothing
 
-        lblTableName.Text = ""
-        pgMain.Visible = False
-        Application.UseWaitCursor = True
-        Application.DoEvents()
+    '    lblTableName.Text = ""
+    '    pgMain.Visible = False
+    '    Application.UseWaitCursor = True
+    '    Application.DoEvents()
 
-    End Sub
+    'End Sub
 
     ' Loads the eveIcons table from the YMAL file
+
     Private Sub Load_YMAL_Icons()
         ' Use the tree node object with vb, Name is the node name, text is the value of the node - all we need to use here
         Dim IconsTree As New TreeNode
@@ -7563,407 +7686,408 @@ Public Class frmMain
     End Sub
 
     ' Loads the invTypes table (and invTypesMasteries, invTypesTraits) from the YMAL file
-    Private Sub Load_YMAL_invTypes()
-        ' Use the tree node object with vb, Name is the node name, text is the value of the node - all we need to use here
-        Dim InventoryTypes As New TreeNode
-        Dim BaseNode As New TreeNode
-        Dim DescriptionNode As TreeNode
-        Dim MasteryNode As TreeNode
-        Dim TraitNode As TreeNode
-        Dim NameNode As TreeNode
-        Dim LanguageName As String
-        Dim SQL As String
-        Dim Count As Integer
-        Dim InsertSQL As String
-        Dim FoundValue As Boolean = False
+    'Private Sub Load_YMAL_invTypes()
+    '    ' Use the tree node object with vb, Name is the node name, text is the value of the node - all we need to use here
+    '    Dim InventoryTypes As New TreeNode
+    '    Dim BaseNode As New TreeNode
+    '    Dim DescriptionNode As TreeNode
+    '    Dim MasteryNode As TreeNode
+    '    Dim TraitNode As TreeNode
+    '    Dim NameNode As TreeNode
+    '    Dim LanguageName As String
+    '    Dim SQL As String
+    '    Dim Count As Integer
+    '    Dim InsertSQL As String
+    '    Dim FoundValue As Boolean = False
 
-        Dim CurrentTypeID As TypeIDRecord
+    '    Dim CurrentTypeID As TypeIDRecord
 
-        Application.UseWaitCursor = True
-        Application.DoEvents()
-        ' First set up the database
+    '    Application.UseWaitCursor = True
+    '    Application.DoEvents()
+    '    ' First set up the database
 
-        ' inventoryTypes
-        Call ResetTable("invTypes")
-        ' Build table
-        SQL = "CREATE TABLE [invTypes] ("
-        SQL = SQL & "[typeID] [int] NOT NULL,"
-        SQL = SQL & "[groupID] [int] NULL,"
-        SQL = SQL & "[typeName] [nvarchar](100) NULL,"
-        SQL = SQL & "[description] [nvarchar](4000) NULL,"
-        SQL = SQL & "[mass] [float] NULL,"
-        SQL = SQL & "[volume] [float] NULL,"
-        SQL = SQL & "[capacity] [float] NULL,"
-        SQL = SQL & "[portionSize] [int] NULL,"
-        SQL = SQL & "[factionID] [int] NULL,"
-        SQL = SQL & "[raceID] [tinyint] NULL,"
-        SQL = SQL & "[basePrice] [money] NULL,"
-        SQL = SQL & "[published] [bit] NULL,"
-        SQL = SQL & "[marketGroupID] [int] NULL,"
-        SQL = SQL & "[chanceOfDuplicating] [float] NULL,"
-        SQL = SQL & "[graphicID] [int] NULL,"
-        SQL = SQL & "[radius] [float] NULL,"
-        SQL = SQL & "[iconID] [int] NULL,"
-        SQL = SQL & "[soundID] [int] NULL,"
-        SQL = SQL & "[sofFactionName] [nvarchar](100) NULL,"
-        SQL = SQL & "[sofDnaAddition] [nvarchar](100) NULL,"
-        SQL = SQL & "CONSTRAINT [invTypes_PK] PRIMARY KEY CLUSTERED ([typeID] ASC) "
-        SQL = SQL & "WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]) ON [PRIMARY]"
-        Call Execute_msSQL(SQL)
-        ' Create index
-        SQL = "CREATE NONCLUSTERED INDEX [invTypes_IX_Group] ON [dbo].[invTypes] ([groupID] ASC)"
-        SQL = SQL & "WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)"
-        Call Execute_msSQL(SQL)
+    '    ' inventoryTypes
+    '    Call ResetTable("invTypes")
+    '    ' Build table
+    '    SQL = "CREATE TABLE [invTypes] ("
+    '    SQL = SQL & "[typeID] [int] NOT NULL,"
+    '    SQL = SQL & "[groupID] [int] NULL,"
+    '    SQL = SQL & "[typeName] [nvarchar](100) NULL,"
+    '    SQL = SQL & "[description] [nvarchar](4000) NULL,"
+    '    SQL = SQL & "[mass] [float] NULL,"
+    '    SQL = SQL & "[volume] [float] NULL,"
+    '    SQL = SQL & "[capacity] [float] NULL,"
+    '    SQL = SQL & "[portionSize] [int] NULL,"
+    '    SQL = SQL & "[factionID] [int] NULL,"
+    '    SQL = SQL & "[raceID] [tinyint] NULL,"
+    '    SQL = SQL & "[basePrice] [money] NULL,"
+    '    SQL = SQL & "[published] [bit] NULL,"
+    '    SQL = SQL & "[marketGroupID] [int] NULL,"
+    '    SQL = SQL & "[chanceOfDuplicating] [float] NULL,"
+    '    SQL = SQL & "[graphicID] [int] NULL,"
+    '    SQL = SQL & "[radius] [float] NULL,"
+    '    SQL = SQL & "[iconID] [int] NULL,"
+    '    SQL = SQL & "[soundID] [int] NULL,"
+    '    SQL = SQL & "[sofFactionName] [nvarchar](100) NULL,"
+    '    SQL = SQL & "[sofDnaAddition] [nvarchar](100) NULL,"
+    '    SQL = SQL & "CONSTRAINT [invTypes_PK] PRIMARY KEY CLUSTERED ([typeID] ASC) "
+    '    SQL = SQL & "WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]) ON [PRIMARY]"
+    '    Call Execute_msSQL(SQL)
+    '    ' Create index
+    '    SQL = "CREATE NONCLUSTERED INDEX [invTypes_IX_Group] ON [dbo].[invTypes] ([groupID] ASC)"
+    '    SQL = SQL & "WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)"
+    '    Call Execute_msSQL(SQL)
 
-        Call ResetTable("invTypesTraits")
-        ' Build table
-        SQL = "CREATE TABLE [invTypesTraits] ("
-        SQL = SQL & "[typeID] [int] NOT NULL,"
-        SQL = SQL & "[skilltypeID] [int] NULL,"
-        SQL = SQL & "[bonusID] [int] NULL,"
-        SQL = SQL & "[bonus] [float] NULL,"
-        SQL = SQL & "[bonusText] [nvarchar](4000) NULL,"
-        SQL = SQL & "[unitID] [int] NULL)"
-        Call Execute_msSQL(SQL)
-        ' Create index
-        SQL = "CREATE NONCLUSTERED INDEX [invTypesTraits_typeID] ON [dbo].[invTypesTraits] ([typeID] ASC)"
-        SQL = SQL & "WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)"
-        Call Execute_msSQL(SQL)
+    '    Call ResetTable("invTypesTraits")
+    '    ' Build table
+    '    SQL = "CREATE TABLE [invTypesTraits] ("
+    '    SQL = SQL & "[typeID] [int] NOT NULL,"
+    '    SQL = SQL & "[skilltypeID] [int] NULL,"
+    '    SQL = SQL & "[bonusID] [int] NULL,"
+    '    SQL = SQL & "[bonus] [float] NULL,"
+    '    SQL = SQL & "[bonusText] [nvarchar](4000) NULL,"
+    '    SQL = SQL & "[unitID] [int] NULL)"
+    '    Call Execute_msSQL(SQL)
+    '    ' Create index
+    '    SQL = "CREATE NONCLUSTERED INDEX [invTypesTraits_typeID] ON [dbo].[invTypesTraits] ([typeID] ASC)"
+    '    SQL = SQL & "WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)"
+    '    Call Execute_msSQL(SQL)
 
-        Call ResetTable("invTypesMasteries")
-        ' Build table
-        SQL = "CREATE TABLE [invTypesMasteries] ("
-        SQL = SQL & "[typeID] [int] NOT NULL,"
-        SQL = SQL & "[masteryLevel] [int] NULL,"
-        SQL = SQL & "[masteryID] [int] NULL)"
-        Call Execute_msSQL(SQL)
-        ' Create index
-        SQL = "CREATE NONCLUSTERED INDEX [invTypesMasteries_typeID] ON [dbo].[invTypesMasteries] ([typeID] ASC)"
-        SQL = SQL & "WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)"
-        Call Execute_msSQL(SQL)
+    '    Call ResetTable("invTypesMasteries")
+    '    ' Build table
+    '    SQL = "CREATE TABLE [invTypesMasteries] ("
+    '    SQL = SQL & "[typeID] [int] NOT NULL,"
+    '    SQL = SQL & "[masteryLevel] [int] NULL,"
+    '    SQL = SQL & "[masteryID] [int] NULL)"
+    '    Call Execute_msSQL(SQL)
+    '    ' Create index
+    '    SQL = "CREATE NONCLUSTERED INDEX [invTypesMasteries_typeID] ON [dbo].[invTypesMasteries] ([typeID] ASC)"
+    '    SQL = SQL & "WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)"
+    '    Call Execute_msSQL(SQL)
 
-        ' Get the data from the YAML file
-        InventoryTypes = ParseYMALFile(DatabasePath & "\" & YAMLtypeIDs)
+    '    ' Get the data from the YAML file
+    '    InventoryTypes = ParseYMALFile(DatabasePath & "\" & YAMLtypeIDs)
 
-        Count = 0
-        pgMain.Minimum = Count
-        pgMain.Maximum = InventoryTypes.GetNodeCount(False)
-        pgMain.Visible = True
+    '    Count = 0
+    '    pgMain.Minimum = Count
+    '    pgMain.Maximum = InventoryTypes.GetNodeCount(False)
+    '    pgMain.Visible = True
 
-        For Each BaseNode In InventoryTypes.Nodes
+    '    For Each BaseNode In InventoryTypes.Nodes
 
-            ' Update form
-            lblTableName.Text = "Saving invTypes Data: " & BaseNode.Name
-            pgMain.Value = Count
-            Application.DoEvents()
+    '        ' Update form
+    '        lblTableName.Text = "Saving invTypes Data: " & BaseNode.Name
+    '        pgMain.Value = Count
+    '        Application.DoEvents()
 
-            CurrentTypeID = New TypeIDRecord
-            InsertSQL = ""
+    '        CurrentTypeID = New TypeIDRecord
+    '        InsertSQL = ""
 
-            With CurrentTypeID
-                InsertSQL = "INSERT INTO invTypes VALUES ("
+    '        With CurrentTypeID
+    '            InsertSQL = "INSERT INTO invTypes VALUES ("
 
-                .typeID = BaseNode.Name ' PK so will always be her
-                InsertSQL = InsertSQL & .typeID & ","
+    '            .typeID = BaseNode.Name ' PK so will always be here
+    '            InsertSQL = InsertSQL & .typeID & ","
 
-                If BaseNode.Nodes.Find("groupID", True).Length <> 0 Then
-                    .groupID = BaseNode.Nodes.Find("groupID", True)(0).Text
-                    InsertSQL = InsertSQL & .groupID & ","
-                Else
-                    InsertSQL = InsertSQL & "null,"
-                End If
+    '            If BaseNode.Nodes.Find("groupID", True).Length <> 0 Then
+    '                .groupID = BaseNode.Nodes.Find("groupID", True)(0).Text
+    '                InsertSQL = InsertSQL & .groupID & ","
+    '            Else
+    '                InsertSQL = InsertSQL & "null,"
+    '            End If
 
-                ' Get the name nodes to find the english description for typeName
-                If BaseNode.Nodes.Find("name", True).Length <> 0 Then
-                    NameNode = BaseNode.Nodes.Find("name", True)(0)
-                    FoundValue = False
-                    For Each Language In NameNode.Nodes
-                        LanguageName = Language.Name
-                        ' Set the activity
-                        If LanguageName = "en" Then
-                            .typeName = Language.Text
-                            ' If the name has quotes in it, remove the yaml formatting for quotes here, find any with quotes around and then replace
-                            If .typeName.Substring(Len(.typeName) - 1, 1) = "'" Then
-                                ' Remove the front and end apostrophe, then replace the doubles with a single
-                                .typeName = .typeName.Substring(1)
-                                .typeName = .typeName.Substring(0, Len(.typeName) - 1)
-                                .typeName = .typeName.Replace("''", "'")
-                            End If
+    '            ' Get the name nodes to find the english description for typeName
+    '            If BaseNode.Nodes.Find("name", True).Length <> 0 Then
+    '                NameNode = BaseNode.Nodes.Find("name", True)(0)
+    '                FoundValue = False
+    '                For Each Language In NameNode.Nodes
+    '                    LanguageName = Language.Name
+    '                    ' Set the activity
+    '                    If LanguageName = "en" Then
+    '                        .typeName = Language.Text
+    '                        ' If the name has quotes in it, remove the yaml formatting for quotes here, find any with quotes around and then replace
+    '                        If .typeName.Substring(Len(.typeName) - 1, 1) = "'" Then
+    '                            ' Remove the front and end apostrophe, then replace the doubles with a single
+    '                            .typeName = .typeName.Substring(1)
+    '                            .typeName = .typeName.Substring(0, Len(.typeName) - 1)
+    '                            .typeName = .typeName.Replace("''", "'")
+    '                        End If
 
-                            ' Finally, correct any curly quote marks and set them to simple quote marks - this happens when someone saves/pastes data from a Rich text document instead of something like notepad
-                            ' ASCII value 145 and 146 are curly quotes
-                            If .typeName.Contains(Chr(145)) Then
-                                .typeName = .typeName.Replace(Chr(145), Chr(39))
-                            End If
+    '                        ' Finally, correct any curly quote marks and set them to simple quote marks - this happens when someone saves/pastes data from a Rich text document instead of something like notepad
+    '                        ' ASCII value 145 and 146 are curly quotes
+    '                        If .typeName.Contains(Chr(145)) Then
+    '                            .typeName = .typeName.Replace(Chr(145), Chr(39))
+    '                        End If
 
-                            If .typeName.Contains(Chr(146)) Then
-                                .typeName = .typeName.Replace(Chr(146), Chr(39))
-                            End If
+    '                        If .typeName.Contains(Chr(146)) Then
+    '                            .typeName = .typeName.Replace(Chr(146), Chr(39))
+    '                        End If
 
-                            ' Make sure to trim this to get the correct name without leading spaces
-                            InsertSQL = InsertSQL & "'" & Trim(FormatDBString(.typeName)) & "',"
-                            FoundValue = True
-                            Exit For
-                        End If
-                    Next
-                    ' If it doesn't find the english version, mark as null
-                    If Not FoundValue Then
-                        InsertSQL = InsertSQL & "null,"
-                    End If
-                Else
-                    InsertSQL = InsertSQL & "null,"
-                End If
+    '                        ' Make sure to trim this to get the correct name without leading spaces
+    '                        InsertSQL = InsertSQL & "'" & Trim(FormatDBString(.typeName)) & "',"
+    '                        FoundValue = True
+    '                        Exit For
+    '                    End If
+    '                Next
+    '                ' If it doesn't find the english version, mark as null
+    '                If Not FoundValue Then
+    '                    InsertSQL = InsertSQL & "null,"
+    '                End If
+    '            Else
+    '                InsertSQL = InsertSQL & "null,"
+    '            End If
 
-                ' Get the description nodes to find the english description
-                If BaseNode.Nodes.Find("description", True).Length <> 0 Then
-                    DescriptionNode = BaseNode.Nodes.Find("description", True)(0)
-                    FoundValue = False
-                    For Each Language In DescriptionNode.Nodes
-                        LanguageName = Language.Name
-                        ' Set the activity
-                        If LanguageName = "en" Then
-                            .description = Language.Text
-                            ' Strip off quotes if they exist at beginning and end
-                            If .description.Substring(0, 1) = Chr(ASCII_DoubleQuote_Code) Or .description.Substring(0, 1) = Chr(ASCII_Quote_Code) Then
-                                .description = .description.Substring(1)
-                            End If
-                            If .description.Substring(Len(.description) - 1, 1) = Chr(ASCII_DoubleQuote_Code) Or .description.Substring(Len(.description) - 1, 1) = Chr(ASCII_Quote_Code) Then
-                                .description = .description.Substring(0, Len(.description) - 1)
-                            End If
+    '            ' Get the description nodes to find the english description
+    '            If BaseNode.Nodes.Find("description", True).Length <> 0 Then
+    '                DescriptionNode = BaseNode.Nodes.Find("description", True)(0)
+    '                FoundValue = False
+    '                For Each Language In DescriptionNode.Nodes
+    '                    LanguageName = Language.Name
+    '                    ' Set the activity
+    '                    If LanguageName = "en" Then
+    '                        .description = Language.Text
+    '                        ' Strip off quotes if they exist at beginning and end
+    '                        If .description.Substring(0, 1) = Chr(ASCII_DoubleQuote_Code) Or .description.Substring(0, 1) = Chr(ASCII_Quote_Code) Then
+    '                            .description = .description.Substring(1)
+    '                        End If
+    '                        If .description.Substring(Len(.description) - 1, 1) = Chr(ASCII_DoubleQuote_Code) Or .description.Substring(Len(.description) - 1, 1) = Chr(ASCII_Quote_Code) Then
+    '                            .description = .description.Substring(0, Len(.description) - 1)
+    '                        End If
 
-                            InsertSQL = InsertSQL & "'" & Trim(FormatDBString(.description)) & "',"
-                            FoundValue = True
-                            Exit For
-                        End If
-                    Next
-                    ' If it doesn't find the english version, mark as null
-                    If Not FoundValue Then
-                        InsertSQL = InsertSQL & "null,"
-                    End If
-                Else
-                    InsertSQL = InsertSQL & "null,"
-                End If
+    '                        InsertSQL = InsertSQL & "'" & Trim(FormatDBString(.description)) & "',"
+    '                        FoundValue = True
+    '                        Exit For
+    '                    End If
+    '                Next
+    '                ' If it doesn't find the english version, mark as null
+    '                If Not FoundValue Then
+    '                    InsertSQL = InsertSQL & "null,"
+    '                End If
+    '            Else
+    '                InsertSQL = InsertSQL & "null,"
+    '            End If
 
-                If BaseNode.Nodes.Find("mass", True).Length <> 0 Then
-                    .mass = BaseNode.Nodes.Find("mass", True)(0).Text
-                    InsertSQL = InsertSQL & .mass & ","
-                Else
-                    InsertSQL = InsertSQL & "null,"
-                End If
+    '            If BaseNode.Nodes.Find("mass", True).Length <> 0 Then
+    '                .mass = BaseNode.Nodes.Find("mass", True)(0).Text
+    '                InsertSQL = InsertSQL & .mass & ","
+    '            Else
+    '                InsertSQL = InsertSQL & "null,"
+    '            End If
 
-                If BaseNode.Nodes.Find("volume", True).Length <> 0 Then
-                    .volume = BaseNode.Nodes.Find("volume", True)(0).Text
-                    InsertSQL = InsertSQL & .volume & ","
-                Else
-                    InsertSQL = InsertSQL & "null,"
-                End If
+    '            If BaseNode.Nodes.Find("volume", True).Length <> 0 Then
+    '                .volume = BaseNode.Nodes.Find("volume", True)(0).Text
+    '                InsertSQL = InsertSQL & .volume & ","
+    '            Else
+    '                InsertSQL = InsertSQL & "null,"
+    '            End If
 
-                If BaseNode.Nodes.Find("capacity", True).Length <> 0 Then
-                    .capacity = BaseNode.Nodes.Find("capacity", True)(0).Text
-                    InsertSQL = InsertSQL & .capacity & ","
-                Else
-                    InsertSQL = InsertSQL & "null,"
-                End If
+    '            If BaseNode.Nodes.Find("capacity", True).Length <> 0 Then
+    '                .capacity = BaseNode.Nodes.Find("capacity", True)(0).Text
+    '                InsertSQL = InsertSQL & .capacity & ","
+    '            Else
+    '                InsertSQL = InsertSQL & "null,"
+    '            End If
 
-                If BaseNode.Nodes.Find("portionSize", True).Length <> 0 Then
-                    .portionSize = BaseNode.Nodes.Find("portionSize", True)(0).Text
-                    InsertSQL = InsertSQL & .portionSize & ","
-                Else
-                    InsertSQL = InsertSQL & "null,"
-                End If
+    '            If BaseNode.Nodes.Find("portionSize", True).Length <> 0 Then
+    '                .portionSize = BaseNode.Nodes.Find("portionSize", True)(0).Text
+    '                InsertSQL = InsertSQL & .portionSize & ","
+    '            Else
+    '                InsertSQL = InsertSQL & "null,"
+    '            End If
 
-                If BaseNode.Nodes.Find("factionID", True).Length <> 0 Then
-                    .factionID = BaseNode.Nodes.Find("factionID", True)(0).Text
-                    InsertSQL = InsertSQL & .factionID & ","
-                Else
-                    InsertSQL = InsertSQL & "null,"
-                End If
+    '            If BaseNode.Nodes.Find("factionID", True).Length <> 0 Then
+    '                .factionID = BaseNode.Nodes.Find("factionID", True)(0).Text
+    '                InsertSQL = InsertSQL & .factionID & ","
+    '            Else
+    '                InsertSQL = InsertSQL & "null,"
+    '            End If
 
-                If BaseNode.Nodes.Find("raceID", True).Length <> 0 Then
-                    .raceID = BaseNode.Nodes.Find("raceID", True)(0).Text
-                    InsertSQL = InsertSQL & .raceID & ","
-                Else
-                    InsertSQL = InsertSQL & "null,"
-                End If
+    '            If BaseNode.Nodes.Find("raceID", True).Length <> 0 Then
+    '                .raceID = BaseNode.Nodes.Find("raceID", True)(0).Text
+    '                InsertSQL = InsertSQL & .raceID & ","
+    '            Else
+    '                InsertSQL = InsertSQL & "null,"
+    '            End If
 
-                If BaseNode.Nodes.Find("basePrice", True).Length <> 0 Then
-                    .basePrice = BaseNode.Nodes.Find("basePrice", True)(0).Text
-                    InsertSQL = InsertSQL & .basePrice & ","
-                Else
-                    InsertSQL = InsertSQL & "null,"
-                End If
+    '            If BaseNode.Nodes.Find("basePrice", True).Length <> 0 Then
+    '                .basePrice = BaseNode.Nodes.Find("basePrice", True)(0).Text
+    '                InsertSQL = InsertSQL & .basePrice & ","
+    '            Else
+    '                InsertSQL = InsertSQL & "null,"
+    '            End If
 
-                If BaseNode.Nodes.Find("published", True).Length <> 0 Then
-                    .published = CInt(CBool(BaseNode.Nodes.Find("published", True)(0).Text))
-                    InsertSQL = InsertSQL & .published & ","
-                Else
-                    InsertSQL = InsertSQL & "null,"
-                End If
+    '            If BaseNode.Nodes.Find("published", True).Length <> 0 Then
+    '                .published = CInt(CBool(BaseNode.Nodes.Find("published", True)(0).Text))
+    '                InsertSQL = InsertSQL & .published & ","
+    '            Else
+    '                InsertSQL = InsertSQL & "null,"
+    '            End If
 
-                If BaseNode.Nodes.Find("marketGroupID", True).Length <> 0 Then
-                    .marketGroupID = BaseNode.Nodes.Find("marketGroupID", True)(0).Text
-                    InsertSQL = InsertSQL & .marketGroupID & ","
-                Else
-                    InsertSQL = InsertSQL & "null,"
-                End If
+    '            If BaseNode.Nodes.Find("marketGroupID", True).Length <> 0 Then
+    '                .marketGroupID = BaseNode.Nodes.Find("marketGroupID", True)(0).Text
+    '                InsertSQL = InsertSQL & .marketGroupID & ","
+    '            Else
+    '                InsertSQL = InsertSQL & "null,"
+    '            End If
 
-                If BaseNode.Nodes.Find("chanceOfDuplicating", True).Length <> 0 Then
-                    .chanceOfDuplicating = BaseNode.Nodes.Find("chanceOfDuplicating", True)(0).Text
-                    InsertSQL = InsertSQL & .chanceOfDuplicating & ","
-                Else
-                    InsertSQL = InsertSQL & "null,"
-                End If
+    '            If BaseNode.Nodes.Find("chanceOfDuplicating", True).Length <> 0 Then
+    '                .chanceOfDuplicating = BaseNode.Nodes.Find("chanceOfDuplicating", True)(0).Text
+    '                InsertSQL = InsertSQL & .chanceOfDuplicating & ","
+    '            Else
+    '                InsertSQL = InsertSQL & "null,"
+    '            End If
 
-                If BaseNode.Nodes.Find("graphicID", True).Length <> 0 Then
-                    .graphicID = BaseNode.Nodes.Find("graphicID", True)(0).Text
-                    InsertSQL = InsertSQL & .graphicID & ","
-                Else
-                    InsertSQL = InsertSQL & "null,"
-                End If
+    '            If BaseNode.Nodes.Find("graphicID", True).Length <> 0 Then
+    '                .graphicID = BaseNode.Nodes.Find("graphicID", True)(0).Text
+    '                InsertSQL = InsertSQL & .graphicID & ","
+    '            Else
+    '                InsertSQL = InsertSQL & "null,"
+    '            End If
 
-                If BaseNode.Nodes.Find("radius", True).Length <> 0 Then
-                    .radius = BaseNode.Nodes.Find("radius", True)(0).Text
-                    InsertSQL = InsertSQL & .radius & ","
-                Else
-                    InsertSQL = InsertSQL & "null,"
-                End If
+    '            If BaseNode.Nodes.Find("radius", True).Length <> 0 Then
+    '                .radius = BaseNode.Nodes.Find("radius", True)(0).Text
+    '                InsertSQL = InsertSQL & .radius & ","
+    '            Else
+    '                InsertSQL = InsertSQL & "null,"
+    '            End If
 
-                If BaseNode.Nodes.Find("iconID", True).Length <> 0 Then
-                    .iconID = BaseNode.Nodes.Find("iconID", True)(0).Text
-                    InsertSQL = InsertSQL & .iconID & ","
-                Else
-                    InsertSQL = InsertSQL & "null,"
-                End If
+    '            If BaseNode.Nodes.Find("iconID", True).Length <> 0 Then
+    '                .iconID = BaseNode.Nodes.Find("iconID", True)(0).Text
+    '                InsertSQL = InsertSQL & .iconID & ","
+    '            Else
+    '                InsertSQL = InsertSQL & "null,"
+    '            End If
 
-                If BaseNode.Nodes.Find("soundID", True).Length <> 0 Then
-                    .soundID = BaseNode.Nodes.Find("soundID", True)(0).Text
-                    InsertSQL = InsertSQL & .soundID & ","
-                Else
-                    InsertSQL = InsertSQL & "null,"
-                End If
+    '            If BaseNode.Nodes.Find("soundID", True).Length <> 0 Then
+    '                .soundID = BaseNode.Nodes.Find("soundID", True)(0).Text
+    '                InsertSQL = InsertSQL & .soundID & ","
+    '            Else
+    '                InsertSQL = InsertSQL & "null,"
+    '            End If
 
-                If BaseNode.Nodes.Find("sofFactionName", True).Length <> 0 Then
-                    .sofFactionName = BaseNode.Nodes.Find("sofFactionName", True)(0).Text
-                    InsertSQL = InsertSQL & "'" & FormatDBString(.sofFactionName) & "',"
-                Else
-                    InsertSQL = InsertSQL & "null,"
-                End If
+    '            If BaseNode.Nodes.Find("sofFactionName", True).Length <> 0 Then
+    '                .sofFactionName = BaseNode.Nodes.Find("sofFactionName", True)(0).Text
+    '                InsertSQL = InsertSQL & "'" & FormatDBString(.sofFactionName) & "',"
+    '            Else
+    '                InsertSQL = InsertSQL & "null,"
+    '            End If
 
-                If BaseNode.Nodes.Find("sofDnaAddition", True).Length <> 0 Then
-                    .sofDnaAddition = BaseNode.Nodes.Find("sofDnaAddition", True)(0).Text
-                    InsertSQL = InsertSQL & "'" & FormatDBString(.sofDnaAddition) & "'"
-                Else
-                    InsertSQL = InsertSQL & "null"
-                End If
+    '            If BaseNode.Nodes.Find("sofDnaAddition", True).Length <> 0 Then
+    '                .sofDnaAddition = BaseNode.Nodes.Find("sofDnaAddition", True)(0).Text
+    '                InsertSQL = InsertSQL & "'" & FormatDBString(.sofDnaAddition) & "'"
+    '            Else
+    '                InsertSQL = InsertSQL & "null"
+    '            End If
 
-                InsertSQL = InsertSQL & ")"
+    '            InsertSQL = InsertSQL & ")"
 
-                ' Insert this invTypes record
-                Call Execute_msSQL(InsertSQL)
+    '            ' Insert this invTypes record
+    '            Call Execute_msSQL(InsertSQL)
 
-                ' Insert the mastery
-                If BaseNode.Nodes.Find("masteries", True).Length <> 0 Then
-                    MasteryNode = BaseNode.Nodes.Find("masteries", True)(0)
-                    Dim masteryLevel As Integer
-                    Dim masteryID As Integer
+    '            ' Insert the mastery
+    '            If BaseNode.Nodes.Find("masteries", True).Length <> 0 Then
+    '                MasteryNode = BaseNode.Nodes.Find("masteries", True)(0)
+    '                Dim masteryLevel As Integer
+    '                Dim masteryID As Integer
 
-                    For Each mastery In MasteryNode.Nodes
-                        masteryLevel = mastery.Name
+    '                For Each mastery In MasteryNode.Nodes
+    '                    masteryLevel = mastery.Name
 
-                        For Each sequence In mastery.nodes
-                            masteryLevel = mastery.Name
-                            For Each ID In sequence.nodes
-                                masteryID = ID.name
-                                ' Insert the record (typeID, masteryLevel, masteryID)
-                                InsertSQL = "INSERT INTO invTypesMasteries VALUES (" & CStr(.typeID) & "," & CStr(masteryLevel) & "," & CStr(masteryID) & ")"
-                                ' Insert this record
-                                Call Execute_msSQL(InsertSQL)
-                            Next
-                        Next
-                    Next
-                End If
+    '                    For Each sequence In mastery.nodes
+    '                        masteryLevel = mastery.Name
+    '                        For Each ID In sequence.nodes
+    '                            masteryID = ID.name
+    '                            ' Insert the record (typeID, masteryLevel, masteryID)
+    '                            InsertSQL = "INSERT INTO invTypesMasteries VALUES (" & CStr(.typeID) & "," & CStr(masteryLevel) & "," & CStr(masteryID) & ")"
+    '                            ' Insert this record
+    '                            Call Execute_msSQL(InsertSQL)
+    '                        Next
+    '                    Next
+    '                Next
+    '            End If
 
-                ' Insert the Trait
-                If BaseNode.Nodes.Find("traits", True).Length <> 0 Then
-                    TraitNode = BaseNode.Nodes.Find("traits", True)(0)
-                    Dim skillID As Integer = 0
-                    Dim bonusID As Integer = 0
-                    Dim bonus As Double = 0
-                    Dim bonusText As String = Nothing
-                    Dim unitID As Integer = 0
+    '            ' Insert the Trait
+    '            If BaseNode.Nodes.Find("traits", True).Length <> 0 Then
+    '                TraitNode = BaseNode.Nodes.Find("traits", True)(0)
+    '                Dim skillID As Integer = 0
+    '                Dim bonusID As Integer = 0
+    '                Dim bonus As Double = 0
+    '                Dim bonusText As String = Nothing
+    '                Dim unitID As Integer = 0
 
-                    For Each trait In TraitNode.Nodes
-                        skillID = trait.Name
+    '                For Each trait In TraitNode.Nodes
+    '                    skillID = trait.Name
 
-                        For Each bonusIDLabel In trait.nodes
-                            bonusID = bonusIDLabel.Name
-                            For Each field In bonusIDLabel.nodes
-                                If field.name = "bonus" Then
-                                    bonus = CDbl(field.text)
-                                End If
-                                If field.name = "unitID" Then
-                                    unitID = CInt(field.text)
-                                End If
-                                If field.Nodes.Find("en", True).Length <> 0 Then
-                                    bonusText = field.nodes.find("en", True)(0).text
-                                End If
-                            Next
-                            ' Form the SQL insert
-                            InsertSQL = "INSERT INTO invTypesTraits VALUES (" & CStr(.typeID) & ","
-                            If skillID = 0 Then
-                                InsertSQL = InsertSQL & "null,"
-                            Else
-                                InsertSQL = InsertSQL & CStr(skillID) & ","
-                            End If
+    '                    For Each bonusIDLabel In trait.nodes
+    '                        bonusID = bonusIDLabel.Name
+    '                        For Each field In bonusIDLabel.nodes
+    '                            If field.name = "bonus" Then
+    '                                bonus = CDbl(field.text)
+    '                            End If
+    '                            If field.name = "unitID" Then
+    '                                unitID = CInt(field.text)
+    '                            End If
+    '                            If field.Nodes.Find("en", True).Length <> 0 Then
+    '                                bonusText = field.nodes.find("en", True)(0).text
+    '                            End If
+    '                        Next
+    '                        ' Form the SQL insert
+    '                        InsertSQL = "INSERT INTO invTypesTraits VALUES (" & CStr(.typeID) & ","
+    '                        If skillID = 0 Then
+    '                            InsertSQL = InsertSQL & "null,"
+    '                        Else
+    '                            InsertSQL = InsertSQL & CStr(skillID) & ","
+    '                        End If
 
-                            If bonusID = 0 Then
-                                InsertSQL = InsertSQL & "null,"
-                            Else
-                                InsertSQL = InsertSQL & CStr(bonusID) & ","
-                            End If
+    '                        If bonusID = 0 Then
+    '                            InsertSQL = InsertSQL & "null,"
+    '                        Else
+    '                            InsertSQL = InsertSQL & CStr(bonusID) & ","
+    '                        End If
 
-                            If bonus = 0 Then
-                                InsertSQL = InsertSQL & "null,"
-                            Else
-                                InsertSQL = InsertSQL & CStr(bonus) & ","
-                            End If
+    '                        If bonus = 0 Then
+    '                            InsertSQL = InsertSQL & "null,"
+    '                        Else
+    '                            InsertSQL = InsertSQL & CStr(bonus) & ","
+    '                        End If
 
-                            If IsNothing(bonusText) Then
-                                InsertSQL = InsertSQL & "null,"
-                            Else
-                                InsertSQL = InsertSQL & "'" & FormatDBString(bonusText) & "',"
-                            End If
+    '                        If IsNothing(bonusText) Then
+    '                            InsertSQL = InsertSQL & "null,"
+    '                        Else
+    '                            InsertSQL = InsertSQL & "'" & FormatDBString(bonusText) & "',"
+    '                        End If
 
-                            If unitID = 0 Then
-                                InsertSQL = InsertSQL & "null"
-                            Else
-                                InsertSQL = InsertSQL & CStr(unitID)
-                            End If
+    '                        If unitID = 0 Then
+    '                            InsertSQL = InsertSQL & "null"
+    '                        Else
+    '                            InsertSQL = InsertSQL & CStr(unitID)
+    '                        End If
 
-                            InsertSQL = InsertSQL & ")"
+    '                        InsertSQL = InsertSQL & ")"
 
-                            ' Insert this record
-                            Call Execute_msSQL(InsertSQL)
-                        Next
-                    Next
-                End If
+    '                        ' Insert this record
+    '                        Call Execute_msSQL(InsertSQL)
+    '                    Next
+    '                Next
+    '            End If
 
-            End With
-            Count += 1
-        Next
+    '        End With
+    '        Count += 1
+    '    Next
 
-        ' Bug update
-        SQL = "UPDATE invTypes SET published = 1 WHERE typeID = 12224"
-        Call Execute_msSQL(SQL)
+    '    ' Bug update
+    '    SQL = "UPDATE invTypes SET published = 1 WHERE typeID = 12224"
+    '    Call Execute_msSQL(SQL)
 
-        lblTableName.Text = ""
-        pgMain.Visible = False
-        Application.UseWaitCursor = True
-        Application.DoEvents()
+    '    lblTableName.Text = ""
+    '    pgMain.Visible = False
+    '    Application.UseWaitCursor = True
+    '    Application.DoEvents()
 
-    End Sub
+    'End Sub
 
     ' Loads the invGroups table from the YMAL file
+
     Private Sub Load_YMAL_invGroups()
         ' Use the tree node object with vb, Name is the node name, text is the value of the node - all we need to use here
         Dim InventoryGroups As New TreeNode
@@ -10838,7 +10962,7 @@ Public Class frmMain
 
         ' Get Count
         SQLUniverse = "SELECT COUNT(*) FROM mapCelestialStatistics"
-        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
+        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
         SQLiteReader.Read()
 
@@ -10849,37 +10973,34 @@ Public Class frmMain
 
         ' Pull new data from UniverseDB (SQLite) and insert
         SQLUniverse = "SELECT * FROM mapCelestialStatistics"
-        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
+        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         On Error Resume Next
         While SQLiteReader.Read
             Application.DoEvents()
-            If SQLiteReader.GetValue(0) = 40458667 Then
-                Application.DoEvents()
-            End If
 
             msSQL = "INSERT INTO mapCelestialStatistics VALUES ("
             msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(0)) & ","
-            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(1)) & ","
+            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetDouble(1)) & ","
             msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(2)) & ","
-            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(3)) & ","
-            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(4)) & ","
-            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(5)) & ","
-            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(6)) & ","
-            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(7)) & ","
-            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(8)) & ","
-            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(9)) & ","
-            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(10)) & ","
-            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(11)) & ","
-            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(12)) & ","
-            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(13)) & ","
-            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(14)) & ","
-            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(15)) & ","
-            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(16)) & ","
+            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetDouble(3)) & ","
+            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetDouble(4)) & ","
+            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetDouble(5)) & ","
+            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetDouble(6)) & ","
+            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetDouble(7)) & ","
+            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetDouble(8)) & ","
+            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetDouble(9)) & ","
+            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetDouble(10)) & ","
+            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetDouble(11)) & ","
+            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetDouble(12)) & ","
+            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetDouble(13)) & ","
+            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetDouble(14)) & ","
+            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetDouble(15)) & ","
+            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetDouble(16)) & ","
             msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetDouble(17)) & ","
-            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(18)) & ","
-            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetValue(19)) & ")"
+            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetDouble(18)) & ","
+            msSQL = msSQL & BuildInsertFieldString(SQLiteReader.GetDouble(19)) & ")"
 
             Call Execute_msSQL(msSQL) ' add to msSQL Server
 
@@ -10937,7 +11058,7 @@ Public Class frmMain
 
         ' Get Count
         SQLUniverse = "SELECT COUNT(*) FROM mapConstellationJumps"
-        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
+        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         pgMain.Minimum = 0
@@ -10947,10 +11068,10 @@ Public Class frmMain
 
         ' Pull new data from UniverseDB (SQLite) and insert
         SQLUniverse = "SELECT * FROM mapConstellationJumps"
-        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
+        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
-        Call BeginSQLiteTransaction(UniverseDB)
+        Call UniverseDB.BeginSQLiteTransaction()
 
         While SQLiteReader.Read
             Application.DoEvents()
@@ -10969,7 +11090,7 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(UniverseDB)
+        Call UniverseDB.CommitSQLiteTransaction()
 
 
         SQLiteReader.Close()
@@ -11015,7 +11136,7 @@ Public Class frmMain
 
         ' Get Count
         SQLUniverse = "SELECT COUNT(*) FROM mapConstellations"
-        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
+        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         pgMain.Minimum = 0
@@ -11025,10 +11146,10 @@ Public Class frmMain
 
         ' Pull new data from UniverseDB (SQLite) and insert
         SQLUniverse = "SELECT * FROM mapConstellations"
-        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
+        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
-        Call BeginSQLiteTransaction(UniverseDB)
+        Call UniverseDB.BeginSQLiteTransaction()
 
         While SQLiteReader.Read
             Application.DoEvents()
@@ -11057,7 +11178,7 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(UniverseDB)
+        Call UniverseDB.CommitSQLiteTransaction()
 
 
         SQLiteReader.Close()
@@ -11120,7 +11241,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         SQLUniverse = "SELECT COUNT(*) FROM mapDenormalize"
-        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
+        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         pgMain.Minimum = 0
@@ -11130,10 +11251,10 @@ Public Class frmMain
 
         ' Pull new data and insert
         SQLUniverse = "SELECT * FROM mapDenormalize"
-        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
+        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
-        Call BeginSQLiteTransaction(UniverseDB)
+        Call UniverseDB.BeginSQLiteTransaction()
 
         While SQLiteReader.Read
             Application.DoEvents()
@@ -11163,7 +11284,7 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(UniverseDB)
+        Call UniverseDB.CommitSQLiteTransaction()
 
 
         SQLiteReader.Close()
@@ -11209,7 +11330,7 @@ Public Class frmMain
 
         ' Get Count
         SQLUniverse = "SELECT COUNT(*) FROM mapJumps"
-        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
+        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         pgMain.Minimum = 0
@@ -11219,10 +11340,10 @@ Public Class frmMain
 
         ' Pull new data from UniverseDB (SQLite) and insert
         SQLUniverse = "SELECT * FROM mapJumps"
-        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
+        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
-        Call BeginSQLiteTransaction(UniverseDB)
+        Call UniverseDB.BeginSQLiteTransaction()
 
         While SQLiteReader.Read
             Application.DoEvents()
@@ -11239,7 +11360,7 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(UniverseDB)
+        Call UniverseDB.CommitSQLiteTransaction()
 
 
         SQLiteReader.Close()
@@ -11285,7 +11406,7 @@ Public Class frmMain
 
         ' Get Count
         SQLUniverse = "SELECT COUNT(*) FROM mapLandmarks"
-        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
+        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         pgMain.Minimum = 0
@@ -11295,10 +11416,10 @@ Public Class frmMain
 
         ' Pull new data from UniverseDB (SQLite) and insert
         SQLUniverse = "SELECT * FROM mapLandmarks"
-        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
+        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
-        Call BeginSQLiteTransaction(UniverseDB)
+        Call UniverseDB.BeginSQLiteTransaction()
 
         While SQLiteReader.Read
             Application.DoEvents()
@@ -11321,7 +11442,7 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(UniverseDB)
+        Call UniverseDB.CommitSQLiteTransaction()
 
 
         SQLiteReader.Close()
@@ -11367,7 +11488,7 @@ Public Class frmMain
 
         ' Get Count
         SQLUniverse = "SELECT COUNT(*) FROM mapLocationScenes"
-        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
+        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         pgMain.Minimum = 0
@@ -11377,10 +11498,10 @@ Public Class frmMain
 
         ' Pull new data from UniverseDB (SQLite) and insert
         SQLUniverse = "SELECT * FROM mapLocationScenes"
-        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
+        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
-        Call BeginSQLiteTransaction(UniverseDB)
+        Call UniverseDB.BeginSQLiteTransaction()
 
         While SQLiteReader.Read
             Application.DoEvents()
@@ -11397,7 +11518,7 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(UniverseDB)
+        Call UniverseDB.CommitSQLiteTransaction()
 
 
         SQLiteReader.Close()
@@ -11444,7 +11565,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         SQLUniverse = "SELECT COUNT(*) FROM mapLocationWormholeClasses"
-        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
+        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         pgMain.Minimum = 0
@@ -11454,10 +11575,10 @@ Public Class frmMain
 
         ' Pull new data and insert
         SQLUniverse = "SELECT * FROM mapLocationWormholeClasses"
-        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
+        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
-        Call BeginSQLiteTransaction(UniverseDB)
+        Call UniverseDB.BeginSQLiteTransaction()
 
         While SQLiteReader.Read
             Application.DoEvents()
@@ -11474,7 +11595,7 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(UniverseDB)
+        Call UniverseDB.CommitSQLiteTransaction()
 
         SQLiteReader.Close()
         SQLiteReader = Nothing
@@ -11505,7 +11626,7 @@ Public Class frmMain
 
         ' Get Count
         SQLUniverse = "SELECT COUNT(*) FROM mapRegionJumps"
-        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
+        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         pgMain.Minimum = 0
@@ -11515,10 +11636,10 @@ Public Class frmMain
 
         ' Pull new data from UniverseDB (SQLite) and insert
         SQLUniverse = "SELECT * FROM mapRegionJumps"
-        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
+        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
-        Call BeginSQLiteTransaction(UniverseDB)
+        Call UniverseDB.BeginSQLiteTransaction()
 
         While SQLiteReader.Read
             Application.DoEvents()
@@ -11535,7 +11656,7 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(UniverseDB)
+        Call UniverseDB.CommitSQLiteTransaction()
 
         SQLiteReader.Close()
         SQLiteReader = Nothing
@@ -11580,7 +11701,7 @@ Public Class frmMain
 
         ' Get Count
         SQLUniverse = "SELECT COUNT(*) FROM mapRegions"
-        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
+        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         pgMain.Minimum = 0
@@ -11590,10 +11711,10 @@ Public Class frmMain
 
         ' Pull new data from UniverseDB (SQLite) and insert
         SQLUniverse = "SELECT * FROM mapRegions"
-        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
+        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
-        Call BeginSQLiteTransaction(UniverseDB)
+        Call UniverseDB.BeginSQLiteTransaction()
 
         While SQLiteReader.Read
             Application.DoEvents()
@@ -11621,7 +11742,7 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(UniverseDB)
+        Call UniverseDB.CommitSQLiteTransaction()
 
         SQLiteReader.Close()
         SQLiteReader = Nothing
@@ -11666,7 +11787,7 @@ Public Class frmMain
 
         ' Get Count
         SQLUniverse = "SELECT COUNT(*) FROM mapSolarSystemJumps"
-        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
+        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         pgMain.Minimum = 0
@@ -11676,10 +11797,10 @@ Public Class frmMain
 
         ' Pull new data from UniverseDB (SQLite) and insert
         SQLUniverse = "SELECT * FROM mapSolarSystemJumps"
-        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
+        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
-        Call BeginSQLiteTransaction(UniverseDB)
+        Call UniverseDB.BeginSQLiteTransaction()
 
         While SQLiteReader.Read
             Application.DoEvents()
@@ -11700,7 +11821,7 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(UniverseDB)
+        Call UniverseDB.CommitSQLiteTransaction()
 
         SQLiteReader.Close()
         SQLiteReader = Nothing
@@ -11745,7 +11866,7 @@ Public Class frmMain
 
         ' Get Count
         SQLUniverse = "SELECT COUNT(*) FROM mapSolarSystems"
-        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
+        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         pgMain.Minimum = 0
@@ -11755,10 +11876,10 @@ Public Class frmMain
 
         ' Pull new data from UniverseDB (SQLite) and insert
         SQLUniverse = "SELECT * FROM mapSolarSystems"
-        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB)
+        SQLiteDBCommand = New SQLiteCommand(SQLUniverse, UniverseDB.DBREf)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
-        Call BeginSQLiteTransaction(UniverseDB)
+        Call UniverseDB.BeginSQLiteTransaction()
 
         While SQLiteReader.Read
             Application.DoEvents()
@@ -11802,7 +11923,7 @@ Public Class frmMain
 
         End While
 
-        Call CommitSQLiteTransaction(UniverseDB)
+        Call UniverseDB.CommitSQLiteTransaction()
 
         SQLiteReader.Close()
         SQLiteReader = Nothing
@@ -12114,43 +12235,125 @@ Public Class frmMain
 
 #End Region
 
-
     Private Sub btnYAMLTest_Click(sender As Object, e As EventArgs) Handles btnYAMLTest.Click
-        Dim NewSQLiteDB As New SQLiteConnection
-        Dim DBPath As String = WorkingDirectory & "YAMLTestDB"
+        Dim NewSQLiteDB As SQLiteDBConnection
+        Dim DBPath As String = WorkingDirectory & "YAMLTestDB.s3db"
+        Dim BSDPath As String = WorkingDirectory & DatabaseName & "test\sde\bsd\"
 
         ' Build a new database - each time this is run it deletes the old DB
-        Call BuildDB(WorkingDirectory & "YAMLTestDB")
-
-        ' Open new SQLite DB
-        If File.Exists(DBPath & ".s3db") Then
-            NewSQLiteDB.ConnectionString = "Data Source=" & DBPath & ".s3db"
-            NewSQLiteDB.Open()
-            ' Set pragma to make this faster
-            Call Execute_SQLiteSQL("PRAGMA synchronous = OFF", NewSQLiteDB)
+        If File.Exists(DBPath) Then
+            ' Delete old one
+            File.Delete(DBPath)
         End If
 
-        Dim YAMLBP As New YAMLBlueprints(NewSQLiteDB)
-        Dim YAMLinvNames As New YAMLinvNames(NewSQLiteDB)
+        ' Create new SQLite DB
+        SQLiteConnection.CreateFile(DBPath)
+
+        ' Open new SQLite DB
+        NewSQLiteDB = New SQLiteDBConnection(DBPath)
+        ' Set synchronous off to make this faster
+        Call NewSQLiteDB.ExecuteNonQuerySQL("PRAGMA synchronous = OFF")
 
         ' Load the files
         Me.Cursor = Cursors.WaitCursor
         Application.DoEvents()
 
-        'Call YAMLBP.ImportFile(WorkingDirectory & DatabaseName & "\blueprints.yaml", lblTableName, pgMain)
-        Call YAMLinvNames.ImportFile(WorkingDirectory & DatabaseName & "\invNames.yaml", lblTableName, pgMain)
+        ' Run Translations before anything else
+        'Dim Translations As New YAMLTranslations(DBPath)
+        '' Process the YAML classes - use same name as other working path but add 'test' to it
+        'Call Translations.ImportTranslationLanguages(bsdpath", "trnTranslationLanguages.yaml", lblTableName, pgMain)
+        'Call Translations.ImportTranslationColumns(bsdpath, "trnTranslationColumns.yaml", lblTableName, pgMain)
+        'Call Translations.ImportTranslations(bsdpath, "trnTranslations.yaml", lblTableName, pgMain)
+
+        'Dim Agents As New YAMLAgents(DBPath)
+        'Call Agents.ImportData(BSDPath, "agtAgents.yaml", lblTableName, pgMain)
+
+        'Dim AgentTypes As New YAMLAgentTypes(DBPath)
+        'Call AgentTypes.ImportData(BSDPath, "agtAgentTypes.yaml", lblTableName, pgMain)
+
+        'Dim ResearchAgents As New YAMLResearchAgents(DBPath)
+        'Call ResearchAgents.ImportData(BSDPath, "agtResearchAgents.yaml", lblTableName, pgMain)
+
+        'Dim CharAncestry As New YAMLCharAncestries(DBPath)
+        'Call CharAncestry.ImportData(BSDPath, "chrAncestries.yaml", lblTableName, pgMain)
+
+        'Dim CharAttributes As New YAMLCharAttributes(DBPath)
+        'Call CharAttributes.ImportData(BSDPath, "chrAttributes.yaml", lblTableName, pgMain)
+
+        'Dim CharBloodlines As New YAMLCharBloodLines(DBPath)
+        'Call CharBloodlines.ImportData(BSDPath, "chrBloodlines.yaml", lblTableName, pgMain)
+
+        'Dim CharFactions As New YAMLCharFactions(DBPath)
+        'Call CharFactions.ImportData(BSDPath, "chrFactions.yaml", lblTableName, pgMain)
+
+        'Dim CharRaces As New YAMLCharRaces(DBPath)
+        'Call CharRaces.ImportData(BSDPath, "chrRaces.yaml", lblTableName, pgMain)
+
+        'Dim CorpActivities As New YAMLCrpActivities(DBPath)
+        'Call CorpActivities.ImportData(BSDPath, "crpActivities.yaml", lblTableName, pgMain)
+
+        'Dim NPCCorpDivisions As New YAMLCrpNPCCorporationDivisions(DBPath)
+        'Call NPCCorpDivisions.ImportData(BSDPath, "crpNPCCorporationDivisions.yaml", lblTableName, pgMain)
+
+        'Dim NPCCorpResearch As New YAMLCrpNPCCorporationResearchFields(DBPath)
+        'Call NPCCorpResearch.ImportData(BSDPath, "crpNPCCorporationResearchFields.yaml", lblTableName, pgMain)
+
+        'Dim NPCCorporations As New YAMLCrpNPCCorporations(DBPath)
+        'Call NPCCorporations.ImportData(BSDPath, "crpNPCCorporations.yaml", lblTableName, pgMain)
+
+        'Dim NPCCorporationTrades As New YAMLCrpNPCCorporationTrades(DBPath)
+        'Call NPCCorporationTrades.ImportData(BSDPath, "crpNPCCorporationTrades.yaml", lblTableName, pgMain)
+
+        Dim NPCCorpDivisions As New YAMLCrpNPCDivisions(DBPath)
+        Call NPCCorpDivisions.ImportData(BSDPath, "crpNPCDivisions.yaml", lblTableName, pgMain)
 
         Me.Cursor = Cursors.Default
 
-        ' Run a vacuum on the new SQL DB
-        Call Execute_SQLiteSQL("VACUUM;", NewSQLiteDB)
-
-        Call NewSQLiteDB.Close()
         lblTableName.Text = "Finalizing..."
         Application.DoEvents()
 
+        ' Run a vacuum on the new DB to optimize and safe space
+        Call NewSQLiteDB.ExecuteNonQuerySQL("VACUUM")
+
+        Call NewSQLiteDB.CloseDB()
+        lblTableName.Text = ""
+
         Call MsgBox("Files Imported", vbInformation, Application.ProductName)
 
+    End Sub
+
+    ' Initializes the form
+    Public Sub InitalizeProcessing(ByRef LabelRef As Label, ByRef PGRef As ProgressBar, PGMaxCount As Long, FileName As String)
+        LabelRef.Text = "Reading " & FileName
+        Application.UseWaitCursor = True
+        Application.DoEvents()
+
+        PGRef.Value = 0
+        PGRef.Maximum = PGMaxCount
+        PGRef.Visible = True
+    End Sub
+
+    ' Resets the form
+    Public Sub ClearProcessing(ByRef LabelRef As Label, ByRef PGRef As ProgressBar)
+        PGRef.Visible = False
+        LabelRef.Text = ""
+        Application.UseWaitCursor = False
+        Application.DoEvents()
+    End Sub
+
+    ' Increments the progressbar
+    Public Sub UpdateProgress(ByRef LabelRef As Label, ByRef PGRef As ProgressBar, ByRef Count As Long, DataUpdatedText As String)
+        Count += 1
+        If Count < PGRef.Maximum - 1 And Count <> 0 Then
+            PGRef.Value = Count
+            PGRef.Value = PGRef.Value - 1
+            PGRef.Value = Count
+        Else
+            PGRef.Value = Count
+        End If
+
+        LabelRef.Text = "Saving " & DataUpdatedText
+        Application.DoEvents()
     End Sub
 
 End Class
