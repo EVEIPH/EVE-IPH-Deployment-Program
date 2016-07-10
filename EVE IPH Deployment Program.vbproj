@@ -111,20 +111,24 @@
     <Compile Include="ApplicationEvents.vb" />
     <Compile Include="Database Classes\msSQLDBConnection.vb" />
     <Compile Include="Database Classes\SQLiteDBConnection.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLAgentTypes.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLCrpNPCDivisions.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLCrpNPCCorporationTrades.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLCrpNPCCorporations.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLCharRaces.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLCharFactions.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLCharBloodLines.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLCharAttributes.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLCharAncestries.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLCrpNPCCorporationResearchFields.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLCrpNPCCorporationDivisions.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLResearchAgents.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLCrpActivities.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLAgents.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLagtAgentTypes.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLdgmEffects.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLdgmTypeEffects.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLdgmAttributeTypes.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLdgmAttributeCategories.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLcrpNPCDivisions.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLcrpNPCCorporationTrades.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLcrpNPCCorporations.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLcharRaces.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLcharFactions.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLcharBloodLines.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLcharAttributes.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLcharAncestries.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLcrpNPCCorporationResearchFields.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLcrpNPCCorporationDivisions.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLagtResearchAgents.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLcrpActivities.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLagtAgents.vb" />
     <Compile Include="YAML Classes\SQLite\YAMLTranslations.vb" />
     <Compile Include="YAML Classes\msSQL\YAMLTranslations_msSQL.vb" />
     <Compile Include="YAML Classes\msSQL\YAMLBlueprints_msSQL.vb" />
@@ -150,6 +154,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="YAML Classes\SQLite\YAMLdgmTypeAttributes.vb" />
     <Compile Include="YAML Classes\YAMLDocument.vb" />
     <Compile Include="YAML Classes\msSQL\YAMLinvTypes_msSQL.vb" />
   </ItemGroup>

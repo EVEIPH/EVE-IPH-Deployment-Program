@@ -12304,8 +12304,20 @@ Public Class frmMain
         'Dim NPCCorporationTrades As New YAMLCrpNPCCorporationTrades(DBPath)
         'Call NPCCorporationTrades.ImportData(BSDPath, "crpNPCCorporationTrades.yaml", lblTableName, pgMain)
 
-        Dim NPCCorpDivisions As New YAMLCrpNPCDivisions(DBPath)
-        Call NPCCorpDivisions.ImportData(BSDPath, "crpNPCDivisions.yaml", lblTableName, pgMain)
+        'Dim DMGAttributeCategories As New YAMLdmgAttributeCategories(DBPath)
+        'Call DMGAttributeCategories.ImportData(BSDPath, "dgmAttributeCategories.yaml", lblTableName, pgMain)
+
+        'Dim DMGAttributeTypes As New YAMLdgmAttributeTypes(DBPath)
+        'Call DMGAttributeTypes.ImportData(BSDPath, "dgmAttributeTypes.yaml", lblTableName, pgMain)
+
+        'Dim DMGTypeEffects As New YAMLdgmTypeEffects(DBPath)
+        'Call DMGTypeEffects.ImportData(BSDPath, "dgmTypeEffects.yaml", lblTableName, pgMain)
+
+        'Dim DMGTypeAttributes As New YAMLdgmTypeAttributes(DBPath)
+        'Call DMGTypeAttributes.ImportData(BSDPath, "dgmTypeAttributes.yaml", lblTableName, pgMain)
+
+        Dim DMGEffects As New YAMLdgmEffects(DBPath)
+        Call DMGEffects.ImportData(BSDPath, "dgmEffects.yaml", lblTableName, pgMain)
 
         Me.Cursor = Cursors.Default
 

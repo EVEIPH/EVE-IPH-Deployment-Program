@@ -2,7 +2,7 @@
 Imports YamlDotNet.RepresentationModel
 
 ' Class imports translation data from YAML and inserts it into the appropriate tables
-Public Class YAMLAgentTypes
+Public Class YAMLdgmTypeAttributes
     Private UpdateDB As SQLiteDBConnection
     Private YAMLTranslationDocument As YAMLDocument
 
@@ -31,25 +31,33 @@ Public Class YAMLAgentTypes
 
         ' Build table
         SQL = "CREATE TABLE " & TableName & " ("
-        SQL = SQL & "agentTypeID INTEGER PRIMARY KEY,"
-        SQL = SQL & "agentType VARCHAR(30) NOT NULL"
+        SQL = SQL & "typeID NOT NULL,"
+        SQL = SQL & "attributeID INTEGER NOT NULL,"
+        SQL = SQL & "valueInt INTEGER,"
+        SQL = SQL & "valueFloat FLOAT"
         SQL = SQL & ")"
 
         Call UpdateDB.ExecuteNonQuerySQL(SQL)
 
+        ' Put a unique Primary key
+        SQL = "CREATE UNIQUE INDEX IDX_DTA_TID_AID ON " & TableName & " (typeID, attributeID)"
+        Call UpdateDB.ExecuteNonQuerySQL(SQL)
+
         Call UpdateDB.BeginSQLiteTransaction()
-        Dim AgentTypeID As String
+        Dim typeID As String
 
         ' Process Data
         For Each DataField In Languages
-            AgentTypeID = YAMLTranslationDocument.GetSQLScalarValueFromMapping("agentTypeID", DataField)
+            typeID = YAMLTranslationDocument.GetSQLScalarValueFromMapping("typeID", DataField)
             SQL = "INSERT INTO " & TableName & " VALUES ("
-            SQL = SQL & AgentTypeID & ","
-            SQL = SQL & UpdateDB.BuildSQLInsertStringValue(YAMLTranslationDocument.GetSQLScalarValueFromMapping("agentType", DataField)) & ")"
+            SQL = SQL & typeID & ","
+            SQL = SQL & YAMLTranslationDocument.GetSQLScalarValueFromMapping("attributeID", DataField) & ","
+            SQL = SQL & YAMLTranslationDocument.GetSQLScalarValueFromMapping("valueInt", DataField) & ","
+            SQL = SQL & YAMLTranslationDocument.GetSQLScalarValueFromMapping("valueFloat", DataField) & ")"
 
             Call UpdateDB.ExecuteNonQuerySQL(SQL)
 
-            Call frmMain.UpdateProgress(LabelRef, PGRef, Count, FileName & " Record " & AgentTypeID)
+            Call frmMain.UpdateProgress(LabelRef, PGRef, Count, FileName & " Record " & typeID)
         Next
 
         Call UpdateDB.CommitSQLiteTransaction()

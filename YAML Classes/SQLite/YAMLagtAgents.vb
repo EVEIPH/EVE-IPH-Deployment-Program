@@ -2,7 +2,7 @@
 Imports YamlDotNet.RepresentationModel
 
 ' Class imports translation data from YAML and inserts it into the appropriate tables
-Public Class YAMLResearchAgents
+Public Class YAMLagtAgents
     Private UpdateDB As SQLiteDBConnection
     Private YAMLTranslationDocument As YAMLDocument
 
@@ -31,14 +31,16 @@ Public Class YAMLResearchAgents
 
         ' Build table
         SQL = "CREATE TABLE " & TableName & " ("
-        SQL = SQL & "agentID INTEGER NOT NULL,"
-        SQL = SQL & "typeID INTEGER NOT NULL"
+        SQL = SQL & "agentID INTEGER PRIMARY KEY,"
+        SQL = SQL & "agentTypeID INTEGER NOT NULL,"
+        SQL = SQL & "corporationID INTEGER NOT NULL,"
+        SQL = SQL & "divisionID INTEGER NOT NULL,"
+        SQL = SQL & "isLocator INTEGER NOT NULL," ' Need to convert to number
+        SQL = SQL & "level INTEGER NOT NULL,"
+        SQL = SQL & "locationID INTEGER NOT NULL,"
+        SQL = SQL & "quality INTEGER NOT NULL"
         SQL = SQL & ")"
 
-        Call UpdateDB.ExecuteNonQuerySQL(SQL)
-
-        ' Put a unique Primary key
-        SQL = "CREATE UNIQUE INDEX IDX_AID_TID ON " & TableName & " (agentID, typeID)"
         Call UpdateDB.ExecuteNonQuerySQL(SQL)
 
         Call UpdateDB.BeginSQLiteTransaction()
@@ -50,7 +52,13 @@ Public Class YAMLResearchAgents
             AgentID = YAMLTranslationDocument.GetSQLScalarValueFromMapping("agentID", DataField)
             SQL = "INSERT INTO " & TableName & " VALUES ("
             SQL = SQL & AgentID & ","
-            SQL = SQL & YAMLTranslationDocument.GetSQLScalarValueFromMapping("typeID", DataField) & ")"
+            SQL = SQL & YAMLTranslationDocument.GetSQLScalarValueFromMapping("agentTypeID", DataField) & ","
+            SQL = SQL & YAMLTranslationDocument.GetSQLScalarValueFromMapping("corporationID", DataField) & ","
+            SQL = SQL & YAMLTranslationDocument.GetSQLScalarValueFromMapping("divisionID", DataField) & ","
+            SQL = SQL & CInt(CBool(YAMLTranslationDocument.GetSQLScalarValueFromMapping("isLocator", DataField))) & ","
+            SQL = SQL & YAMLTranslationDocument.GetSQLScalarValueFromMapping("level", DataField) & ","
+            SQL = SQL & YAMLTranslationDocument.GetSQLScalarValueFromMapping("locationID", DataField) & ","
+            SQL = SQL & YAMLTranslationDocument.GetSQLScalarValueFromMapping("quality", DataField) & ")"
 
             Call UpdateDB.ExecuteNonQuerySQL(SQL)
 
