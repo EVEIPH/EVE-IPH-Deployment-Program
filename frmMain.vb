@@ -667,6 +667,7 @@ Public Class frmMain
 
         ' If we didn't output any missing images, delete the output fille
         If Not MissingImages Then
+            OutputFile.Close()
             File.Delete(MissingImagesFilePath)
         End If
 
@@ -12239,6 +12240,7 @@ Public Class frmMain
         Dim NewSQLiteDB As SQLiteDBConnection
         Dim DBPath As String = WorkingDirectory & "YAMLTestDB.s3db"
         Dim BSDPath As String = WorkingDirectory & DatabaseName & "test\sde\bsd\"
+        Dim FSDPath As String = WorkingDirectory & DatabaseName & "test\sde\fsd\"
 
         ' Build a new database - each time this is run it deletes the old DB
         If File.Exists(DBPath) Then
@@ -12316,8 +12318,17 @@ Public Class frmMain
         'Dim DMGTypeAttributes As New YAMLdgmTypeAttributes(DBPath)
         'Call DMGTypeAttributes.ImportData(BSDPath, "dgmTypeAttributes.yaml", lblTableName, pgMain)
 
-        Dim DMGEffects As New YAMLdgmEffects(DBPath)
-        Call DMGEffects.ImportData(BSDPath, "dgmEffects.yaml", lblTableName, pgMain)
+        'Dim DMGEffects As New YAMLdgmEffects(DBPath)
+        'Call DMGEffects.ImportData(BSDPath, "dgmEffects.yaml", lblTableName, pgMain)
+
+        'Dim DMGExpressions As New YAMLdgmExpressions(DBPath)
+        'Call DMGExpressions.ImportData(BSDPath, "dgmExpressions.yaml", lblTableName, pgMain)
+
+        'Dim EVEUnits As New YAMLeveUnits(DBPath)
+        'Call EVEUnits.ImportData(BSDPath, "eveUnits.yaml", lblTableName, pgMain)
+
+        Dim EVEIcons As New YAMLeveIcons(DBPath)
+        Call EVEIcons.ImportData(FSDPath, "iconIDs.yaml", lblTableName, pgMain)
 
         Me.Cursor = Cursors.Default
 

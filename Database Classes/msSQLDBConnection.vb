@@ -107,7 +107,7 @@ Public Class msSQLDBConnection
         If CheckString = "null" Then
             Return "null"
         Else
-            Return "'" & FormatDBString(CheckString) & "'" ' Add quotes and format it for proper insert
+            Return "'" & Trim(FormatDBString(CheckString)) & "'" ' Add quotes and format it for proper insert
         End If
     End Function
 

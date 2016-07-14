@@ -111,7 +111,10 @@
     <Compile Include="ApplicationEvents.vb" />
     <Compile Include="Database Classes\msSQLDBConnection.vb" />
     <Compile Include="Database Classes\SQLiteDBConnection.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLeveIcons.vb" />
     <Compile Include="YAML Classes\SQLite\YAMLagtAgentTypes.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLeveUnits.vb" />
+    <Compile Include="YAML Classes\SQLite\YAMLdgmExpressions.vb" />
     <Compile Include="YAML Classes\SQLite\YAMLdgmEffects.vb" />
     <Compile Include="YAML Classes\SQLite\YAMLdgmTypeEffects.vb" />
     <Compile Include="YAML Classes\SQLite\YAMLdgmAttributeTypes.vb" />
