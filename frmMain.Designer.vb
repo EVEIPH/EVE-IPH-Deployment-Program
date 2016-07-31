@@ -47,9 +47,9 @@ Partial Class frmMain
         Me.TabPage2 = New System.Windows.Forms.TabPage()
         Me.txtSqlInstanceName = New System.Windows.Forms.TextBox()
         Me.lblSqlInstanceName = New System.Windows.Forms.Label()
-        Me.lblMediaFireTestPath = New System.Windows.Forms.Label()
-        Me.btnSelectMediaFireTestPath = New System.Windows.Forms.Button()
-        Me.lblMediaFireTest = New System.Windows.Forms.Label()
+        Me.lblTestPath = New System.Windows.Forms.Label()
+        Me.btnSelectTestFilePath = New System.Windows.Forms.Button()
+        Me.lblTest = New System.Windows.Forms.Label()
         Me.lblImageVersion = New System.Windows.Forms.Label()
         Me.txtImageVersion = New System.Windows.Forms.TextBox()
         Me.Label1 = New System.Windows.Forms.Label()
@@ -57,9 +57,9 @@ Partial Class frmMain
         Me.lblDBName = New System.Windows.Forms.Label()
         Me.txtDBName = New System.Windows.Forms.TextBox()
         Me.btnSaveFilePath = New System.Windows.Forms.Button()
-        Me.lblMediaFirePath = New System.Windows.Forms.Label()
-        Me.btnSelectMediaFirePath = New System.Windows.Forms.Button()
-        Me.lblMediaFire = New System.Windows.Forms.Label()
+        Me.lblFilesPath = New System.Windows.Forms.Label()
+        Me.btnSelectFilePath = New System.Windows.Forms.Button()
+        Me.lblFiles = New System.Windows.Forms.Label()
         Me.lblRootDebugFolderPath = New System.Windows.Forms.Label()
         Me.btnSelectRootDebugPath = New System.Windows.Forms.Button()
         Me.lblRootDebugFolder = New System.Windows.Forms.Label()
@@ -259,9 +259,9 @@ Partial Class frmMain
         '
         Me.TabPage2.Controls.Add(Me.txtSqlInstanceName)
         Me.TabPage2.Controls.Add(Me.lblSqlInstanceName)
-        Me.TabPage2.Controls.Add(Me.lblMediaFireTestPath)
-        Me.TabPage2.Controls.Add(Me.btnSelectMediaFireTestPath)
-        Me.TabPage2.Controls.Add(Me.lblMediaFireTest)
+        Me.TabPage2.Controls.Add(Me.lblTestPath)
+        Me.TabPage2.Controls.Add(Me.btnSelectTestFilePath)
+        Me.TabPage2.Controls.Add(Me.lblTest)
         Me.TabPage2.Controls.Add(Me.lblImageVersion)
         Me.TabPage2.Controls.Add(Me.txtImageVersion)
         Me.TabPage2.Controls.Add(Me.Label1)
@@ -269,9 +269,9 @@ Partial Class frmMain
         Me.TabPage2.Controls.Add(Me.lblDBName)
         Me.TabPage2.Controls.Add(Me.txtDBName)
         Me.TabPage2.Controls.Add(Me.btnSaveFilePath)
-        Me.TabPage2.Controls.Add(Me.lblMediaFirePath)
-        Me.TabPage2.Controls.Add(Me.btnSelectMediaFirePath)
-        Me.TabPage2.Controls.Add(Me.lblMediaFire)
+        Me.TabPage2.Controls.Add(Me.lblFilesPath)
+        Me.TabPage2.Controls.Add(Me.btnSelectFilePath)
+        Me.TabPage2.Controls.Add(Me.lblFiles)
         Me.TabPage2.Controls.Add(Me.lblRootDebugFolderPath)
         Me.TabPage2.Controls.Add(Me.btnSelectRootDebugPath)
         Me.TabPage2.Controls.Add(Me.lblRootDebugFolder)
@@ -302,32 +302,32 @@ Partial Class frmMain
         Me.lblSqlInstanceName.TabIndex = 19
         Me.lblSqlInstanceName.Text = "SQL Instance Name:"
         '
-        'lblMediaFireTestPath
+        'lblTestPath
         '
-        Me.lblMediaFireTestPath.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-        Me.lblMediaFireTestPath.Location = New System.Drawing.Point(22, 151)
-        Me.lblMediaFireTestPath.Name = "lblMediaFireTestPath"
-        Me.lblMediaFireTestPath.Size = New System.Drawing.Size(421, 20)
-        Me.lblMediaFireTestPath.TabIndex = 17
-        Me.lblMediaFireTestPath.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+        Me.lblTestPath.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+        Me.lblTestPath.Location = New System.Drawing.Point(22, 151)
+        Me.lblTestPath.Name = "lblTestPath"
+        Me.lblTestPath.Size = New System.Drawing.Size(421, 20)
+        Me.lblTestPath.TabIndex = 17
+        Me.lblTestPath.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         '
-        'btnSelectMediaFireTestPath
+        'btnSelectTestFilePath
         '
-        Me.btnSelectMediaFireTestPath.Location = New System.Drawing.Point(22, 174)
-        Me.btnSelectMediaFireTestPath.Name = "btnSelectMediaFireTestPath"
-        Me.btnSelectMediaFireTestPath.Size = New System.Drawing.Size(55, 23)
-        Me.btnSelectMediaFireTestPath.TabIndex = 18
-        Me.btnSelectMediaFireTestPath.Text = "Select"
-        Me.btnSelectMediaFireTestPath.UseVisualStyleBackColor = True
+        Me.btnSelectTestFilePath.Location = New System.Drawing.Point(22, 174)
+        Me.btnSelectTestFilePath.Name = "btnSelectTestFilePath"
+        Me.btnSelectTestFilePath.Size = New System.Drawing.Size(55, 23)
+        Me.btnSelectTestFilePath.TabIndex = 18
+        Me.btnSelectTestFilePath.Text = "Select"
+        Me.btnSelectTestFilePath.UseVisualStyleBackColor = True
         '
-        'lblMediaFireTest
+        'lblTest
         '
-        Me.lblMediaFireTest.AutoSize = True
-        Me.lblMediaFireTest.Location = New System.Drawing.Point(19, 135)
-        Me.lblMediaFireTest.Name = "lblMediaFireTest"
-        Me.lblMediaFireTest.Size = New System.Drawing.Size(171, 13)
-        Me.lblMediaFireTest.TabIndex = 16
-        Me.lblMediaFireTest.Text = "MediaFire Test Deployment Folder:"
+        Me.lblTest.AutoSize = True
+        Me.lblTest.Location = New System.Drawing.Point(19, 135)
+        Me.lblTest.Name = "lblTest"
+        Me.lblTest.Size = New System.Drawing.Size(122, 13)
+        Me.lblTest.TabIndex = 16
+        Me.lblTest.Text = "Test Deployment Folder:"
         '
         'lblImageVersion
         '
@@ -386,32 +386,32 @@ Partial Class frmMain
         Me.btnSaveFilePath.Text = "Save Settings"
         Me.btnSaveFilePath.UseVisualStyleBackColor = True
         '
-        'lblMediaFirePath
+        'lblFilesPath
         '
-        Me.lblMediaFirePath.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-        Me.lblMediaFirePath.Location = New System.Drawing.Point(22, 86)
-        Me.lblMediaFirePath.Name = "lblMediaFirePath"
-        Me.lblMediaFirePath.Size = New System.Drawing.Size(421, 20)
-        Me.lblMediaFirePath.TabIndex = 7
-        Me.lblMediaFirePath.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+        Me.lblFilesPath.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+        Me.lblFilesPath.Location = New System.Drawing.Point(22, 86)
+        Me.lblFilesPath.Name = "lblFilesPath"
+        Me.lblFilesPath.Size = New System.Drawing.Size(421, 20)
+        Me.lblFilesPath.TabIndex = 7
+        Me.lblFilesPath.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         '
-        'btnSelectMediaFirePath
+        'btnSelectFilePath
         '
-        Me.btnSelectMediaFirePath.Location = New System.Drawing.Point(22, 109)
-        Me.btnSelectMediaFirePath.Name = "btnSelectMediaFirePath"
-        Me.btnSelectMediaFirePath.Size = New System.Drawing.Size(55, 23)
-        Me.btnSelectMediaFirePath.TabIndex = 8
-        Me.btnSelectMediaFirePath.Text = "Select"
-        Me.btnSelectMediaFirePath.UseVisualStyleBackColor = True
+        Me.btnSelectFilePath.Location = New System.Drawing.Point(22, 109)
+        Me.btnSelectFilePath.Name = "btnSelectFilePath"
+        Me.btnSelectFilePath.Size = New System.Drawing.Size(55, 23)
+        Me.btnSelectFilePath.TabIndex = 8
+        Me.btnSelectFilePath.Text = "Select"
+        Me.btnSelectFilePath.UseVisualStyleBackColor = True
         '
-        'lblMediaFire
+        'lblFiles
         '
-        Me.lblMediaFire.AutoSize = True
-        Me.lblMediaFire.Location = New System.Drawing.Point(19, 70)
-        Me.lblMediaFire.Name = "lblMediaFire"
-        Me.lblMediaFire.Size = New System.Drawing.Size(147, 13)
-        Me.lblMediaFire.TabIndex = 6
-        Me.lblMediaFire.Text = "MediaFire Deployment Folder:"
+        Me.lblFiles.AutoSize = True
+        Me.lblFiles.Location = New System.Drawing.Point(19, 70)
+        Me.lblFiles.Name = "lblFiles"
+        Me.lblFiles.Size = New System.Drawing.Size(98, 13)
+        Me.lblFiles.TabIndex = 6
+        Me.lblFiles.Text = "Deployment Folder:"
         '
         'lblRootDebugFolderPath
         '
@@ -521,9 +521,9 @@ End Sub
     Friend WithEvents lblWorkingFolderPath As System.Windows.Forms.Label
     Friend WithEvents btnSelectWorkingPath As System.Windows.Forms.Button
     Friend WithEvents lblWorkingFolder As System.Windows.Forms.Label
-    Friend WithEvents lblMediaFirePath As System.Windows.Forms.Label
-    Friend WithEvents btnSelectMediaFirePath As System.Windows.Forms.Button
-    Friend WithEvents lblMediaFire As System.Windows.Forms.Label
+    Friend WithEvents lblFilesPath As System.Windows.Forms.Label
+    Friend WithEvents btnSelectFilePath As System.Windows.Forms.Button
+    Friend WithEvents lblFiles As System.Windows.Forms.Label
     Friend WithEvents btnCopyFilesBuildXML As System.Windows.Forms.Button
     Friend WithEvents btnBuildBinary As System.Windows.Forms.Button
     Friend WithEvents lstFileInformation As System.Windows.Forms.ListView
@@ -542,9 +542,9 @@ End Sub
     Friend WithEvents TabPage3 As System.Windows.Forms.TabPage
     Friend WithEvents TreeView As System.Windows.Forms.TreeView
     Friend WithEvents chkCreateTest As System.Windows.Forms.CheckBox
-    Friend WithEvents lblMediaFireTestPath As System.Windows.Forms.Label
-    Friend WithEvents btnSelectMediaFireTestPath As System.Windows.Forms.Button
-    Friend WithEvents lblMediaFireTest As System.Windows.Forms.Label
+    Friend WithEvents lblTestPath As System.Windows.Forms.Label
+    Friend WithEvents btnSelectTestFilePath As System.Windows.Forms.Button
+    Friend WithEvents lblTest As System.Windows.Forms.Label
     Friend WithEvents txtSqlInstanceName As TextBox
     Friend WithEvents lblSqlInstanceName As Label
     Friend WithEvents btnYAMLTest As Button

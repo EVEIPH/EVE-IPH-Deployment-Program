@@ -63,26 +63,48 @@ Public Class frmMain
     Private LatestTestVersionXML As String
 
     ' File URLs
-    Private JSONDLLURL As String = "http://www.mediafire.com/download/7a6ml9gwu14616d/Newtonsoft.Json.dll"
-    Private SQLiteDLLURL As String = "http://www.mediafire.com/download/b0px46xwaa8jgx4/System.Data.SQLite.dll"
-    Private EVEIPHEXEURL As String = "http://www.mediafire.com/download/2ckpd2th8xlpysv/EVE_Isk_per_Hour.exe"
-    Private EVEIPHUpdaterURL As String = "http://www.mediafire.com/download/r9innfrf287mnd7/EVEIPH_Updater.exe"
-    Private EVEIPHDBURL As String = "http://www.mediafire.com/download/cfylxmlq6v8i26c/EVEIPH_DB.s3db"
-    Private UpdaterManifestURL As String = "http://www.mediafire.com/download/c149x7vcf1gab2p/EVEIPH_Updater.exe.manifest"
-    Private IconicZipFileURL As String = "http://www.mediafire.com/download/6ucs9it1bxjiccv/Ionic.Zip.dll"
-    Private EXEManifestURL As String = "http://www.mediafire.com/download/sdlrk28t18gv8z0/EVE_Isk_per_Hour.exe.manifest"
-    Private ImageZipFileURL As String = "http://www.mediafire.com/download/duq6nw4d0p59rci/EVEIPH_Images.zip"
-    Private MoreLinqDLLURL As String = "http://www.mediafire.com/download/mckqc8cxljc5p86/MoreLinq.Portable.dll"
+    'Private JSONDLLURL As String = "http://www.mediafire.com/download/7a6ml9gwu14616d/Newtonsoft.Json.dll"
+    'Private SQLiteDLLURL As String = "http://www.mediafire.com/download/b0px46xwaa8jgx4/System.Data.SQLite.dll"
+    'Private EVEIPHEXEURL As String = "http://www.mediafire.com/download/2ckpd2th8xlpysv/EVE_Isk_per_Hour.exe"
+    'Private EVEIPHUpdaterURL As String = "http://www.mediafire.com/download/r9innfrf287mnd7/EVEIPH_Updater.exe"
+    'Private EVEIPHDBURL As String = "http://www.mediafire.com/download/cfylxmlq6v8i26c/EVEIPH_DB.s3db"
+    'Private UpdaterManifestURL As String = "http://www.mediafire.com/download/c149x7vcf1gab2p/EVEIPH_Updater.exe.manifest"
+    'Private IconicZipFileURL As String = "http://www.mediafire.com/download/6ucs9it1bxjiccv/Ionic.Zip.dll"
+    'Private EXEManifestURL As String = "http://www.mediafire.com/download/sdlrk28t18gv8z0/EVE_Isk_per_Hour.exe.manifest"
+    'Private ImageZipFileURL As String = "http://www.mediafire.com/download/duq6nw4d0p59rci/EVEIPH_Images.zip"
+    'Private MoreLinqDLLURL As String = "http://www.mediafire.com/download/mckqc8cxljc5p86/MoreLinq.Portable.dll"
 
-    Private TestJSONDLLURL As String = "http://www.mediafire.com/download/wmgmu7qu6ha4qag/Newtonsoft.Json.dll"
-    Private TestSQLiteDLLURL As String = "http://www.mediafire.com/download/q1bbs5hgp4e18gh/System.Data.SQLite.dll"
-    Private TestEVEIPHEXEURL As String = "http://www.mediafire.com/download/8cp2ffnb50y0or5/EVE_Isk_per_Hour.exe"
-    Private TestEVEIPHUpdaterURL As String = "http://www.mediafire.com/download/2d0dsgfap2gq299/EVEIPH_Updater.exe"
-    Private TestEVEIPHDBURL As String = "http://www.mediafire.com/download/w69bgqr9bo7awt4/EVEIPH_DB.s3db"
-    Private TestUpdaterManifestURL As String = "http://www.mediafire.com/download/9my8r2x78bbym9k/EVEIPH_Updater.exe.manifest"
-    Private TestIconicZipFileURL As String = "http://www.mediafire.com/download/w3xwdhl8vnxw0q7/Ionic.Zip.dll"
-    Private TestEXEManifestURL As String = "http://www.mediafire.com/download/9snq0e79zbesfuq/EVE_Isk_per_Hour.exe.manifest"
-    Private TestImageZipFileURL As String = "http://www.mediafire.com/download/eox20bz6ddey1g3/EVEIPH_Images.zip"
+    'Private TestJSONDLLURL As String = "http://www.mediafire.com/download/wmgmu7qu6ha4qag/Newtonsoft.Json.dll"
+    'Private TestSQLiteDLLURL As String = "http://www.mediafire.com/download/q1bbs5hgp4e18gh/System.Data.SQLite.dll"
+    'Private TestEVEIPHEXEURL As String = "http://www.mediafire.com/download/8cp2ffnb50y0or5/EVE_Isk_per_Hour.exe"
+    'Private TestEVEIPHUpdaterURL As String = "http://www.mediafire.com/download/2d0dsgfap2gq299/EVEIPH_Updater.exe"
+    'Private TestEVEIPHDBURL As String = "http://www.mediafire.com/download/w69bgqr9bo7awt4/EVEIPH_DB.s3db"
+    'Private TestUpdaterManifestURL As String = "http://www.mediafire.com/download/9my8r2x78bbym9k/EVEIPH_Updater.exe.manifest"
+    'Private TestIconicZipFileURL As String = "http://www.mediafire.com/download/w3xwdhl8vnxw0q7/Ionic.Zip.dll"
+    'Private TestEXEManifestURL As String = "http://www.mediafire.com/download/9snq0e79zbesfuq/EVE_Isk_per_Hour.exe.manifest"
+    'Private TestImageZipFileURL As String = "http://www.mediafire.com/download/eox20bz6ddey1g3/EVEIPH_Images.zip"
+
+    Private JSONDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Newtonsoft.Json.dll"
+    Private SQLiteDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/System.Data.SQLite.dll"
+    Private EVEIPHEXEURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVE%20Isk%20per%20Hour.exe"
+    Private EVEIPHUpdaterURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Updater.exe"
+    Private EVEIPHDBURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20DB.s3db"
+    Private UpdaterManifestURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Updater.exe.manifest"
+    Private IconicZipFileURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Ionic.Zip.dll"
+    Private EXEManifestURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVE%20Isk%20per%20Hour.exe.manifest"
+    Private ImageZipFileURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Images.zip"
+    Private MoreLinqDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/MoreLinq.Portable.dll"
+
+    Private TestJSONDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Newtonsoft.Json.dll"
+    Private TestSQLiteDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/System.Data.SQLite.dll"
+    Private TestEVEIPHEXEURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVE%20Isk%20per%20Hour.exe"
+    Private TestEVEIPHUpdaterURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Updater.exe"
+    Private TestEVEIPHDBURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20DB.s3db"
+    Private TestUpdaterManifestURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Updater.exe.manifest"
+    Private TestIconicZipFileURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Ionic.Zip.dll"
+    Private TestEXEManifestURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVE%20Isk%20per%20Hour.exe.manifest"
+    Private TestImageZipFileURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Images.zip"
+    Private TestMoreLinqDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/MoreLinq.Portable.dll"
 
     ' YAML files
     Private Const YAMLBlueprints As String = "blueprints.yaml"
@@ -262,11 +284,11 @@ Public Class frmMain
         End If
 
         If MediaFireDirectory <> "\" Then
-            lblMediaFirePath.Text = MediaFireDirectory
+            lblFilesPath.Text = MediaFireDirectory
         End If
 
         If MediaFireTestDirectory <> "\" Then
-            lblMediaFireTestPath.Text = MediaFireTestDirectory
+            lblTestPath.Text = MediaFireTestDirectory
         End If
 
         If RootDirectory <> "\" Then
@@ -308,14 +330,14 @@ Public Class frmMain
 
     End Sub
 
-    Private Sub btnSelectMediaFirePath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectMediaFirePath.Click
+    Private Sub btnSelectMediaFirePath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectFilePath.Click
         If MediaFireDirectory <> "" Then
             FolderBrowserDialog.SelectedPath = MediaFireDirectory
         End If
 
         If FolderBrowserDialog.ShowDialog() = DialogResult.OK Then
             Try
-                lblMediaFirePath.Text = FolderBrowserDialog.SelectedPath
+                lblFilesPath.Text = FolderBrowserDialog.SelectedPath
                 MediaFireDirectory = FolderBrowserDialog.SelectedPath
                 Call SetFilePaths()
             Catch ex As Exception
@@ -324,14 +346,14 @@ Public Class frmMain
         End If
     End Sub
 
-    Private Sub btnSelectMediaFireTestPath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectMediaFireTestPath.Click
+    Private Sub btnSelectMediaFireTestPath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectTestFilePath.Click
         If MediaFireTestDirectory <> "" Then
             FolderBrowserDialog.SelectedPath = MediaFireTestDirectory
         End If
 
         If FolderBrowserDialog.ShowDialog() = DialogResult.OK Then
             Try
-                lblMediaFireTestPath.Text = FolderBrowserDialog.SelectedPath
+                lblTestPath.Text = FolderBrowserDialog.SelectedPath
                 MediaFireTestDirectory = FolderBrowserDialog.SelectedPath
                 Call SetFilePaths()
             Catch ex As Exception
@@ -376,13 +398,13 @@ Public Class frmMain
             txtSqlInstanceName.Focus()
         End If
 
-        If Trim(lblMediaFirePath.Text) = "" Then
+        If Trim(lblFilesPath.Text) = "" Then
             MsgBox("Invalid Installer/Binary file path", vbExclamation, Application.ProductName)
             TabPage2.Select()
             Exit Sub
         End If
 
-        If Trim(lblMediaFireTestPath.Text) = "" Then
+        If Trim(lblTestPath.Text) = "" Then
             MsgBox("Invalid Installer/Binary test file path", vbExclamation, Application.ProductName)
             TabPage2.Select()
             Exit Sub
@@ -422,8 +444,8 @@ Public Class frmMain
 
         RootDirectory = lblRootDebugFolderPath.Text
         WorkingDirectory = lblWorkingFolderPath.Text
-        MediaFireDirectory = lblMediaFirePath.Text
-        MediaFireTestDirectory = lblMediaFireTestPath.Text
+        MediaFireDirectory = lblFilesPath.Text
+        MediaFireTestDirectory = lblTestPath.Text
 
         ' Set these if we have a version number
         FinalBinaryZip = "EVEIPH v" & VersionNumber & " Binaries.zip"
@@ -438,8 +460,8 @@ Public Class frmMain
         MyStream.Write(txtVersionNumber.Text & Environment.NewLine)
         MyStream.Write(lblRootDebugFolderPath.Text & Environment.NewLine)
         MyStream.Write(lblWorkingFolderPath.Text & Environment.NewLine)
-        MyStream.Write(lblMediaFirePath.Text & Environment.NewLine)
-        MyStream.Write(lblMediaFireTestPath.Text & Environment.NewLine)
+        MyStream.Write(lblFilesPath.Text & Environment.NewLine)
+        MyStream.Write(lblTestPath.Text & Environment.NewLine)
         MyStream.Write(txtSqlInstanceName.Text & Environment.NewLine)
 
         MyStream.Flush()
@@ -12226,6 +12248,13 @@ Public Class frmMain
                 writer.WriteEndDocument()
             End Using
         End If
+
+        ' Finally, replace all the update file's crlf with lf so that when it's uploaded to git, it works properly on download
+        Dim FileText As String = File.ReadAllText(RootDirectory & VersionXMLFileName)
+        FileText = FileText.Replace(vbCrLf, Chr(10))
+        ' Write the file back out with new formatting
+        File.WriteAllText(RootDirectory & VersionXMLFileName, FileText)
+        File.WriteAllText(FileDirectory & VersionXMLFileName, FileText)
 
     End Sub
 
