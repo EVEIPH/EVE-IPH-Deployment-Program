@@ -89,10 +89,6 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="YamlDotNet, Version=3.8.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\YamlDotNet.3.8.0\lib\net35\YamlDotNet.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Import Include="Microsoft.VisualBasic" />
@@ -111,30 +107,6 @@
     <Compile Include="ApplicationEvents.vb" />
     <Compile Include="Database Classes\msSQLDBConnection.vb" />
     <Compile Include="Database Classes\SQLiteDBConnection.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLeveIcons.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLagtAgentTypes.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLeveUnits.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLdgmExpressions.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLdgmEffects.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLdgmTypeEffects.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLdgmAttributeTypes.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLdgmAttributeCategories.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLcrpNPCDivisions.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLcrpNPCCorporationTrades.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLcrpNPCCorporations.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLcharRaces.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLcharFactions.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLcharBloodLines.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLcharAttributes.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLcharAncestries.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLcrpNPCCorporationResearchFields.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLcrpNPCCorporationDivisions.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLagtResearchAgents.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLcrpActivities.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLagtAgents.vb" />
-    <Compile Include="YAML Classes\SQLite\YAMLTranslations.vb" />
-    <Compile Include="YAML Classes\msSQL\YAMLTranslations_msSQL.vb" />
-    <Compile Include="YAML Classes\msSQL\YAMLBlueprints_msSQL.vb" />
     <Compile Include="frmMain.vb">
       <SubType>Form</SubType>
     </Compile>
@@ -157,9 +129,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="YAML Classes\SQLite\YAMLdgmTypeAttributes.vb" />
-    <Compile Include="YAML Classes\YAMLDocument.vb" />
-    <Compile Include="YAML Classes\msSQL\YAMLinvTypes_msSQL.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="frmMain.resx">
@@ -184,7 +153,6 @@
       <CustomToolNamespace>My</CustomToolNamespace>
       <LastGenOutput>Settings.Designer.vb</LastGenOutput>
     </None>
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />

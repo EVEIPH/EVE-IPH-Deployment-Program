@@ -1,9 +1,9 @@
-﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
+﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class frmMain
     Inherits System.Windows.Forms.Form
 
     'Form overrides dispose to clean up the component list.
-    <System.Diagnostics.DebuggerNonUserCode()> _
+    <System.Diagnostics.DebuggerNonUserCode()>
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         Try
             If disposing AndAlso components IsNot Nothing Then
@@ -20,7 +20,7 @@ Partial Class frmMain
     'NOTE: The following procedure is required by the Windows Form Designer
     'It can be modified using the Windows Form Designer.  
     'Do not modify it using the code editor.
-    <System.Diagnostics.DebuggerStepThrough()> _
+    <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmMain))
@@ -28,7 +28,6 @@ Partial Class frmMain
         Me.ToolTip = New System.Windows.Forms.ToolTip(Me.components)
         Me.TabControl1 = New System.Windows.Forms.TabControl()
         Me.TabPage1 = New System.Windows.Forms.TabPage()
-        Me.btnYAMLTest = New System.Windows.Forms.Button()
         Me.chkCreateTest = New System.Windows.Forms.CheckBox()
         Me.btnRefreshList = New System.Windows.Forms.Button()
         Me.lblDBNameDisplay1 = New System.Windows.Forms.Label()
@@ -87,7 +86,6 @@ Partial Class frmMain
         '
         'TabPage1
         '
-        Me.TabPage1.Controls.Add(Me.btnYAMLTest)
         Me.TabPage1.Controls.Add(Me.chkCreateTest)
         Me.TabPage1.Controls.Add(Me.btnRefreshList)
         Me.TabPage1.Controls.Add(Me.lblDBNameDisplay1)
@@ -109,15 +107,6 @@ Partial Class frmMain
         Me.TabPage1.TabIndex = 0
         Me.TabPage1.Text = "DB Updater & Deployment"
         Me.TabPage1.UseVisualStyleBackColor = True
-        '
-        'btnYAMLTest
-        '
-        Me.btnYAMLTest.Location = New System.Drawing.Point(392, 6)
-        Me.btnYAMLTest.Name = "btnYAMLTest"
-        Me.btnYAMLTest.Size = New System.Drawing.Size(62, 35)
-        Me.btnYAMLTest.TabIndex = 14
-        Me.btnYAMLTest.Text = "YAML Test"
-        Me.btnYAMLTest.UseVisualStyleBackColor = True
         '
         'chkCreateTest
         '
@@ -486,24 +475,24 @@ Partial Class frmMain
         '
         'frmMain
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(96!, 96!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
-        Me.AutoSize = true
+        Me.AutoSize = True
         Me.ClientSize = New System.Drawing.Size(471, 381)
         Me.Controls.Add(Me.TabControl1)
-        Me.Icon = CType(resources.GetObject("$this.Icon"),System.Drawing.Icon)
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmMain"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "EVE IPH Deployment Program"
-        Me.TabControl1.ResumeLayout(false)
-        Me.TabPage1.ResumeLayout(false)
-        Me.TabPage1.PerformLayout
-        Me.TabPage2.ResumeLayout(false)
-        Me.TabPage2.PerformLayout
-        Me.TabPage3.ResumeLayout(false)
-        Me.ResumeLayout(false)
+        Me.TabControl1.ResumeLayout(False)
+        Me.TabPage1.ResumeLayout(False)
+        Me.TabPage1.PerformLayout()
+        Me.TabPage2.ResumeLayout(False)
+        Me.TabPage2.PerformLayout()
+        Me.TabPage3.ResumeLayout(False)
+        Me.ResumeLayout(False)
 
-End Sub
+    End Sub
     Friend WithEvents FolderBrowserDialog As System.Windows.Forms.FolderBrowserDialog
     Friend WithEvents ToolTip As System.Windows.Forms.ToolTip
     Friend WithEvents TabControl1 As System.Windows.Forms.TabControl
@@ -547,5 +536,4 @@ End Sub
     Friend WithEvents lblTest As System.Windows.Forms.Label
     Friend WithEvents txtSqlInstanceName As TextBox
     Friend WithEvents lblSqlInstanceName As Label
-    Friend WithEvents btnYAMLTest As Button
 End Class
