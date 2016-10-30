@@ -1342,6 +1342,9 @@ Public Class frmMain
         lblTableName.Text = "Building: PLANET_RESOURCES"
         Call Build_PLANET_RESOURCES()
 
+        lblTableName.Text = "Building: INVENTORY_TRAITS"
+        Call Build_INVENTORY_TRAITS()
+
         ' After we are done with everything, use the following tables to update the RACE ID value in the ALL_BLUEPRINTS table
         lblTableName.Text = "Updating the Race ID's"
 
@@ -3458,6 +3461,78 @@ Public Class frmMain
         msSQLReader.Close()
 
         SQL = "CREATE INDEX IDX_F_FACTION_NAME ON FACTIONS (factionName)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
+
+        pgMain.Visible = False
+        Application.DoEvents()
+
+    End Sub
+
+    ' INVENTORY_TRAITS
+    Private Sub Build_INVENTORY_TRAITS()
+        Dim SQL As String
+
+        ' MS SQL variables
+        Dim msSQLQuery As New SqlCommand
+        Dim msSQLReader As SqlDataReader
+        Dim msSQL As String
+
+        Dim DBRef1 As New SqlConnection
+        DBRef1 = DBConnectionRef()
+
+        SQL = "CREATE TABLE INVENTORY_TRAITS ("
+        SQL = SQL & "bonusID INTEGER,"
+        SQL = SQL & "typeID INTEGER,"
+        SQL = SQL & "skilltypeID INTEGER,"
+        SQL = SQL & "bonus FLOAT,"
+        SQL = SQL & "bonusText TEXT,"
+        SQL = SQL & "importance INTEGER,"
+        SQL = SQL & "nameID INTEGER,"
+        SQL = SQL & "unitID INTEGER"
+        SQL = SQL & ")"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
+
+        ' Now select the count of the final query of data
+        Call SetProgressBarValues("invTraits")
+
+        Application.DoEvents()
+
+        ' Pull new data and insert
+        msSQL = "SELECT * FROM invTraits"
+        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLReader = msSQLQuery.ExecuteReader()
+
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
+
+        While msSQLReader.Read
+            Application.DoEvents()
+            SQL = "INSERT INTO INVENTORY_TRAITS VALUES ("
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(0)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(3)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(4)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(5)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(6)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(7)) & ")"
+
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
+
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
+
+        End While
+
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
+
+        msSQLReader.Close()
+
+        SQL = "CREATE INDEX IDX_INVENTORY_TRAITS_BID ON INVENTORY_TRAITS (bonusID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
+
+        SQL = "CREATE INDEX IDX_INVENTORY_TRAITS_TID ON INVENTORY_TRAITS (typeID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
@@ -7117,11 +7192,11 @@ Public Class frmMain
         Dim msSQL As String = ""
 
         ' Delete records first if they exist
-        Execute_msSQL("DELETE FROM industryBlueprints WHERE typeID < 0")
-        Execute_msSQL("DELETE FROM industryActivities WHERE typeID < 0")
-        Execute_msSQL("DELETE FROM industryActivityProducts WHERE typeID < 0")
-        Execute_msSQL("DELETE FROM industryActivityMaterials WHERE typeID < 0")
-        Execute_msSQL("DELETE FROM industryActivitySkills WHERE typeID < 0")
+        Execute_msSQL("DELETE FROM industryBlueprints WHERE blueprintTypeID < 0")
+        Execute_msSQL("DELETE FROM industryActivities WHERE blueprintTypeID < 0")
+        Execute_msSQL("DELETE FROM industryActivityProducts WHERE blueprintTypeID < 0")
+        Execute_msSQL("DELETE FROM industryActivityMaterials WHERE blueprintTypeID < 0")
+        Execute_msSQL("DELETE FROM industryActivitySkills WHERE blueprintTypeID < 0")
         Execute_msSQL("DELETE FROM invTypes WHERE typeID < 0")
         Execute_msSQL("DELETE FROM invTypes WHERE typeID > 100000000")
 
