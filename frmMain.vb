@@ -16,8 +16,8 @@ Public Class frmMain
     ' Directory files and paths
     Private RootDirectory As String ' For the debugging process, will copy images here as well
     Private WorkingDirectory As String ' Where the final DB and image zip is stored 
-    Private MediaFireDirectory As String ' Where all the files we want to sync to the Media fire server for download are
-    Private MediaFireTestDirectory As String
+    Private FileDirectory As String ' Where all the files we want to sync to the Media fire server for download are
+    Private FileTestDirectory As String
 
     ' DB
     Private DatabasePath As String ' Where we build the SQLite database
@@ -49,33 +49,32 @@ Public Class frmMain
     Private EVEIPHDB As String = "EVEIPH DB.s3db"
     Private UpdaterManifest As String = "EVEIPH Updater.exe.manifest"
     Private EXEManifest As String = "EVE Isk per Hour.exe.manifest"
-    'Private IonicZipFile As String = "Ionic.Zip.dll"
     Private ImageZipFile As String = "EVEIPH Images.zip"
     Private MoreLinqDLL As String = "MoreLinq.Portable.dll"
     Private LatestVersionXML As String
     Private LatestTestVersionXML As String
 
     ' File URLs
-    'Private JSONDLLURL As String = "http://www.mediafire.com/download/7a6ml9gwu14616d/Newtonsoft.Json.dll"
-    'Private SQLiteDLLURL As String = "http://www.mediafire.com/download/b0px46xwaa8jgx4/System.Data.SQLite.dll"
-    'Private EVEIPHEXEURL As String = "http://www.mediafire.com/download/2ckpd2th8xlpysv/EVE_Isk_per_Hour.exe"
-    'Private EVEIPHUpdaterURL As String = "http://www.mediafire.com/download/r9innfrf287mnd7/EVEIPH_Updater.exe"
-    'Private EVEIPHDBURL As String = "http://www.mediafire.com/download/cfylxmlq6v8i26c/EVEIPH_DB.s3db"
-    'Private UpdaterManifestURL As String = "http://www.mediafire.com/download/c149x7vcf1gab2p/EVEIPH_Updater.exe.manifest"
-    'Private IconicZipFileURL As String = "http://www.mediafire.com/download/6ucs9it1bxjiccv/Ionic.Zip.dll"
-    'Private EXEManifestURL As String = "http://www.mediafire.com/download/sdlrk28t18gv8z0/EVE_Isk_per_Hour.exe.manifest"
-    'Private ImageZipFileURL As String = "http://www.mediafire.com/download/duq6nw4d0p59rci/EVEIPH_Images.zip"
-    'Private MoreLinqDLLURL As String = "http://www.mediafire.com/download/mckqc8cxljc5p86/MoreLinq.Portable.dll"
+    'Private JSONDLLURL As String = "http://www.File.com/download/7a6ml9gwu14616d/Newtonsoft.Json.dll"
+    'Private SQLiteDLLURL As String = "http://www.File.com/download/b0px46xwaa8jgx4/System.Data.SQLite.dll"
+    'Private EVEIPHEXEURL As String = "http://www.File.com/download/2ckpd2th8xlpysv/EVE_Isk_per_Hour.exe"
+    'Private EVEIPHUpdaterURL As String = "http://www.File.com/download/r9innfrf287mnd7/EVEIPH_Updater.exe"
+    'Private EVEIPHDBURL As String = "http://www.File.com/download/cfylxmlq6v8i26c/EVEIPH_DB.s3db"
+    'Private UpdaterManifestURL As String = "http://www.File.com/download/c149x7vcf1gab2p/EVEIPH_Updater.exe.manifest"
+    'Private IconicZipFileURL As String = "http://www.File.com/download/6ucs9it1bxjiccv/Ionic.Zip.dll"
+    'Private EXEManifestURL As String = "http://www.File.com/download/sdlrk28t18gv8z0/EVE_Isk_per_Hour.exe.manifest"
+    'Private ImageZipFileURL As String = "http://www.File.com/download/duq6nw4d0p59rci/EVEIPH_Images.zip"
+    'Private MoreLinqDLLURL As String = "http://www.File.com/download/mckqc8cxljc5p86/MoreLinq.Portable.dll"
 
-    'Private TestJSONDLLURL As String = "http://www.mediafire.com/download/wmgmu7qu6ha4qag/Newtonsoft.Json.dll"
-    'Private TestSQLiteDLLURL As String = "http://www.mediafire.com/download/q1bbs5hgp4e18gh/System.Data.SQLite.dll"
-    'Private TestEVEIPHEXEURL As String = "http://www.mediafire.com/download/8cp2ffnb50y0or5/EVE_Isk_per_Hour.exe"
-    'Private TestEVEIPHUpdaterURL As String = "http://www.mediafire.com/download/2d0dsgfap2gq299/EVEIPH_Updater.exe"
-    'Private TestEVEIPHDBURL As String = "http://www.mediafire.com/download/w69bgqr9bo7awt4/EVEIPH_DB.s3db"
-    'Private TestUpdaterManifestURL As String = "http://www.mediafire.com/download/9my8r2x78bbym9k/EVEIPH_Updater.exe.manifest"
-    'Private TestIconicZipFileURL As String = "http://www.mediafire.com/download/w3xwdhl8vnxw0q7/Ionic.Zip.dll"
-    'Private TestEXEManifestURL As String = "http://www.mediafire.com/download/9snq0e79zbesfuq/EVE_Isk_per_Hour.exe.manifest"
-    'Private TestImageZipFileURL As String = "http://www.mediafire.com/download/eox20bz6ddey1g3/EVEIPH_Images.zip"
+    'Private TestJSONDLLURL As String = "http://www.File.com/download/wmgmu7qu6ha4qag/Newtonsoft.Json.dll"
+    'Private TestSQLiteDLLURL As String = "http://www.File.com/download/q1bbs5hgp4e18gh/System.Data.SQLite.dll"
+    'Private TestEVEIPHEXEURL As String = "http://www.File.com/download/8cp2ffnb50y0or5/EVE_Isk_per_Hour.exe"
+    'Private TestEVEIPHUpdaterURL As String = "http://www.File.com/download/2d0dsgfap2gq299/EVEIPH_Updater.exe"
+    'Private TestEVEIPHDBURL As String = "http://www.File.com/download/w69bgqr9bo7awt4/EVEIPH_DB.s3db"
+    'Private TestUpdaterManifestURL As String = "http://www.File.com/download/9my8r2x78bbym9k/EVEIPH_Updater.exe.manifest"
+    'Private TestIconicZipFileURL As String = "http://www.File.com/download/w3xwdhl8vnxw0q7/Ionic.Zip.dll"
+    'Private TestEXEManifestURL As String = "http://www.File.com/download/9snq0e79zbesfuq/EVE_Isk_per_Hour.exe.manifest"
+    'Private TestImageZipFileURL As String = "http://www.File.com/download/eox20bz6ddey1g3/EVEIPH_Images.zip"
 
     Private JSONDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Newtonsoft.Json.dll"
     Private SQLiteDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/System.Data.SQLite.dll"
@@ -150,8 +149,8 @@ Public Class frmMain
         ToolTip.SetToolTip(btnCopyFilesBuildXML, "Copies all the files from directories and then builds the xml file and saves them all in the github folder for upload")
 
         ' Set the grid - scrollbar is 21
-        lstFileInformation.Columns.Add("File Name", 250, HorizontalAlignment.Left)
-        lstFileInformation.Columns.Add("File Date/Time", 150, HorizontalAlignment.Left)
+        lstFileInformation.Columns.Add("File Name", 155, HorizontalAlignment.Left)
+        lstFileInformation.Columns.Add("File Date/Time", 136, HorizontalAlignment.Left)
 
         Call LoadFileGrid()
 
@@ -184,13 +183,13 @@ Public Class frmMain
             If Not Directory.Exists(WorkingDirectory) Then
                 WorkingDirectory = ""
             End If
-            MediaFireDirectory = BPStream.ReadLine
-            If Not Directory.Exists(MediaFireDirectory) Then
-                MediaFireDirectory = ""
+            FileDirectory = BPStream.ReadLine
+            If Not Directory.Exists(FileDirectory) Then
+                FileDirectory = ""
             End If
-            MediaFireTestDirectory = BPStream.ReadLine
-            If Not Directory.Exists(MediaFireTestDirectory) Then
-                MediaFireTestDirectory = ""
+            FileTestDirectory = BPStream.ReadLine
+            If Not Directory.Exists(FileTestDirectory) Then
+                FileTestDirectory = ""
             End If
 
             If Not IsNothing(VersionNumber) Then
@@ -215,8 +214,8 @@ Public Class frmMain
             ImagesVersion = ""
             RootDirectory = ""
             WorkingDirectory = ""
-            MediaFireDirectory = ""
-            MediaFireTestDirectory = ""
+            FileDirectory = ""
+            FileTestDirectory = ""
             VersionNumber = ""
             SQLInstance = ""
         End If
@@ -237,15 +236,15 @@ Public Class frmMain
             End If
         End If
 
-        If MediaFireDirectory <> "" Then
-            If MediaFireDirectory.Substring(Len(MediaFireDirectory) - 1) <> "\" Then
-                MediaFireDirectory = MediaFireDirectory & "\"
+        If FileDirectory <> "" Then
+            If FileDirectory.Substring(Len(FileDirectory) - 1) <> "\" Then
+                FileDirectory = FileDirectory & "\"
             End If
         End If
 
-        If MediaFireTestDirectory <> "" Then
-            If MediaFireTestDirectory.Substring(Len(MediaFireTestDirectory) - 1) <> "\" Then
-                MediaFireTestDirectory = MediaFireTestDirectory & "\"
+        If FileTestDirectory <> "" Then
+            If FileTestDirectory.Substring(Len(FileTestDirectory) - 1) <> "\" Then
+                FileTestDirectory = FileTestDirectory & "\"
             End If
         End If
 
@@ -263,12 +262,12 @@ Public Class frmMain
             lblWorkingFolderPath.Text = WorkingDirectory
         End If
 
-        If MediaFireDirectory <> "\" Then
-            lblFilesPath.Text = MediaFireDirectory
+        If FileDirectory <> "\" Then
+            lblFilesPath.Text = FileDirectory
         End If
 
-        If MediaFireTestDirectory <> "\" Then
-            lblTestPath.Text = MediaFireTestDirectory
+        If FileTestDirectory <> "\" Then
+            lblTestPath.Text = FileTestDirectory
         End If
 
         If RootDirectory <> "\" Then
@@ -294,14 +293,13 @@ Public Class frmMain
         Dim mySQLReader1 As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef As New SqlConnection
-        DBRef = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         Dim i As Integer
 
         ' Now select the count of the final query of data
         msSQL = "SELECT COUNT(*) FROM " & TableName
-        msSQLQuery = New SqlCommand(msSQL, DBRef)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         mySQLReader1 = msSQLQuery.ExecuteReader()
         mySQLReader1.Read()
         pgMain.Maximum = mySQLReader1.GetValue(0)
@@ -311,17 +309,19 @@ Public Class frmMain
         mySQLReader1.Close()
         msSQLQuery = Nothing
 
+        DB.CloseDB()
+
     End Sub
 
-    Private Sub btnSelectMediaFirePath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectFilePath.Click
-        If MediaFireDirectory <> "" Then
-            FolderBrowserDialog.SelectedPath = MediaFireDirectory
+    Private Sub btnSelectFilePath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectFilePath.Click
+        If FileDirectory <> "" Then
+            FolderBrowserDialog.SelectedPath = FileDirectory
         End If
 
         If FolderBrowserDialog.ShowDialog() = DialogResult.OK Then
             Try
                 lblFilesPath.Text = FolderBrowserDialog.SelectedPath
-                MediaFireDirectory = FolderBrowserDialog.SelectedPath
+                FileDirectory = FolderBrowserDialog.SelectedPath
                 Call SetFilePaths()
             Catch ex As Exception
                 MsgBox(Err.Description, vbExclamation, Application.ProductName)
@@ -329,15 +329,15 @@ Public Class frmMain
         End If
     End Sub
 
-    Private Sub btnSelectMediaFireTestPath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectTestFilePath.Click
-        If MediaFireTestDirectory <> "" Then
-            FolderBrowserDialog.SelectedPath = MediaFireTestDirectory
+    Private Sub btnSelectTestFilePath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectTestFilePath.Click
+        If FileTestDirectory <> "" Then
+            FolderBrowserDialog.SelectedPath = FileTestDirectory
         End If
 
         If FolderBrowserDialog.ShowDialog() = DialogResult.OK Then
             Try
                 lblTestPath.Text = FolderBrowserDialog.SelectedPath
-                MediaFireTestDirectory = FolderBrowserDialog.SelectedPath
+                FileTestDirectory = FolderBrowserDialog.SelectedPath
                 Call SetFilePaths()
             Catch ex As Exception
                 MsgBox(Err.Description, vbExclamation, Application.ProductName)
@@ -423,8 +423,8 @@ Public Class frmMain
 
         RootDirectory = lblRootDebugFolderPath.Text
         WorkingDirectory = lblWorkingFolderPath.Text
-        MediaFireDirectory = lblFilesPath.Text
-        MediaFireTestDirectory = lblTestPath.Text
+        FileDirectory = lblFilesPath.Text
+        FileTestDirectory = lblTestPath.Text
 
         ' Set these if we have a version number
         FinalBinaryZip = "EVEIPH v" & VersionNumber & " Binaries.zip"
@@ -496,11 +496,11 @@ Public Class frmMain
         Dim TempFile As FileNameDate
         Dim di As DirectoryInfo
 
-        If MediaFireDirectory <> "" Then
+        If FileDirectory <> "" Then
             If chkCreateTest.Checked Then
-                di = New DirectoryInfo(MediaFireTestDirectory)
+                di = New DirectoryInfo(FileTestDirectory)
             Else
-                di = New DirectoryInfo(MediaFireDirectory)
+                di = New DirectoryInfo(FileDirectory)
             End If
 
             Dim fiArr As FileInfo() = di.GetFiles()
@@ -563,7 +563,6 @@ Public Class frmMain
         If Not ConnectToDBs() Then
             Me.Cursor = Cursors.Default
             btnBuildDatabase.Enabled = True
-            btnBuildSQLServerDB.Enabled = True
             btnImageCopy.Enabled = True
             Exit Sub
         End If
@@ -650,6 +649,8 @@ Public Class frmMain
         File.Copy(IECFOlder & "\28352_64.png", WorkingImageFolder & "\28352_64.png")   ' Rorqual
         File.Copy(IECFOlder & "\28606_64.png", EVEIPHImageFolder & "\28606_64.png")    ' Orca
         File.Copy(IECFOlder & "\28606_64.png", WorkingImageFolder & "\28606_64.png")   ' Orca
+        File.Copy(IECFOlder & "\42244_64.png", EVEIPHImageFolder & "\42244_64.png")    ' Porpoise
+        File.Copy(IECFOlder & "\42244_64.png", WorkingImageFolder & "\42244_64.png")   ' Porpoise
         File.Copy(IECFOlder & "\17480_64.png", EVEIPHImageFolder & "\17480_64.png")    ' Procurer
         File.Copy(IECFOlder & "\17480_64.png", WorkingImageFolder & "\17480_64.png")   ' Procurer
         File.Copy(IECFOlder & "\24698_64.png", EVEIPHImageFolder & "\24698_64.png")    ' Drake
@@ -711,15 +712,15 @@ Public Class frmMain
         Directory.CreateDirectory(FinalBinaryFolderPath)
 
         ' Copy all these files from the media file directory (should be most up to date) to the working directory to make the zip
-        File.Copy(MediaFireDirectory & JSONDLL, FinalBinaryFolderPath & JSONDLL)
-        File.Copy(MediaFireDirectory & SQLiteDLL, FinalBinaryFolderPath & SQLiteDLL)
-        File.Copy(MediaFireDirectory & EVEIPHEXE, FinalBinaryFolderPath & EVEIPHEXE)
-        File.Copy(MediaFireDirectory & EVEIPHUpdater, FinalBinaryFolderPath & EVEIPHUpdater)
-        File.Copy(MediaFireDirectory & UpdaterManifest, FinalBinaryFolderPath & UpdaterManifest)
-        File.Copy(MediaFireDirectory & EXEManifest, FinalBinaryFolderPath & EXEManifest)
-        File.Copy(MediaFireDirectory & LatestVersionXML, FinalBinaryFolderPath & LatestVersionXML)
-        'File.Copy(MediaFireDirectory & LatestVersionXML, FinalBinaryFolderPath & IonicZipFile)
-        File.Copy(MediaFireDirectory & MoreLinqDLL, FinalBinaryFolderPath & MoreLinqDLL)
+        File.Copy(FileDirectory & JSONDLL, FinalBinaryFolderPath & JSONDLL)
+        File.Copy(FileDirectory & SQLiteDLL, FinalBinaryFolderPath & SQLiteDLL)
+        File.Copy(FileDirectory & EVEIPHEXE, FinalBinaryFolderPath & EVEIPHEXE)
+        File.Copy(FileDirectory & EVEIPHUpdater, FinalBinaryFolderPath & EVEIPHUpdater)
+        File.Copy(FileDirectory & UpdaterManifest, FinalBinaryFolderPath & UpdaterManifest)
+        File.Copy(FileDirectory & EXEManifest, FinalBinaryFolderPath & EXEManifest)
+        File.Copy(FileDirectory & LatestVersionXML, FinalBinaryFolderPath & LatestVersionXML)
+        'File.Copy(FileDirectory & LatestVersionXML, FinalBinaryFolderPath & IonicZipFile)
+        File.Copy(FileDirectory & MoreLinqDLL, FinalBinaryFolderPath & MoreLinqDLL)
 
         ' DB
         File.Copy(WorkingDirectory & EVEIPHDB, FinalBinaryFolderPath & EVEIPHDB)
@@ -732,10 +733,10 @@ Public Class frmMain
         ' Compress the whole file for download
         Call ZipFile.CreateFromDirectory(FinalBinaryFolderPath, FinalBinaryZipPath, CompressionLevel.Optimal, False)
 
-        File.Delete(MediaFireDirectory & FinalBinaryZip)
+        File.Delete(FileDirectory & FinalBinaryZip)
 
         ' Copy binary zip file to the media file directory
-        File.Copy(FinalBinaryZipPath, MediaFireDirectory & FinalBinaryZip)
+        File.Copy(FinalBinaryZipPath, FileDirectory & FinalBinaryZip)
 
         Application.UseWaitCursor = False
         Application.DoEvents()
@@ -773,7 +774,6 @@ Public Class frmMain
 
     Public Sub EnableButtons(EnableValue As Boolean)
         btnBuildDatabase.Enabled = EnableValue
-        btnBuildSQLServerDB.Enabled = EnableValue
         btnImageCopy.Enabled = EnableValue
         btnCopyFilesBuildXML.Enabled = EnableValue
         btnBuildBinary.Enabled = EnableValue
@@ -936,11 +936,10 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim ColumnLength As Integer
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "SELECT MAX(Datalength(" & FieldName & ")) FROM " & TableName
-        msSQLQuery = New SqlCommand(SQL, DBRef1)
+        msSQLQuery = New SqlCommand(SQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
         msSQLReader.Read()
 
@@ -954,20 +953,21 @@ Public Class frmMain
 
         Return CStr(ColumnLength)
 
+        DB.CloseDB()
+
     End Function
 
     Public Sub Execute_msSQL(ByVal SQL As String)
         Dim Command As SqlCommand
-        Dim DBRef As New SqlConnection
-        DBRef = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
-        Command = New SqlCommand(SQL, DBRef)
+        Command = New SqlCommand(SQL, DB.DBREf)
+        Command.CommandTimeout = 0
         Command.ExecuteNonQuery()
 
         Command = Nothing
 
-        DBRef.Close()
-        DBRef.Dispose()
+        DB.CloseDB()
 
     End Sub
 
@@ -979,12 +979,11 @@ Public Class frmMain
 
         Dim SQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         ' See if the table exists and drop if it does
         msSQL = "SELECT COUNT(*) FROM sys.tables WHERE name = '" & TableName & "'"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
         msSQLReader.Read()
 
@@ -995,6 +994,8 @@ Public Class frmMain
         Else
             msSQLReader.Close()
         End If
+
+        DB.CloseDB()
 
     End Sub
 
@@ -1014,6 +1015,9 @@ Public Class frmMain
 
         Call EnableButtons(False)
 
+        ' Set the sde data updates
+        Call UpdateSDEData()
+
         ' Build DB's and open connections
         Call BuildDB(FinalDBPath)
 
@@ -1027,7 +1031,6 @@ Public Class frmMain
             lblTableName.Text = ""
             Me.Cursor = Cursors.Default
             btnBuildDatabase.Enabled = True
-            btnBuildSQLServerDB.Enabled = True
             btnImageCopy.Enabled = True
             ' Done
             Exit Sub
@@ -1070,9 +1073,6 @@ Public Class frmMain
         Me.Cursor = Cursors.WaitCursor
         Dim SQLInstanceName = ""
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
-
         If (txtSqlInstanceName.Text = "") Then
             MessageBox.Show("SQL Server Instance Name not supplied", "Error", MessageBoxButtons.OK)
             Return False
@@ -1081,10 +1081,6 @@ Public Class frmMain
         SQLInstanceName = txtSqlInstanceName.Text
 
         Try
-            ' Open connections
-            DBRef1 = New SqlConnection(String.Format("Server={0}\{1};Database={2};Trusted_Connection=True; Initial Catalog=master; Integrated Security=True;Connection Timeout=60;",
-                                             Environment.MachineName, SQLInstanceName, DatabaseName))
-            DBRef1.Open()
 
             ' SQL Lite DB
             If File.Exists(FinalDBPath & ".s3db") Then
@@ -1106,6 +1102,7 @@ Public Class frmMain
     Private Sub CloseDBs()
         On Error Resume Next
         EVEIPHSQLiteDB.CloseDB()
+        EVEIPHSQLiteDB.ClearPools()
         On Error GoTo 0
     End Sub
 
@@ -1452,6 +1449,7 @@ Public Class frmMain
 
         ' Run a vacuum on the new SQL DB
         Call Execute_SQLiteSQL("VACUUM;", EVEIPHSQLiteDB.DBREf)
+        'Call EVEIPHSQLiteDB.DBREf.ClearAllPools()
 
     End Sub
 
@@ -1464,12 +1462,11 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         ' See if the table exists and delete if so
         SQL = "SELECT COUNT(*) FROM sys.tables where name = 'ALL_BLUEPRINTS'"
-        msSQLQuery = New SqlCommand(SQL, DBRef1)
+        msSQLQuery = New SqlCommand(SQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
         msSQLReader.Read()
 
@@ -1601,7 +1598,7 @@ Public Class frmMain
         SQL = SQL & "OR (ITEM_GROUP = 'Propulsion Module' AND ITEM_NAME Like '1MN%') "
         SQL = SQL & "OR (ITEM_CATEGORY = 'Module' AND ITEM_ID IN (SELECT typeID from invTypes where marketGroupID IN (561,564,567,570,574,577,1671,1672,1037)))  "
         SQL = SQL & "OR (ITEM_CATEGORY IN ('Charge','Module') AND (ITEM_NAME Like '%Rocket%' OR ITEM_NAME Like '%Light Missile%') AND ITEM_GROUP NOT IN ('Propulsion Module', 'Rig Launcher'))  "
-        SQL = SQL & "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE packagedVolume < 10000) AND ITEM_GROUP_ID <> 963) OR ITEM_GROUP_ID = 1527)"
+        SQL = SQL & "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE groupID IN (324,29,1534,237,830,420,893,1283,25,831,541,1527,1022,31,834,1305))))"
 
         Execute_msSQL(SQL)
 
@@ -1614,8 +1611,7 @@ Public Class frmMain
         SQL = SQL & "OR (ITEM_CATEGORY = 'Subsystem') "
         SQL = SQL & "OR (ITEM_CATEGORY = 'Module' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE marketGroupID IN (562,565,568,572,575,578,1673,1674))) "
         SQL = SQL & "OR (ITEM_CATEGORY IN ('Charge','Module') AND ITEM_NAME Like '%Heavy%' AND ITEM_NAME Not Like '%Jolt%')  "
-        SQL = SQL & "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE (packagedVolume >= 10000 AND packagedVolume < 50000) "
-        SQL = SQL & "OR ITEM_GROUP_ID = 963 OR ITEM_GROUP_ID = 1534))) "
+        SQL = SQL & "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE groupID IN (1201,1202,419,540,26,380,543,833,358,894,28,941,832,463,963)))) "
         Execute_msSQL(SQL)
 
         ' Drones are Heavy, missiles are cruise/torp, towers are regular towers (Caldari Control Tower)
@@ -1631,7 +1627,7 @@ Public Class frmMain
         SQL = SQL & "OR (ITEM_CATEGORY = 'Module' AND ITEM_NAME Like '%Heavy%' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE marketGroupID NOT IN (563,566,569,573,576,579,1675,1676))) "
         SQL = SQL & "OR (ITEM_CATEGORY = 'Module' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE marketGroupID IN (563,566,569,573,576,579,1675,1676))) "
         SQL = SQL & "OR (ITEM_CATEGORY IN ('Charge','Module') AND (ITEM_NAME Like '%Cruise%' OR ITEM_NAME Like '%Torpedo%')) "
-        SQL = SQL & "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE (packagedVolume >= 50000 AND packagedVolume < 500000))))"
+        SQL = SQL & "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE groupID IN (27, 898, 900))))"
         Execute_msSQL(SQL)
 
         ' Drones are fighters, missiles are citadel
@@ -1650,7 +1646,7 @@ Public Class frmMain
         SQL = SQL & "OR (ITEM_CATEGORY IN ('Charge','Module') AND ITEM_NAME Like '%Citadel%') "
         SQL = SQL & "OR (ITEM_CATEGORY = 'Celestial' AND (ITEM_NAME Like 'Station%' OR ITEM_NAME LIKE '%Outpost%' OR ITEM_NAME LIKE '%Freight%')) "
         SQL = SQL & "OR ITEM_GROUP LIKE 'Bomb%' "
-        SQL = SQL & "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE packagedVolume >= 500000)))"
+        SQL = SQL & "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE groupID IN (30,485,513,547,659,883,902,941,1538))))"
         Execute_msSQL(SQL)
 
         ' Anything left update to small (may need to revisit later)
@@ -1692,7 +1688,7 @@ Public Class frmMain
 
         ' Now select the final query of data
         msSQL = "SELECT * FROM ALL_BLUEPRINTS"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -1753,6 +1749,9 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
+
+        DB.CloseDB()
+
         Application.DoEvents()
 
     End Sub
@@ -1766,14 +1765,13 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         Application.DoEvents()
 
         ' See if the table exists and delete if so
         SQL = "SELECT COUNT(*) FROM sys.tables where name = 'ALL_BLUEPRINT_MATERIALS'"
-        msSQLQuery = New SqlCommand(SQL, DBRef1)
+        msSQLQuery = New SqlCommand(SQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
         msSQLReader.Read()
 
@@ -1813,7 +1811,7 @@ Public Class frmMain
 
         ' Also, find any bp that has the product the same as a material id, this will cause an infinite loop
         SQL = "SELECT BLUEPRINT_ID FROM ALL_BLUEPRINT_MATERIALS where PRODUCT_ID = MATERIAL_ID"
-        msSQLQuery = New SqlCommand(SQL, DBRef1)
+        msSQLQuery = New SqlCommand(SQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         ' Delete these BPs from the materials and all_blueprints tables before building the final in SQLite
@@ -1847,7 +1845,7 @@ Public Class frmMain
 
         ' Now select the final query of data
         msSQL = "SELECT * FROM ALL_BLUEPRINT_MATERIALS"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -1890,6 +1888,9 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
+
+        DB.CloseDB()
+
         Application.DoEvents()
 
     End Sub
@@ -1898,8 +1899,7 @@ Public Class frmMain
     Private Sub Build_ASSEMBLY_ARRAYS()
         Dim SQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         ' MS SQL variables
         Dim msSQLQuery As New SqlCommand
@@ -1956,7 +1956,7 @@ Public Class frmMain
         msSQL = msSQL & "AND invTypes.groupID = invGroups.groupID  "
         msSQL = msSQL & "AND invGroups.categoryID  = 23 "
 
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call SetProgressBarValues(" (" & msSQL & ") AS X ")
@@ -1996,14 +1996,15 @@ Public Class frmMain
 
         Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
+        DB.CloseDB()
+
     End Sub
 
     ' STATION_FACILITIES - Temp table, update with CREST
     Private Sub Build_STATION_FACILITIES()
         Dim SQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         ' MS SQL variables
         Dim msSQLQuery As New SqlCommand
@@ -2084,7 +2085,7 @@ Public Class frmMain
         msSQL = msSQL & "AND ramAssemblyLineTypes.activityID = ramActivities.activityID "
         msSQL = msSQL & "AND ramAssemblyLineStations.assemblyLineTypeID = ramAssemblyLineTypes.assemblyLineTypeID "
 
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call SetProgressBarValues(" (" & msSQL & ") AS X ")
@@ -2145,6 +2146,8 @@ Public Class frmMain
 
         Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
+        DB.CloseDB()
+
     End Sub
 
     ' Updates the table with categories not included - this makes it easier to run the station_facilities table without joins
@@ -2158,12 +2161,9 @@ Public Class frmMain
         Dim msSQLReader3 As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
-        Dim DBRef2 As New SqlConnection
-        DBRef2 = DBConnectionRef()
-        Dim DBRef3 As New SqlConnection
-        DBRef3 = DBConnectionRef()
+        Dim DB1 As New msSQLDBConnection(DatabaseName, SQLInstance)
+        Dim DB2 As New msSQLDBConnection(DatabaseName, SQLInstance)
+        Dim DB3 As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         ' Figure out what lines are not in the categories table so that we can add the missing line and categoryID
         msSQL = "SELECT ramAssemblyLineTypes.assemblyLineTypeID, activityID "
@@ -2173,7 +2173,7 @@ Public Class frmMain
         msSQL = msSQL & "AND ramAssemblyLineTypes.assemblyLineTypeID = ramInstallationTypeContents.assemblyLineTypeID "
         msSQL = msSQL & "AND ramInstallationTypeContents.installationTypeID = invTypes.typeID "
         msSQL = msSQL & "GROUP BY ramAssemblyLineTypes.assemblyLineTypeID, activityID "
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB1.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         While msSQLReader.Read
@@ -2187,7 +2187,7 @@ Public Class frmMain
             msSQL = msSQL & "AND activityID = " & msSQLReader.GetValue(1) & " "
             msSQL = msSQL & "GROUP BY invCategories.categoryID "
 
-            msSQLQuery2 = New SqlCommand(msSQL, DBRef2)
+            msSQLQuery2 = New SqlCommand(msSQL, DB2.DBREf)
             msSQLReader2 = msSQLQuery2.ExecuteReader()
 
             While msSQLReader2.Read
@@ -2197,7 +2197,7 @@ Public Class frmMain
                 msSQL = msSQL & "AND categoryID = " & msSQLReader2.GetValue(0) & " "
                 msSQL = msSQL & "AND timeMultiplier = 1 AND materialMultiplier = 1 AND costMultiplier = 1"
 
-                msSQLQuery3 = New SqlCommand(msSQL, DBRef3)
+                msSQLQuery3 = New SqlCommand(msSQL, DB3.DBREf)
                 msSQLReader3 = msSQLQuery3.ExecuteReader()
 
                 If Not msSQLReader3.Read Then
@@ -2221,14 +2221,17 @@ Public Class frmMain
 
         msSQLReader.Close()
 
+        DB1.CloseDB()
+        DB2.CloseDB()
+        DB3.CloseDB()
+
     End Sub
 
     ' STATIONS - Temp table, update with CREST
     Private Sub Build_Stations()
         Dim SQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         ' MS SQL variables
         Dim msSQLQuery As New SqlCommand
@@ -2252,7 +2255,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT stationID, stationName, stationTypeID, solarSystemID, security, regionID, reprocessingEfficiency, reprocessingStationsTake FROM staStations"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -2285,6 +2288,8 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         msSQLReader.Close()
+
+        DB.CloseDB()
 
     End Sub
 
@@ -2754,8 +2759,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE industryBlueprints ("
         SQL = SQL & "blueprintTypeID INTEGER NOT NULL PRIMARY KEY,"
@@ -2766,7 +2770,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT blueprintTypeID, maxProductionLimit FROM industryBlueprints"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -2792,6 +2796,9 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
+
+        DB.CloseDB()
+
         Application.DoEvents()
 
     End Sub
@@ -2805,8 +2812,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE industryActivities ("
         SQL = SQL & "blueprintTypeID INTEGER NOT NULL,"
@@ -2821,7 +2827,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT blueprintTypeID, activityID, time FROM industryActivities"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -2848,6 +2854,9 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
+
+        DB.CloseDB()
+
         Application.DoEvents()
 
     End Sub
@@ -2861,8 +2870,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         ' Build table
         SQL = "CREATE TABLE industryActivityMaterials ("
@@ -2879,7 +2887,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT * FROM MY_INDUSTRY_MATERIALS "
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -2908,6 +2916,9 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
+
+        DB.CloseDB()
+
         Application.DoEvents()
 
     End Sub
@@ -2921,8 +2932,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         ' Build table
         SQL = "CREATE TABLE INDUSTRY_ACTIVITY_PRODUCTS ("
@@ -2939,7 +2949,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT blueprintTypeID, activityID, productTypeID, quantity, probability FROM industryActivityProducts"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -2968,6 +2978,9 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
+
+        DB.CloseDB()
+
         Application.DoEvents()
 
     End Sub
@@ -2981,8 +2994,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE RAM_ACTIVITIES ("
         SQL = SQL & "activityID INTEGER NOT NULL,"
@@ -2998,7 +3010,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT activityID, activityName, iconNo, description, published FROM ramActivities"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -3029,6 +3041,8 @@ Public Class frmMain
         SQL = "CREATE INDEX IDX_ACTIVITY_ID ON RAM_ACTIVITIES (activityID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
+        DB.CloseDB()
+
     End Sub
 
     ' RAM_ASSEMBLY_LINE_STATIONS
@@ -3040,8 +3054,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE RAM_ASSEMBLY_LINE_STATIONS ("
         SQL = SQL & "stationID INTEGER NOT NULL,"
@@ -3059,7 +3072,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT * FROM ramAssemblyLineStations"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -3099,6 +3112,8 @@ Public Class frmMain
         SQL = "CREATE INDEX IDX_RALS_ALTID ON RAM_ASSEMBLY_LINE_STATIONS (assemblyLineTypeID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
+        DB.CloseDB()
+
     End Sub
 
     ' RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_CATEGORY
@@ -3110,8 +3125,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_CATEGORY ("
         SQL = SQL & "assemblyLineTypeID INTEGER NOT NULL,"
@@ -3127,7 +3141,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT * FROM ramAssemblyLineTypeDetailPerCategory"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -3162,6 +3176,8 @@ Public Class frmMain
         SQL = "CREATE INDEX IDX_ALC_CID ON RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_CATEGORY (categoryID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
+        DB.CloseDB()
+
     End Sub
 
     ' RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_GROUP
@@ -3173,8 +3189,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_GROUP ("
         SQL = SQL & "assemblyLineTypeID INTEGER NOT NULL,"
@@ -3190,7 +3205,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT * FROM ramAssemblyLineTypeDetailPerGroup"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -3225,6 +3240,8 @@ Public Class frmMain
         SQL = "CREATE INDEX IDX_ALG_GID ON RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_GROUP (groupID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
+        DB.CloseDB()
+
     End Sub
 
     ' RAM_ASSEMBLY_LINE_TYPES
@@ -3236,8 +3253,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE RAM_ASSEMBLY_LINE_TYPES ("
         SQL = SQL & "assemblyLineTypeID INTEGER NOT NULL,"
@@ -3257,7 +3273,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT * FROM ramAssemblyLineTypes"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -3296,6 +3312,8 @@ Public Class frmMain
         SQL = "CREATE INDEX IDX_ALT_AID ON RAM_ASSEMBLY_LINE_TYPES (activityID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
+        DB.CloseDB()
+
     End Sub
 
     ' RAM_INSTALLATION_TYPE_CONTENTS
@@ -3307,8 +3325,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE RAM_INSTALLATION_TYPE_CONTENTS ("
         SQL = SQL & "installationTypeID INTEGER NOT NULL,"
@@ -3322,7 +3339,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT * FROM ramInstallationTypeContents"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -3354,6 +3371,8 @@ Public Class frmMain
 
         SQL = "CREATE INDEX IDX_RITC_ALTID ON RAM_INSTALLATION_TYPE_CONTENTS (assemblyLineTypeID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
+
+        DB.CloseDB()
 
     End Sub
 
@@ -3418,8 +3437,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE FACTIONS ("
         SQL = SQL & "factionID INTEGER PRIMARY KEY,"
@@ -3436,7 +3454,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT factionID, factionName, raceIDs FROM chrFactions"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -3466,6 +3484,8 @@ Public Class frmMain
         pgMain.Visible = False
         Application.DoEvents()
 
+        DB.CloseDB()
+
     End Sub
 
     ' INVENTORY_TRAITS
@@ -3477,8 +3497,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE INVENTORY_TRAITS ("
         SQL = SQL & "bonusID INTEGER,"
@@ -3500,7 +3519,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT * FROM invTraits"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -3536,6 +3555,9 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
+
+        DB.CloseDB()
+
         Application.DoEvents()
 
     End Sub
@@ -3549,8 +3571,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE META_TYPES ("
         SQL = SQL & "typeID INTEGER PRIMARY KEY,"
@@ -3564,7 +3585,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT * FROM invMetaTypes"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -3592,6 +3613,8 @@ Public Class frmMain
 
         pgMain.Visible = False
 
+        DB.CloseDB()
+
     End Sub
 
     ' CONTROL_TOWER_RESOURCES
@@ -3603,8 +3626,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE CONTROL_TOWER_RESOURCES ("
         SQL = SQL & "controlTowerTypeID INTEGER NOT NULL,"
@@ -3621,7 +3643,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT controlTowerTypeID, resourceTypeID, purpose, quantity, minSecurityLevel, factionID FROM invControlTowerResources"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -3658,6 +3680,8 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
+
+        DB.CloseDB()
 
     End Sub
 
@@ -3717,8 +3741,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE ATTRIBUTE_TYPES ("
         SQL = SQL & "attributeID INTEGER PRIMARY KEY,"
@@ -3732,7 +3755,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT attributeID, attributeName, displayName FROM dgmAttributeTypes"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -3760,6 +3783,8 @@ Public Class frmMain
 
         pgMain.Visible = False
 
+        DB.CloseDB()
+
     End Sub
 
     ' TYPE_ATTRIBUTES
@@ -3771,8 +3796,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE TYPE_ATTRIBUTES ("
         SQL = SQL & "typeID INTEGER NOT NULL,"
@@ -3787,7 +3811,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT typeID, attributeID, valueInt, valueFloat FROM dgmTypeAttributes"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -3821,6 +3845,8 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
+
+        DB.CloseDB()
 
     End Sub
 
@@ -3947,8 +3973,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         Application.DoEvents()
 
@@ -3978,7 +4003,7 @@ Public Class frmMain
         msSQL = msSQL & "'Hemorphite','Jaspet','Kernite','Mercoxit','Omber','Plagioclase','Pyroxeres','Scordite','Spodumain','Veldspar') THEN 0 "
         msSQL = msSQL & "WHEN invTypes.groupID = 465 THEN -1 WHEN invTypes.groupID = 711 THEN -2 ELSE 1 END "
 
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLQuery.CommandTimeout = 300
         msSQLReader = msSQLQuery.ExecuteReader()
 
@@ -4074,6 +4099,8 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
+
+        DB.CloseDB()
 
     End Sub
 
@@ -5078,8 +5105,7 @@ Public Class frmMain
         Dim msSQL As String
         Dim msSQL2 As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         Dim i As Integer
 
@@ -5108,7 +5134,7 @@ Public Class frmMain
         msSQL2 = msSQL2 & "INNER JOIN invCategories AS invCategories_1 ON invGroups_1.categoryID = invCategories_1.categoryID) ON invTypes_1.groupID = invGroups_1.groupID "
 
         ' Get the count
-        msSQLQuery = New SqlCommand("SELECT COUNT(*) " & msSQL2, DBRef1)
+        msSQLQuery = New SqlCommand("SELECT COUNT(*) " & msSQL2, DB.DBREf)
         mySQLReader2 = msSQLQuery.ExecuteReader()
         mySQLReader2.Read()
         pgMain.Maximum = mySQLReader2.GetValue(0)
@@ -5117,7 +5143,7 @@ Public Class frmMain
         pgMain.Visible = True
         mySQLReader2.Close()
 
-        msSQLQuery = New SqlCommand(msSQL & msSQL2, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL & msSQL2, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -5154,6 +5180,8 @@ Public Class frmMain
 
         pgMain.Visible = False
 
+        DB.CloseDB()
+
     End Sub
 
     ' REACTIONS
@@ -5167,8 +5195,7 @@ Public Class frmMain
         Dim msSQL As String
         Dim msSQL2 As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         Dim i As Integer
 
@@ -5207,7 +5234,7 @@ Public Class frmMain
         msSQL2 = msSQL2 & "AND invGroups_1.categoryID = invCategories.categoryID "
         msSQL2 = msSQL2 & "AND invTypes.published <> 0 AND invTypes_1.published <> 0 AND invCategories.published <> 0 AND invGroups.published <> 0 AND invGroups_1.published <> 0 "
 
-        msSQLQuery = New SqlCommand("SELECT COUNT(*) " & msSQL2, DBRef1)
+        msSQLQuery = New SqlCommand("SELECT COUNT(*) " & msSQL2, DB.DBREf)
         mySQLReader2 = msSQLQuery.ExecuteReader()
         mySQLReader2.Read()
         pgMain.Maximum = mySQLReader2.GetValue(0)
@@ -5216,7 +5243,7 @@ Public Class frmMain
         pgMain.Visible = True
         mySQLReader2.Close()
 
-        msSQLQuery = New SqlCommand(msSQL & msSQL2, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL & msSQL2, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -5257,6 +5284,8 @@ Public Class frmMain
 
         pgMain.Visible = False
 
+        DB.CloseDB()
+
     End Sub
 
     ' CURRENT_RESEARCH_AGENTS
@@ -5293,8 +5322,7 @@ Public Class frmMain
         Dim msSQL As String
         Dim msSQL2 As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         Dim i As Integer
 
@@ -5312,7 +5340,7 @@ Public Class frmMain
         msSQL2 = msSQL2 & "WHERE invCategories.categoryName='Skill' AND invTypes.published<>0 AND invGroups.published<>0 AND invCategories.published<>0"
 
         ' Get the count
-        msSQLQuery = New SqlCommand("SELECT COUNT(*) " & msSQL2, DBRef1)
+        msSQLQuery = New SqlCommand("SELECT COUNT(*) " & msSQL2, DB.DBREf)
         mySQLReader2 = msSQLQuery.ExecuteReader()
         mySQLReader2.Read()
         pgMain.Maximum = mySQLReader2.GetValue(0)
@@ -5321,7 +5349,7 @@ Public Class frmMain
         pgMain.Visible = True
         mySQLReader2.Close()
 
-        msSQLQuery = New SqlCommand(msSQL & msSQL2, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL & msSQL2, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -5347,6 +5375,8 @@ Public Class frmMain
 
         msSQLReader.Close()
 
+        DB.CloseDB()
+
     End Sub
 
     ' RESEARCH_AGENTS
@@ -5360,8 +5390,7 @@ Public Class frmMain
         Dim msSQL As String
         Dim msSQL2 As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         Dim i As Integer
 
@@ -5413,7 +5442,7 @@ Public Class frmMain
         msSQL2 = msSQL2 & "WHERE agtAgents.agentTypeID= 4"
 
         ' Get the count
-        msSQLQuery = New SqlCommand("SELECT COUNT(*) " & msSQL2, DBRef1)
+        msSQLQuery = New SqlCommand("SELECT COUNT(*) " & msSQL2, DB.DBREf)
         mySQLReader2 = msSQLQuery.ExecuteReader()
         mySQLReader2.Read()
         pgMain.Maximum = mySQLReader2.GetValue(0)
@@ -5422,7 +5451,7 @@ Public Class frmMain
         pgMain.Visible = True
         mySQLReader2.Close()
 
-        msSQLQuery = New SqlCommand(msSQL & msSQL2, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL & msSQL2, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -5467,6 +5496,8 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
+
+        DB.CloseDB()
 
     End Sub
 
@@ -5568,8 +5599,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE REGIONS ("
         SQL = SQL & "regionID INTEGER PRIMARY KEY,"
@@ -5582,7 +5612,7 @@ Public Class frmMain
         Application.DoEvents()
 
         msSQL = "SELECT regionID, regionName, factionID FROM mapRegions ORDER BY regionName"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -5617,6 +5647,9 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
+
+        DB.CloseDB()
+
         Application.DoEvents()
 
     End Sub
@@ -5630,8 +5663,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE CONSTELLATIONS ("
         SQL = SQL & "regionID INTEGER NOT NULL,"
@@ -5643,7 +5675,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT regionID, constellationID, constellationName FROM mapConstellations"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -5670,6 +5702,8 @@ Public Class frmMain
         SQL = "CREATE INDEX IDX_C_REGION_ID ON CONSTELLATIONS (regionID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
+        DB.CloseDB()
+
     End Sub
 
     ' SOLAR_SYSTEMS
@@ -5681,8 +5715,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE SOLAR_SYSTEMS ("
         SQL = SQL & "regionID INTEGER NOT NULL,"
@@ -5699,7 +5732,7 @@ Public Class frmMain
         msSQL = "SELECT regionID, constellationID, solarSystemID, solarSystemName, security, "
         msSQL = msSQL & "CASE WHEN solarSystemID in (SELECT solarSystemID FROM warCombatZoneSystems) THEN 1 ELSE 0 END as fwsystem "
         msSQL = msSQL & "FROM mapSolarSystems "
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -5742,6 +5775,8 @@ Public Class frmMain
         pgMain.Visible = False
         Application.DoEvents()
 
+        DB.CloseDB()
+
     End Sub
 
 #Region "Inventory Tables"
@@ -5755,8 +5790,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE INVENTORY_TYPES ("
         SQL = SQL & "typeID INTEGER PRIMARY KEY,"
@@ -5787,7 +5821,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT * FROM invTypes "
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -5841,6 +5875,8 @@ Public Class frmMain
 
         pgMain.Visible = False
 
+        DB.CloseDB()
+
     End Sub
 
     ' INVENTORY_GROUPS
@@ -5852,8 +5888,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE INVENTORY_GROUPS ("
         SQL = SQL & "groupID INTEGER PRIMARY KEY,"
@@ -5873,7 +5908,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT * FROM invGroups"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -5913,6 +5948,8 @@ Public Class frmMain
 
         pgMain.Visible = False
 
+        DB.CloseDB()
+
     End Sub
 
     ' INVENTORY_CATEGORIES
@@ -5924,8 +5961,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE INVENTORY_CATEGORIES ("
         SQL = SQL & "categoryID INTEGER PRIMARY KEY,"
@@ -5939,7 +5975,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT categoryID, categoryName, published FROM invCategories"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -5970,6 +6006,8 @@ Public Class frmMain
 
         pgMain.Visible = False
 
+        DB.CloseDB()
+
     End Sub
 
     ' INVENTORY_FLAGS
@@ -5982,8 +6020,7 @@ Public Class frmMain
         Dim msSQL As String
         Dim Temp As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE INVENTORY_FLAGS ("
         SQL = SQL & "FlagID INTEGER NOT NULL,"
@@ -5998,7 +6035,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT * FROM invFlags"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -6047,6 +6084,8 @@ Public Class frmMain
         SQL = "CREATE INDEX IDX_ITEM_FLAG_ID ON INVENTORY_FLAGS (FlagID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
+        DB.CloseDB()
+
     End Sub
 
 #End Region
@@ -6062,14 +6101,13 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         Application.DoEvents()
 
         ' See if the view exists and drop if it does
         SQL = "SELECT COUNT(*) FROM sys.all_views where name = 'PRICES_BUILD'"
-        msSQLQuery = New SqlCommand(SQL, DBRef1)
+        msSQLQuery = New SqlCommand(SQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
         msSQLReader.Read()
 
@@ -6099,7 +6137,7 @@ Public Class frmMain
 
         ' See if the view exists and delete if so
         SQL = "SELECT COUNT(*) FROM sys.all_views where name = 'PRICES_NOBUILD'"
-        msSQLQuery = New SqlCommand(SQL, DBRef1)
+        msSQLQuery = New SqlCommand(SQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
         msSQLReader.Read()
 
@@ -6136,7 +6174,7 @@ Public Class frmMain
 
         ' See if the view exists and delete if so
         SQL = "SELECT COUNT(*) FROM sys.all_views where name = 'PRICES_LP_OFFERS'"
-        msSQLQuery = New SqlCommand(SQL, DBRef1)
+        msSQLQuery = New SqlCommand(SQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
         msSQLReader.Read()
 
@@ -6175,7 +6213,7 @@ Public Class frmMain
 
         ' See if the view exists and delete if so
         SQL = "SELECT COUNT(*) FROM sys.all_views where name = 'PRICES_LP_BP_ITEMS'"
-        msSQLQuery = New SqlCommand(SQL, DBRef1)
+        msSQLQuery = New SqlCommand(SQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
         msSQLReader.Read()
 
@@ -6203,7 +6241,7 @@ Public Class frmMain
 
         ' See if the union view exists and delete if so
         SQL = "SELECT COUNT(*) FROM sys.all_views where name = 'ITEM_PRICES_UNION'"
-        msSQLQuery = New SqlCommand(SQL, DBRef1)
+        msSQLQuery = New SqlCommand(SQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
         msSQLReader.Read()
 
@@ -6215,8 +6253,8 @@ Public Class frmMain
             msSQLReader.Close()
         End If
 
-        SQL = "CREATE VIEW ITEM_PRICES_UNION AS SELECT * FROM PRICES_BUILD UNION SELECT * FROM PRICES_NOBUILD "
-        SQL = SQL & "UNION SELECT * FROM PRICES_LP_OFFERS UNION SELECT * FROM PRICES_LP_BP_ITEMS"
+        SQL = "SELECT * INTO ITEM_PRICES_UNION FROM (SELECT * FROM PRICES_BUILD UNION SELECT * FROM PRICES_NOBUILD "
+        SQL = SQL & "UNION SELECT * FROM PRICES_LP_OFFERS UNION SELECT * FROM PRICES_LP_BP_ITEMS) AS X "
         Execute_msSQL(SQL)
 
         ' Create SQLite table
@@ -6239,10 +6277,10 @@ Public Class frmMain
         ' Now select the count of the final query of data
         Call SetProgressBarValues("ITEM_PRICES_UNION")
 
-        ' Now select the final query of data
+        ' Now select the final query of data into a temp table
         msSQL = "SELECT ITEM_ID, ITEM_NAME, TECH_LEVEL, PRICE, ITEM_CATEGORY, ITEM_GROUP, MANUFACTURE, ITEM_TYPE, PRICE_TYPE FROM ITEM_PRICES_UNION "
         msSQL = msSQL & "GROUP BY ITEM_ID, ITEM_NAME, TECH_LEVEL, PRICE, ITEM_CATEGORY, ITEM_GROUP, MANUFACTURE, ITEM_TYPE, PRICE_TYPE"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -6286,7 +6324,14 @@ Public Class frmMain
         SQL = "CREATE INDEX IDX_IP_CATEGORY ON ITEM_PRICES (ITEM_CATEGORY)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
+        ' Drop the Temp table
+        SQL = "DROP TABLE ITEM_PRICES_UNION"
+        Call DB.ExecuteNonQuerySQL(SQL)
+
         pgMain.Visible = False
+
+        DB.CloseDB()
+
         Application.DoEvents()
 
     End Sub
@@ -6704,8 +6749,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE PLANET_SCHEMATICS ("
         SQL = SQL & "schematicID INTEGER PRIMARY KEY,"
@@ -6719,7 +6763,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT * FROM planetSchematics"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -6748,6 +6792,9 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
+
+        DB.CloseDB()
+
         Application.DoEvents()
 
     End Sub
@@ -6761,8 +6808,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE PLANET_SCHEMATICS_TYPE_MAP ("
         SQL = SQL & "schematicID INTEGER NOT NULL,"
@@ -6778,7 +6824,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT * FROM planetSchematicsTypeMap"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -6808,6 +6854,9 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
+
+        DB.CloseDB()
+
         Application.DoEvents()
 
     End Sub
@@ -6821,8 +6870,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE PLANET_SCHEMATICS_PIN_MAP ("
         SQL = SQL & "schematicID INTEGER NOT NULL,"
@@ -6836,7 +6884,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT * FROM planetSchematicsPinMap"
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -6864,6 +6912,9 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
+
+        DB.CloseDB()
+
         Application.DoEvents()
 
     End Sub
@@ -6881,8 +6932,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE LP_OFFER_REQUIREMENTS ("
         SQL = SQL & "OFFER_ID INTEGER NOT NULL,"
@@ -6896,7 +6946,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         msSQL = "SELECT * FROM lpOfferRequirements WHERE offerID <> 1201" '1201 seems to be extra
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -6927,6 +6977,9 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
+
+        DB.CloseDB()
+
         Application.DoEvents()
 
     End Sub
@@ -6954,7 +7007,7 @@ Public Class frmMain
 
     '    ' Pull new data and insert
     '    msSQL = "SELECT * FROM lpOffers"
-    '    msSQLQuery = New SqlCommand(msSQL, DBRef1)
+    '    msSQLQuery = New SqlCommand(msSQL, DB.DBRef)
     '    msSQLReader = msSQLQuery.ExecuteReader()
 
     '    Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -6997,8 +7050,7 @@ Public Class frmMain
         Dim msSQLReader As SqlDataReader
         Dim msSQL As String
 
-        Dim DBRef1 As New SqlConnection
-        DBRef1 = DBConnectionRef()
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
 
         SQL = "CREATE TABLE LP_STORE ("
         SQL = SQL & "OFFER_ID INTEGER NOT NULL,"
@@ -7027,7 +7079,7 @@ Public Class frmMain
         msSQL = msSQL & "AND lpStore.corporationID = crpNPCCorporations.corporationID "
         msSQL = msSQL & "AND crpNPCCorporations.factionID = chrFactions.factionID "
 
-        msSQLQuery = New SqlCommand(msSQL, DBRef1)
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
         msSQLReader = msSQLQuery.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -7067,6 +7119,9 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
+
+        DB.CloseDB()
+
         Application.DoEvents()
 
     End Sub
@@ -7092,7 +7147,7 @@ Public Class frmMain
 
     '    ' Pull new data and insert
     '    msSQL = "SELECT * FROM lpVerified"
-    '    msSQLQuery = New SqlCommand(msSQL, DBRef1)
+    '    msSQLQuery = New SqlCommand(msSQL, DB.DBRef)
     '    msSQLReader = msSQLQuery.ExecuteReader()
 
     '    Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -7129,7 +7184,7 @@ Public Class frmMain
 #Region "Build SQL DB"
 
     ' Copies all the data from the universe DB into the MSSQL DB
-    Private Sub btnBuildSQLServerDB_Click(sender As System.Object, e As System.EventArgs) Handles btnBuildSQLServerDB.Click
+    Private Sub UpdateSDEData()
 
         ' Make sure we have a DB first
         If DatabaseName = "" Then
@@ -7147,7 +7202,6 @@ Public Class frmMain
         If Not ConnectToDBs() Then
             Me.Cursor = Cursors.Default
             btnBuildDatabase.Enabled = True
-            btnBuildSQLServerDB.Enabled = True
             btnImageCopy.Enabled = True
             Exit Sub
         End If
@@ -7156,9 +7210,16 @@ Public Class frmMain
 
         ' Chinese named ships in invtypes for some reason
         Call Execute_msSQL("DELETE FROM invTypes where typeID IN (34480,34478,34476,34474,34472,34470,34468,34466,34464,34462,34460,34458)")
+        Call Execute_msSQL("DELETE FROM invTypes where typeID IN (34457,34459,34461,34463,34465,34467,34469,34471,34473,34475,34477,34479)")
 
         ' Insert all the data for outpost upgrades, and eggs here
         Call UploadOutpostItems()
+
+        ' Update the T3 relic "blueprints" to require the relic blueprint as a material for its invention activity
+        Call UpdateT3Relics()
+
+        ' Need to insert blueprints as products for copy, ME/TE 
+        Call UpdateIndustryActivityProducts()
 
         ' When rebuilding the DB, update the ramAssemblyLineTypeDetailPerCategory table
         ' so it is complete and not missing categories of blueprints for assembly lines in 
@@ -7173,7 +7234,6 @@ Public Class frmMain
             MsgBox(Err.Description)
         End Try
 
-        MsgBox("Updates Complete")
         pgMain.Visible = False
         lblTableName.Text = ""
 
@@ -9497,6 +9557,62 @@ Public Class frmMain
 
     End Sub
 
+    ' Inserts a relic into the activities for itself requiring the material
+    Private Sub UpdateT3Relics()
+
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
+
+        ' Delete if any there already
+        Dim SQL As String = "DELETE FROM industryActivityMaterials WHERE blueprintTypeID IN "
+        SQL &= "(SELECT DISTINCT typeID FROM invTypes, invGroups WHERE categoryID = 34 AND invTypes.groupID = invGroups.groupID) "
+        SQL &= "AND activityID = 8 AND blueprintTypeID = materialTypeID"
+
+        Call Execute_msSQL(SQL)
+
+        ' Now insert a record for each 
+        SQL = "SELECT DISTINCT typeID FROM invTypes, invGroups WHERE categoryID = 34 AND invTypes.groupID = invGroups.groupID"
+        Dim msSQLQuery As New SqlCommand
+        Dim msSQLReader As SqlDataReader
+
+        msSQLQuery = New SqlCommand(SQL, DB.DBREf)
+        msSQLReader = msSQLQuery.ExecuteReader()
+        msSQLReader.Read()
+
+        While msSQLReader.Read
+            SQL = String.Format("INSERT INTO industryActivityMaterials VALUES ({0},8,{0},1)", msSQLReader.GetInt32(0))
+            Call Execute_msSQL(SQL)
+        End While
+
+        DB.CloseDB()
+
+    End Sub
+
+    ' Inserts blueprints as output products for copy and ME/TE activities
+    Private Sub UpdateIndustryActivityProducts()
+        Dim SQL As String = "SELECT blueprintTypeID, activityID FROM industryActivities WHERE activityID NOT IN (8,1)"
+
+        Dim msSQLQuery As New SqlCommand
+        Dim msSQLReader As SqlDataReader
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
+
+        msSQLQuery = New SqlCommand(SQL, DB.DBREf)
+        msSQLReader = msSQLQuery.ExecuteReader()
+
+        While msSQLReader.Read
+            ' Delete if it exists, then insert
+            SQL = String.Format("DELETE FROM industryActivityProducts WHERE blueprintTypeID ={0} AND activityID = {1}", msSQLReader.GetValue(0), msSQLReader.GetValue(1))
+            Call Execute_msSQL(SQL)
+
+            ' Insert the blueprintTypeID as an output
+            SQL = String.Format("INSERT INTO industryActivityProducts VALUES ({0},{1},{0},1,1)", msSQLReader.GetValue(0), msSQLReader.GetValue(1))
+            Call Execute_msSQL(SQL)
+
+        End While
+
+        DB.CloseDB()
+
+    End Sub
+
     ' InsertNegativeBPTypeIDRecord
     Private Sub InsertNegativeBPTypeIDRecord(BPID As Long)
         Dim msSQL As String
@@ -9510,114 +9626,17 @@ Public Class frmMain
 
     End Sub
 
-    ' Returns a connection reference for internal use
-    Private Function DBConnectionRef() As SqlConnection
+    '' Returns a connection reference for internal use
+    'Private Function DBConnectionRef() As SqlConnection
 
-        ' Open the connection for reference
-        Dim DBRef As New SqlConnection(String.Format("Server={0}\{1};Database={2};Trusted_Connection=True;Connection Timeout=60;",
-                                             Environment.MachineName, SQLInstance, DatabaseName))
-        DBRef.Open()
+    '    ' Open the connection for reference
+    '    Dim DBRef As New SqlConnection(String.Format("Server={0}\{1};Database={2};Trusted_Connection=True;Connection Timeout=300;",
+    '                                         Environment.MachineName, SQLInstance, DatabaseName))
+    '    DBRef.Open()
 
-        Return DBRef
+    '    Return DBRef
 
-    End Function
-
-    ' PACKAGED_CONTAINER_VOLUMES
-    Private Sub Build_PACKAGED_CONTAINER_VOLUMES()
-        Dim SQL As String
-
-        ' Build the table in msSQL and use it later
-        SQL = String.Format("If OBJECT_ID('{0}') IS NOT NULL " +
-                            "   DROP TABLE {0} " +
-                            "   CREATE TABLE {0} (TYPE_ID INTEGER NOT NULL,PACKAGED_M3 INTEGER NOT NULL)", "PACKAGED_CONTAINER_VOLUMES")
-
-        Call Execute_msSQL(SQL)
-
-        ' Since this is all data from reddit post, just do inserts here
-        Execute_msSQL("INSERT INTO PACKAGED_CONTAINER_VOLUMES VALUES (33003,2500)")
-        Execute_msSQL("INSERT INTO PACKAGED_CONTAINER_VOLUMES VALUES (24445,1200)")
-        Execute_msSQL("INSERT INTO PACKAGED_CONTAINER_VOLUMES VALUES (11489,300)")
-        Execute_msSQL("INSERT INTO PACKAGED_CONTAINER_VOLUMES VALUES (33005,5000)")
-        Execute_msSQL("INSERT INTO PACKAGED_CONTAINER_VOLUMES VALUES (11488,150)")
-        Execute_msSQL("INSERT INTO PACKAGED_CONTAINER_VOLUMES VALUES (17365,65)")
-        Execute_msSQL("INSERT INTO PACKAGED_CONTAINER_VOLUMES VALUES (33007,1000)")
-        Execute_msSQL("INSERT INTO PACKAGED_CONTAINER_VOLUMES VALUES (3465,65)")
-        Execute_msSQL("INSERT INTO PACKAGED_CONTAINER_VOLUMES VALUES (3296,65)")
-        Execute_msSQL("INSERT INTO PACKAGED_CONTAINER_VOLUMES VALUES (17364,33)")
-        Execute_msSQL("INSERT INTO PACKAGED_CONTAINER_VOLUMES VALUES (33009,500)")
-        Execute_msSQL("INSERT INTO PACKAGED_CONTAINER_VOLUMES VALUES (3466,33)")
-        Execute_msSQL("INSERT INTO PACKAGED_CONTAINER_VOLUMES VALUES (3293,33)")
-        Execute_msSQL("INSERT INTO PACKAGED_CONTAINER_VOLUMES VALUES (17363,10)")
-        Execute_msSQL("INSERT INTO PACKAGED_CONTAINER_VOLUMES VALUES (33011,100)")
-        Execute_msSQL("INSERT INTO PACKAGED_CONTAINER_VOLUMES VALUES (3467,10)")
-        Execute_msSQL("INSERT INTO PACKAGED_CONTAINER_VOLUMES VALUES (3297,10)")
-        Execute_msSQL("INSERT INTO PACKAGED_CONTAINER_VOLUMES VALUES (17366,10000)")
-        Execute_msSQL("INSERT INTO PACKAGED_CONTAINER_VOLUMES VALUES (17367,50000)")
-        Execute_msSQL("INSERT INTO PACKAGED_CONTAINER_VOLUMES VALUES (17368,100000)")
-
-        pgMain.Visible = False
-        Application.DoEvents()
-
-    End Sub
-
-    ' PACKAGED_SHIP_VOLUMES 
-    Private Sub Build_PACKAGED_SHIP_VOLUMES()
-        Dim SQL As String
-
-        ' Build the table in msSQL and use it later
-        SQL = String.Format("If OBJECT_ID('{0}') IS NOT NULL " +
-                            "   DROP TABLE {0} " +
-                            "   CREATE TABLE {0} (GROUP_ID INTEGER NOT NULL,PACKAGED_M3 INTEGER NOT NULL)", "PACKAGED_SHIP_VOLUMES")
-
-        Call Execute_msSQL(SQL)
-
-        ' Since this is all data from reddit post, just do inserts here
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (324,2500)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (1201,15000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (419,15000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (27,50000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (898,50000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (1202,20000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (883,1300000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (29,500)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (547,1300000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (906,10000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (540,15000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (830,2500)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (26,10000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (420,5000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (485,1300000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (893,2500)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (381,50000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (543,3750)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (1283,2500)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (833,10000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (513,1300000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (25,2500)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (358,10000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (894,10000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (28,20000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (941,500000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (831,2500)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (541,5000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (902,1300000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (832,10000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (900,50000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (463,3750)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (1022,500)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (237,2500)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (31,500)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (834,2500)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (963,5000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (659,1300000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (1305,5000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (30,10000000)")
-        Execute_msSQL("INSERT INTO PACKAGED_SHIP_VOLUMES VALUES (380,20000)")
-
-        pgMain.Visible = False
-        Application.DoEvents()
-
-    End Sub
+    'End Function
 
 #End Region
 
@@ -9635,9 +9654,9 @@ Public Class frmMain
         Dim FileDirectory As String = ""
 
         If chkCreateTest.Checked Then
-            FileDirectory = MediaFireTestDirectory
+            FileDirectory = FileTestDirectory
         Else
-            FileDirectory = MediaFireDirectory
+            FileDirectory = FileDirectory
         End If
 
         On Error Resume Next
@@ -9722,7 +9741,7 @@ Public Class frmMain
             File.Delete(LatestTestVersionXML)
 
             VersionXMLFileName = LatestTestVersionXML
-            FileDirectory = MediaFireTestDirectory
+            FileDirectory = FileTestDirectory
 
             ' Loop through the settings sent and output each name and value
             ' Copy the new XML file into the root directory - so I don't get updates and then manually upload this to media fire so people don't get crazy updates
@@ -9771,14 +9790,14 @@ Public Class frmMain
 
                 writer.WriteStartElement("row")
                 writer.WriteAttributeString("Name", JSONDLL)
-                writer.WriteAttributeString("Version", "6.03")
+                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(JSONDLL).FileVersion)
                 writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & JSONDLL))
                 writer.WriteAttributeString("URL", TestJSONDLLURL)
                 writer.WriteEndElement()
 
                 writer.WriteStartElement("row")
                 writer.WriteAttributeString("Name", SQLiteDLL)
-                writer.WriteAttributeString("Version", "1.07.9.0")
+                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(SQLiteDLL).FileVersion)
                 writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & SQLiteDLL))
                 writer.WriteAttributeString("URL", TestSQLiteDLLURL)
                 writer.WriteEndElement()
@@ -9797,16 +9816,9 @@ Public Class frmMain
                 writer.WriteAttributeString("URL", TestEXEManifestURL)
                 writer.WriteEndElement()
 
-                'writer.WriteStartElement("row")
-                'writer.WriteAttributeString("Name", IonicZipFile)
-                'writer.WriteAttributeString("Version", "1.0")
-                'writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & IonicZipFile))
-                'writer.WriteAttributeString("URL", TestIconicZipFileURL)
-                'writer.WriteEndElement()
-
                 writer.WriteStartElement("row")
                 writer.WriteAttributeString("Name", MoreLinqDLL)
-                writer.WriteAttributeString("Version", "1.4")
+                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(MoreLinqDLL).FileVersion)
                 writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & MoreLinqDLL))
                 writer.WriteAttributeString("URL", MoreLinqDLLURL)
                 writer.WriteEndElement()
@@ -9817,7 +9829,7 @@ Public Class frmMain
         Else
             File.Delete(LatestVersionXML)
             VersionXMLFileName = LatestVersionXML
-            FileDirectory = MediaFireDirectory
+            FileDirectory = FileDirectory
 
             ' Loop through the settings sent and output each name and value
             ' Copy the new XML file into the root directory - so I don't get updates and then manually upload this to media fire so people don't get crazy updates

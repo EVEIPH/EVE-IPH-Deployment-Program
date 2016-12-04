@@ -26,6 +26,7 @@ Public Class SQLiteDBConnection
     ' Closes the database
     Public Sub CloseDB()
         DB.Close()
+        DB.Dispose()
     End Sub
 
     ' Provides a reference to the DB
@@ -33,9 +34,14 @@ Public Class SQLiteDBConnection
         Return DB
     End Function
 
+    Public Sub ClearPools()
+
+    End Sub
+
     ' Executes the SQL sent, which doesn't require a return value
     Public Sub ExecuteNonQuerySQL(ByVal SQL As String)
         Dim DBExecuteCmd As SQLiteCommand = DB.CreateCommand
+        DBExecuteCmd.CommandTimeout = 0
         DBExecuteCmd.CommandText = SQL
         DBExecuteCmd.ExecuteNonQuery()
         DBExecuteCmd.Dispose()

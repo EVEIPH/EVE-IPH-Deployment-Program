@@ -7,7 +7,7 @@ Public Class msSQLDBConnection
     Private DB As SqlConnection
 
     Public Sub New(ByVal DBFileName As String, InstanceName As String)
-        DB = New SqlConnection(String.Format("Server={0}\{1};Database={2};Trusted_Connection=True;Connection Timeout=300",
+        DB = New SqlConnection(String.Format("Server={0}\{1};Database={2};Trusted_Connection=True; Connection Timeout = 0",
                                              Environment.MachineName, InstanceName, DBFileName))
         DB.Open()
     End Sub
@@ -36,6 +36,7 @@ Public Class msSQLDBConnection
     Public Sub ExecuteNonQuerySQL(ByVal SQL As String)
         Dim Command As New SqlCommand(SQL, DB)
         Command.ExecuteNonQuery()
+        Command.CommandTimeout = 0
         Command = Nothing
     End Sub
 

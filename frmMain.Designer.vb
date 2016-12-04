@@ -26,35 +26,18 @@ Partial Class frmMain
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmMain))
         Me.FolderBrowserDialog = New System.Windows.Forms.FolderBrowserDialog()
         Me.ToolTip = New System.Windows.Forms.ToolTip(Me.components)
-        Me.TabControl1 = New System.Windows.Forms.TabControl()
-        Me.TabPage1 = New System.Windows.Forms.TabPage()
-        Me.chkCreateTest = New System.Windows.Forms.CheckBox()
-        Me.btnRefreshList = New System.Windows.Forms.Button()
-        Me.lblDBNameDisplay1 = New System.Windows.Forms.Label()
-        Me.lblDBNameDisplay = New System.Windows.Forms.Label()
-        Me.btnCopyFilesBuildXML = New System.Windows.Forms.Button()
-        Me.btnBuildBinary = New System.Windows.Forms.Button()
-        Me.lstFileInformation = New System.Windows.Forms.ListView()
-        Me.btnExit = New System.Windows.Forms.Button()
-        Me.pgMain = New System.Windows.Forms.ProgressBar()
-        Me.btnBuildSQLServerDB = New System.Windows.Forms.Button()
-        Me.lblTableName = New System.Windows.Forms.Label()
-        Me.btnBuildDatabase = New System.Windows.Forms.Button()
-        Me.btnImageCopy = New System.Windows.Forms.Button()
-        Me.ShapeContainer1 = New Microsoft.VisualBasic.PowerPacks.ShapeContainer()
-        Me.LineShape1 = New Microsoft.VisualBasic.PowerPacks.LineShape()
         Me.TabPage2 = New System.Windows.Forms.TabPage()
         Me.txtSqlInstanceName = New System.Windows.Forms.TextBox()
+        Me.txtImageVersion = New System.Windows.Forms.TextBox()
+        Me.txtVersionNumber = New System.Windows.Forms.TextBox()
+        Me.txtDBName = New System.Windows.Forms.TextBox()
         Me.lblSqlInstanceName = New System.Windows.Forms.Label()
         Me.lblTestPath = New System.Windows.Forms.Label()
         Me.btnSelectTestFilePath = New System.Windows.Forms.Button()
         Me.lblTest = New System.Windows.Forms.Label()
         Me.lblImageVersion = New System.Windows.Forms.Label()
-        Me.txtImageVersion = New System.Windows.Forms.TextBox()
         Me.Label1 = New System.Windows.Forms.Label()
-        Me.txtVersionNumber = New System.Windows.Forms.TextBox()
         Me.lblDBName = New System.Windows.Forms.Label()
-        Me.txtDBName = New System.Windows.Forms.TextBox()
         Me.btnSaveFilePath = New System.Windows.Forms.Button()
         Me.lblFilesPath = New System.Windows.Forms.Label()
         Me.btnSelectFilePath = New System.Windows.Forms.Button()
@@ -65,198 +48,40 @@ Partial Class frmMain
         Me.lblWorkingFolderPath = New System.Windows.Forms.Label()
         Me.btnSelectWorkingPath = New System.Windows.Forms.Button()
         Me.lblWorkingFolder = New System.Windows.Forms.Label()
-        Me.TabPage3 = New System.Windows.Forms.TabPage()
-        Me.TreeView = New System.Windows.Forms.TreeView()
-        Me.TabControl1.SuspendLayout()
-        Me.TabPage1.SuspendLayout()
+        Me.TabPage1 = New System.Windows.Forms.TabPage()
+        Me.chkCreateTest = New System.Windows.Forms.CheckBox()
+        Me.btnRefreshList = New System.Windows.Forms.Button()
+        Me.lblDBNameDisplay1 = New System.Windows.Forms.Label()
+        Me.lblDBNameDisplay = New System.Windows.Forms.Label()
+        Me.btnCopyFilesBuildXML = New System.Windows.Forms.Button()
+        Me.btnBuildBinary = New System.Windows.Forms.Button()
+        Me.lstFileInformation = New System.Windows.Forms.ListView()
+        Me.btnExit = New System.Windows.Forms.Button()
+        Me.pgMain = New System.Windows.Forms.ProgressBar()
+        Me.lblTableName = New System.Windows.Forms.Label()
+        Me.btnBuildDatabase = New System.Windows.Forms.Button()
+        Me.btnImageCopy = New System.Windows.Forms.Button()
+        Me.ShapeContainer1 = New Microsoft.VisualBasic.PowerPacks.ShapeContainer()
+        Me.LineShape1 = New Microsoft.VisualBasic.PowerPacks.LineShape()
+        Me.TabControl1 = New System.Windows.Forms.TabControl()
         Me.TabPage2.SuspendLayout()
-        Me.TabPage3.SuspendLayout()
+        Me.TabPage1.SuspendLayout()
+        Me.TabControl1.SuspendLayout()
         Me.SuspendLayout()
-        '
-        'TabControl1
-        '
-        Me.TabControl1.Controls.Add(Me.TabPage1)
-        Me.TabControl1.Controls.Add(Me.TabPage2)
-        Me.TabControl1.Controls.Add(Me.TabPage3)
-        Me.TabControl1.Location = New System.Drawing.Point(1, 2)
-        Me.TabControl1.Name = "TabControl1"
-        Me.TabControl1.SelectedIndex = 0
-        Me.TabControl1.Size = New System.Drawing.Size(471, 378)
-        Me.TabControl1.TabIndex = 19
-        '
-        'TabPage1
-        '
-        Me.TabPage1.Controls.Add(Me.chkCreateTest)
-        Me.TabPage1.Controls.Add(Me.btnRefreshList)
-        Me.TabPage1.Controls.Add(Me.lblDBNameDisplay1)
-        Me.TabPage1.Controls.Add(Me.lblDBNameDisplay)
-        Me.TabPage1.Controls.Add(Me.btnCopyFilesBuildXML)
-        Me.TabPage1.Controls.Add(Me.btnBuildBinary)
-        Me.TabPage1.Controls.Add(Me.lstFileInformation)
-        Me.TabPage1.Controls.Add(Me.btnExit)
-        Me.TabPage1.Controls.Add(Me.pgMain)
-        Me.TabPage1.Controls.Add(Me.btnBuildSQLServerDB)
-        Me.TabPage1.Controls.Add(Me.lblTableName)
-        Me.TabPage1.Controls.Add(Me.btnBuildDatabase)
-        Me.TabPage1.Controls.Add(Me.btnImageCopy)
-        Me.TabPage1.Controls.Add(Me.ShapeContainer1)
-        Me.TabPage1.Location = New System.Drawing.Point(4, 22)
-        Me.TabPage1.Name = "TabPage1"
-        Me.TabPage1.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPage1.Size = New System.Drawing.Size(463, 352)
-        Me.TabPage1.TabIndex = 0
-        Me.TabPage1.Text = "DB Updater & Deployment"
-        Me.TabPage1.UseVisualStyleBackColor = True
-        '
-        'chkCreateTest
-        '
-        Me.chkCreateTest.Location = New System.Drawing.Point(344, 157)
-        Me.chkCreateTest.Name = "chkCreateTest"
-        Me.chkCreateTest.Size = New System.Drawing.Size(95, 40)
-        Me.chkCreateTest.TabIndex = 13
-        Me.chkCreateTest.Text = "Create Test Version"
-        Me.chkCreateTest.UseVisualStyleBackColor = True
-        '
-        'btnRefreshList
-        '
-        Me.btnRefreshList.Location = New System.Drawing.Point(236, 157)
-        Me.btnRefreshList.Name = "btnRefreshList"
-        Me.btnRefreshList.Size = New System.Drawing.Size(97, 40)
-        Me.btnRefreshList.TabIndex = 12
-        Me.btnRefreshList.Text = "Refresh List"
-        Me.btnRefreshList.UseVisualStyleBackColor = True
-        '
-        'lblDBNameDisplay1
-        '
-        Me.lblDBNameDisplay1.AutoSize = True
-        Me.lblDBNameDisplay1.Location = New System.Drawing.Point(76, 19)
-        Me.lblDBNameDisplay1.Name = "lblDBNameDisplay1"
-        Me.lblDBNameDisplay1.Size = New System.Drawing.Size(87, 13)
-        Me.lblDBNameDisplay1.TabIndex = 1
-        Me.lblDBNameDisplay1.Text = "Database Name:"
-        '
-        'lblDBNameDisplay
-        '
-        Me.lblDBNameDisplay.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-        Me.lblDBNameDisplay.Location = New System.Drawing.Point(169, 15)
-        Me.lblDBNameDisplay.Name = "lblDBNameDisplay"
-        Me.lblDBNameDisplay.Size = New System.Drawing.Size(217, 20)
-        Me.lblDBNameDisplay.TabIndex = 2
-        Me.lblDBNameDisplay.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
-        '
-        'btnCopyFilesBuildXML
-        '
-        Me.btnCopyFilesBuildXML.Location = New System.Drawing.Point(20, 157)
-        Me.btnCopyFilesBuildXML.Name = "btnCopyFilesBuildXML"
-        Me.btnCopyFilesBuildXML.Size = New System.Drawing.Size(97, 40)
-        Me.btnCopyFilesBuildXML.TabIndex = 9
-        Me.btnCopyFilesBuildXML.Text = "Update Files for Export"
-        Me.btnCopyFilesBuildXML.UseVisualStyleBackColor = True
-        '
-        'btnBuildBinary
-        '
-        Me.btnBuildBinary.Location = New System.Drawing.Point(128, 157)
-        Me.btnBuildBinary.Name = "btnBuildBinary"
-        Me.btnBuildBinary.Size = New System.Drawing.Size(97, 40)
-        Me.btnBuildBinary.TabIndex = 10
-        Me.btnBuildBinary.Text = "Build Binary"
-        Me.btnBuildBinary.UseVisualStyleBackColor = True
-        '
-        'lstFileInformation
-        '
-        Me.lstFileInformation.FullRowSelect = True
-        Me.lstFileInformation.GridLines = True
-        Me.lstFileInformation.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable
-        Me.lstFileInformation.Location = New System.Drawing.Point(20, 205)
-        Me.lstFileInformation.Name = "lstFileInformation"
-        Me.lstFileInformation.Size = New System.Drawing.Size(421, 130)
-        Me.lstFileInformation.TabIndex = 11
-        Me.lstFileInformation.UseCompatibleStateImageBehavior = False
-        Me.lstFileInformation.View = System.Windows.Forms.View.Details
-        '
-        'btnExit
-        '
-        Me.btnExit.Location = New System.Drawing.Point(344, 43)
-        Me.btnExit.Name = "btnExit"
-        Me.btnExit.Size = New System.Drawing.Size(97, 40)
-        Me.btnExit.TabIndex = 6
-        Me.btnExit.Text = "Exit"
-        Me.btnExit.UseVisualStyleBackColor = True
-        '
-        'pgMain
-        '
-        Me.pgMain.Location = New System.Drawing.Point(20, 93)
-        Me.pgMain.Name = "pgMain"
-        Me.pgMain.Size = New System.Drawing.Size(421, 18)
-        Me.pgMain.TabIndex = 7
-        Me.pgMain.Visible = False
-        '
-        'btnBuildSQLServerDB
-        '
-        Me.btnBuildSQLServerDB.Location = New System.Drawing.Point(236, 43)
-        Me.btnBuildSQLServerDB.Name = "btnBuildSQLServerDB"
-        Me.btnBuildSQLServerDB.Size = New System.Drawing.Size(97, 40)
-        Me.btnBuildSQLServerDB.TabIndex = 5
-        Me.btnBuildSQLServerDB.Text = "Update SQL Server DB"
-        Me.btnBuildSQLServerDB.UseVisualStyleBackColor = True
-        '
-        'lblTableName
-        '
-        Me.lblTableName.Location = New System.Drawing.Point(20, 117)
-        Me.lblTableName.Name = "lblTableName"
-        Me.lblTableName.Size = New System.Drawing.Size(421, 18)
-        Me.lblTableName.TabIndex = 8
-        Me.lblTableName.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
-        '
-        'btnBuildDatabase
-        '
-        Me.btnBuildDatabase.Location = New System.Drawing.Point(20, 43)
-        Me.btnBuildDatabase.Name = "btnBuildDatabase"
-        Me.btnBuildDatabase.Size = New System.Drawing.Size(97, 40)
-        Me.btnBuildDatabase.TabIndex = 3
-        Me.btnBuildDatabase.Text = "Build DB"
-        Me.btnBuildDatabase.UseVisualStyleBackColor = True
-        '
-        'btnImageCopy
-        '
-        Me.btnImageCopy.Location = New System.Drawing.Point(128, 43)
-        Me.btnImageCopy.Name = "btnImageCopy"
-        Me.btnImageCopy.Size = New System.Drawing.Size(97, 40)
-        Me.btnImageCopy.TabIndex = 4
-        Me.btnImageCopy.Text = "Image Copy"
-        Me.btnImageCopy.UseVisualStyleBackColor = True
-        '
-        'ShapeContainer1
-        '
-        Me.ShapeContainer1.Location = New System.Drawing.Point(3, 3)
-        Me.ShapeContainer1.Margin = New System.Windows.Forms.Padding(0)
-        Me.ShapeContainer1.Name = "ShapeContainer1"
-        Me.ShapeContainer1.Shapes.AddRange(New Microsoft.VisualBasic.PowerPacks.Shape() {Me.LineShape1})
-        Me.ShapeContainer1.Size = New System.Drawing.Size(457, 346)
-        Me.ShapeContainer1.TabIndex = 0
-        Me.ShapeContainer1.TabStop = False
-        '
-        'LineShape1
-        '
-        Me.LineShape1.Name = "LineShape1"
-        Me.LineShape1.X1 = 21
-        Me.LineShape1.X2 = 435
-        Me.LineShape1.Y1 = 146
-        Me.LineShape1.Y2 = 146
         '
         'TabPage2
         '
         Me.TabPage2.Controls.Add(Me.txtSqlInstanceName)
+        Me.TabPage2.Controls.Add(Me.txtImageVersion)
+        Me.TabPage2.Controls.Add(Me.txtVersionNumber)
+        Me.TabPage2.Controls.Add(Me.txtDBName)
         Me.TabPage2.Controls.Add(Me.lblSqlInstanceName)
         Me.TabPage2.Controls.Add(Me.lblTestPath)
         Me.TabPage2.Controls.Add(Me.btnSelectTestFilePath)
         Me.TabPage2.Controls.Add(Me.lblTest)
         Me.TabPage2.Controls.Add(Me.lblImageVersion)
-        Me.TabPage2.Controls.Add(Me.txtImageVersion)
         Me.TabPage2.Controls.Add(Me.Label1)
-        Me.TabPage2.Controls.Add(Me.txtVersionNumber)
         Me.TabPage2.Controls.Add(Me.lblDBName)
-        Me.TabPage2.Controls.Add(Me.txtDBName)
         Me.TabPage2.Controls.Add(Me.btnSaveFilePath)
         Me.TabPage2.Controls.Add(Me.lblFilesPath)
         Me.TabPage2.Controls.Add(Me.btnSelectFilePath)
@@ -270,22 +95,43 @@ Partial Class frmMain
         Me.TabPage2.Location = New System.Drawing.Point(4, 22)
         Me.TabPage2.Name = "TabPage2"
         Me.TabPage2.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPage2.Size = New System.Drawing.Size(463, 352)
+        Me.TabPage2.Size = New System.Drawing.Size(366, 464)
         Me.TabPage2.TabIndex = 1
         Me.TabPage2.Text = "File Path Settings"
         Me.TabPage2.UseVisualStyleBackColor = True
         '
         'txtSqlInstanceName
         '
-        Me.txtSqlInstanceName.Location = New System.Drawing.Point(131, 46)
+        Me.txtSqlInstanceName.Location = New System.Drawing.Point(127, 46)
         Me.txtSqlInstanceName.Name = "txtSqlInstanceName"
         Me.txtSqlInstanceName.Size = New System.Drawing.Size(96, 20)
         Me.txtSqlInstanceName.TabIndex = 20
         '
+        'txtImageVersion
+        '
+        Me.txtImageVersion.Location = New System.Drawing.Point(229, 23)
+        Me.txtImageVersion.Name = "txtImageVersion"
+        Me.txtImageVersion.Size = New System.Drawing.Size(122, 20)
+        Me.txtImageVersion.TabIndex = 3
+        '
+        'txtVersionNumber
+        '
+        Me.txtVersionNumber.Location = New System.Drawing.Point(313, 46)
+        Me.txtVersionNumber.Name = "txtVersionNumber"
+        Me.txtVersionNumber.Size = New System.Drawing.Size(38, 20)
+        Me.txtVersionNumber.TabIndex = 5
+        '
+        'txtDBName
+        '
+        Me.txtDBName.Location = New System.Drawing.Point(18, 23)
+        Me.txtDBName.Name = "txtDBName"
+        Me.txtDBName.Size = New System.Drawing.Size(205, 20)
+        Me.txtDBName.TabIndex = 1
+        '
         'lblSqlInstanceName
         '
         Me.lblSqlInstanceName.AutoSize = True
-        Me.lblSqlInstanceName.Location = New System.Drawing.Point(19, 49)
+        Me.lblSqlInstanceName.Location = New System.Drawing.Point(15, 49)
         Me.lblSqlInstanceName.Name = "lblSqlInstanceName"
         Me.lblSqlInstanceName.Size = New System.Drawing.Size(106, 13)
         Me.lblSqlInstanceName.TabIndex = 19
@@ -294,15 +140,15 @@ Partial Class frmMain
         'lblTestPath
         '
         Me.lblTestPath.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-        Me.lblTestPath.Location = New System.Drawing.Point(22, 151)
+        Me.lblTestPath.Location = New System.Drawing.Point(18, 151)
         Me.lblTestPath.Name = "lblTestPath"
-        Me.lblTestPath.Size = New System.Drawing.Size(421, 20)
+        Me.lblTestPath.Size = New System.Drawing.Size(333, 20)
         Me.lblTestPath.TabIndex = 17
         Me.lblTestPath.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         '
         'btnSelectTestFilePath
         '
-        Me.btnSelectTestFilePath.Location = New System.Drawing.Point(22, 174)
+        Me.btnSelectTestFilePath.Location = New System.Drawing.Point(18, 174)
         Me.btnSelectTestFilePath.Name = "btnSelectTestFilePath"
         Me.btnSelectTestFilePath.Size = New System.Drawing.Size(55, 23)
         Me.btnSelectTestFilePath.TabIndex = 18
@@ -312,7 +158,7 @@ Partial Class frmMain
         'lblTest
         '
         Me.lblTest.AutoSize = True
-        Me.lblTest.Location = New System.Drawing.Point(19, 135)
+        Me.lblTest.Location = New System.Drawing.Point(15, 135)
         Me.lblTest.Name = "lblTest"
         Me.lblTest.Size = New System.Drawing.Size(122, 13)
         Me.lblTest.TabIndex = 16
@@ -321,54 +167,33 @@ Partial Class frmMain
         'lblImageVersion
         '
         Me.lblImageVersion.AutoSize = True
-        Me.lblImageVersion.Location = New System.Drawing.Point(230, 7)
+        Me.lblImageVersion.Location = New System.Drawing.Point(226, 7)
         Me.lblImageVersion.Name = "lblImageVersion"
         Me.lblImageVersion.Size = New System.Drawing.Size(77, 13)
         Me.lblImageVersion.TabIndex = 2
         Me.lblImageVersion.Text = "Image Version:"
         '
-        'txtImageVersion
-        '
-        Me.txtImageVersion.Location = New System.Drawing.Point(233, 23)
-        Me.txtImageVersion.Name = "txtImageVersion"
-        Me.txtImageVersion.Size = New System.Drawing.Size(122, 20)
-        Me.txtImageVersion.TabIndex = 3
-        '
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(358, 7)
+        Me.Label1.Location = New System.Drawing.Point(229, 53)
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(85, 13)
         Me.Label1.TabIndex = 4
         Me.Label1.Text = "Version Number:"
         '
-        'txtVersionNumber
-        '
-        Me.txtVersionNumber.Location = New System.Drawing.Point(361, 23)
-        Me.txtVersionNumber.Name = "txtVersionNumber"
-        Me.txtVersionNumber.Size = New System.Drawing.Size(82, 20)
-        Me.txtVersionNumber.TabIndex = 5
-        '
         'lblDBName
         '
         Me.lblDBName.AutoSize = True
-        Me.lblDBName.Location = New System.Drawing.Point(19, 7)
+        Me.lblDBName.Location = New System.Drawing.Point(15, 7)
         Me.lblDBName.Name = "lblDBName"
         Me.lblDBName.Size = New System.Drawing.Size(87, 13)
         Me.lblDBName.TabIndex = 0
         Me.lblDBName.Text = "Database Name:"
         '
-        'txtDBName
-        '
-        Me.txtDBName.Location = New System.Drawing.Point(22, 23)
-        Me.txtDBName.Name = "txtDBName"
-        Me.txtDBName.Size = New System.Drawing.Size(205, 20)
-        Me.txtDBName.TabIndex = 1
-        '
         'btnSaveFilePath
         '
-        Me.btnSaveFilePath.Location = New System.Drawing.Point(183, 317)
+        Me.btnSaveFilePath.Location = New System.Drawing.Point(127, 343)
         Me.btnSaveFilePath.Name = "btnSaveFilePath"
         Me.btnSaveFilePath.Size = New System.Drawing.Size(97, 28)
         Me.btnSaveFilePath.TabIndex = 15
@@ -378,15 +203,15 @@ Partial Class frmMain
         'lblFilesPath
         '
         Me.lblFilesPath.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-        Me.lblFilesPath.Location = New System.Drawing.Point(22, 86)
+        Me.lblFilesPath.Location = New System.Drawing.Point(18, 86)
         Me.lblFilesPath.Name = "lblFilesPath"
-        Me.lblFilesPath.Size = New System.Drawing.Size(421, 20)
+        Me.lblFilesPath.Size = New System.Drawing.Size(333, 20)
         Me.lblFilesPath.TabIndex = 7
         Me.lblFilesPath.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         '
         'btnSelectFilePath
         '
-        Me.btnSelectFilePath.Location = New System.Drawing.Point(22, 109)
+        Me.btnSelectFilePath.Location = New System.Drawing.Point(18, 109)
         Me.btnSelectFilePath.Name = "btnSelectFilePath"
         Me.btnSelectFilePath.Size = New System.Drawing.Size(55, 23)
         Me.btnSelectFilePath.TabIndex = 8
@@ -396,7 +221,7 @@ Partial Class frmMain
         'lblFiles
         '
         Me.lblFiles.AutoSize = True
-        Me.lblFiles.Location = New System.Drawing.Point(19, 70)
+        Me.lblFiles.Location = New System.Drawing.Point(15, 70)
         Me.lblFiles.Name = "lblFiles"
         Me.lblFiles.Size = New System.Drawing.Size(98, 13)
         Me.lblFiles.TabIndex = 6
@@ -405,15 +230,15 @@ Partial Class frmMain
         'lblRootDebugFolderPath
         '
         Me.lblRootDebugFolderPath.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-        Me.lblRootDebugFolderPath.Location = New System.Drawing.Point(22, 285)
+        Me.lblRootDebugFolderPath.Location = New System.Drawing.Point(18, 285)
         Me.lblRootDebugFolderPath.Name = "lblRootDebugFolderPath"
-        Me.lblRootDebugFolderPath.Size = New System.Drawing.Size(421, 20)
+        Me.lblRootDebugFolderPath.Size = New System.Drawing.Size(333, 20)
         Me.lblRootDebugFolderPath.TabIndex = 13
         Me.lblRootDebugFolderPath.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         '
         'btnSelectRootDebugPath
         '
-        Me.btnSelectRootDebugPath.Location = New System.Drawing.Point(22, 308)
+        Me.btnSelectRootDebugPath.Location = New System.Drawing.Point(18, 308)
         Me.btnSelectRootDebugPath.Name = "btnSelectRootDebugPath"
         Me.btnSelectRootDebugPath.Size = New System.Drawing.Size(55, 23)
         Me.btnSelectRootDebugPath.TabIndex = 14
@@ -423,7 +248,7 @@ Partial Class frmMain
         'lblRootDebugFolder
         '
         Me.lblRootDebugFolder.AutoSize = True
-        Me.lblRootDebugFolder.Location = New System.Drawing.Point(19, 269)
+        Me.lblRootDebugFolder.Location = New System.Drawing.Point(15, 269)
         Me.lblRootDebugFolder.Name = "lblRootDebugFolder"
         Me.lblRootDebugFolder.Size = New System.Drawing.Size(100, 13)
         Me.lblRootDebugFolder.TabIndex = 12
@@ -432,15 +257,15 @@ Partial Class frmMain
         'lblWorkingFolderPath
         '
         Me.lblWorkingFolderPath.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-        Me.lblWorkingFolderPath.Location = New System.Drawing.Point(22, 220)
+        Me.lblWorkingFolderPath.Location = New System.Drawing.Point(18, 220)
         Me.lblWorkingFolderPath.Name = "lblWorkingFolderPath"
-        Me.lblWorkingFolderPath.Size = New System.Drawing.Size(421, 20)
+        Me.lblWorkingFolderPath.Size = New System.Drawing.Size(333, 20)
         Me.lblWorkingFolderPath.TabIndex = 10
         Me.lblWorkingFolderPath.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
         '
         'btnSelectWorkingPath
         '
-        Me.btnSelectWorkingPath.Location = New System.Drawing.Point(22, 243)
+        Me.btnSelectWorkingPath.Location = New System.Drawing.Point(18, 243)
         Me.btnSelectWorkingPath.Name = "btnSelectWorkingPath"
         Me.btnSelectWorkingPath.Size = New System.Drawing.Size(55, 23)
         Me.btnSelectWorkingPath.TabIndex = 11
@@ -450,90 +275,229 @@ Partial Class frmMain
         'lblWorkingFolder
         '
         Me.lblWorkingFolder.AutoSize = True
-        Me.lblWorkingFolder.Location = New System.Drawing.Point(19, 204)
+        Me.lblWorkingFolder.Location = New System.Drawing.Point(15, 204)
         Me.lblWorkingFolder.Name = "lblWorkingFolder"
         Me.lblWorkingFolder.Size = New System.Drawing.Size(82, 13)
         Me.lblWorkingFolder.TabIndex = 9
         Me.lblWorkingFolder.Text = "Working Folder:"
         '
-        'TabPage3
+        'TabPage1
         '
-        Me.TabPage3.Controls.Add(Me.TreeView)
-        Me.TabPage3.Location = New System.Drawing.Point(4, 22)
-        Me.TabPage3.Name = "TabPage3"
-        Me.TabPage3.Size = New System.Drawing.Size(463, 352)
-        Me.TabPage3.TabIndex = 2
-        Me.TabPage3.Text = "Misc"
-        Me.TabPage3.UseVisualStyleBackColor = True
+        Me.TabPage1.Controls.Add(Me.chkCreateTest)
+        Me.TabPage1.Controls.Add(Me.btnRefreshList)
+        Me.TabPage1.Controls.Add(Me.lblDBNameDisplay1)
+        Me.TabPage1.Controls.Add(Me.lblDBNameDisplay)
+        Me.TabPage1.Controls.Add(Me.btnCopyFilesBuildXML)
+        Me.TabPage1.Controls.Add(Me.btnBuildBinary)
+        Me.TabPage1.Controls.Add(Me.lstFileInformation)
+        Me.TabPage1.Controls.Add(Me.btnExit)
+        Me.TabPage1.Controls.Add(Me.pgMain)
+        Me.TabPage1.Controls.Add(Me.lblTableName)
+        Me.TabPage1.Controls.Add(Me.btnBuildDatabase)
+        Me.TabPage1.Controls.Add(Me.btnImageCopy)
+        Me.TabPage1.Controls.Add(Me.ShapeContainer1)
+        Me.TabPage1.Location = New System.Drawing.Point(4, 22)
+        Me.TabPage1.Name = "TabPage1"
+        Me.TabPage1.Padding = New System.Windows.Forms.Padding(3)
+        Me.TabPage1.Size = New System.Drawing.Size(366, 464)
+        Me.TabPage1.TabIndex = 0
+        Me.TabPage1.Text = "DB Updater & Deployment"
+        Me.TabPage1.UseVisualStyleBackColor = True
         '
-        'TreeView
+        'chkCreateTest
         '
-        Me.TreeView.Location = New System.Drawing.Point(5, 3)
-        Me.TreeView.Name = "TreeView"
-        Me.TreeView.Size = New System.Drawing.Size(453, 346)
-        Me.TreeView.TabIndex = 17
+        Me.chkCreateTest.Location = New System.Drawing.Point(121, 441)
+        Me.chkCreateTest.Name = "chkCreateTest"
+        Me.chkCreateTest.Size = New System.Drawing.Size(124, 21)
+        Me.chkCreateTest.TabIndex = 13
+        Me.chkCreateTest.Text = "Create Test Version"
+        Me.chkCreateTest.UseVisualStyleBackColor = True
+        '
+        'btnRefreshList
+        '
+        Me.btnRefreshList.Location = New System.Drawing.Point(243, 157)
+        Me.btnRefreshList.Name = "btnRefreshList"
+        Me.btnRefreshList.Size = New System.Drawing.Size(97, 40)
+        Me.btnRefreshList.TabIndex = 12
+        Me.btnRefreshList.Text = "Refresh List"
+        Me.btnRefreshList.UseVisualStyleBackColor = True
+        '
+        'lblDBNameDisplay1
+        '
+        Me.lblDBNameDisplay1.AutoSize = True
+        Me.lblDBNameDisplay1.Location = New System.Drawing.Point(30, 19)
+        Me.lblDBNameDisplay1.Name = "lblDBNameDisplay1"
+        Me.lblDBNameDisplay1.Size = New System.Drawing.Size(87, 13)
+        Me.lblDBNameDisplay1.TabIndex = 1
+        Me.lblDBNameDisplay1.Text = "Database Name:"
+        '
+        'lblDBNameDisplay
+        '
+        Me.lblDBNameDisplay.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+        Me.lblDBNameDisplay.Location = New System.Drawing.Point(123, 15)
+        Me.lblDBNameDisplay.Name = "lblDBNameDisplay"
+        Me.lblDBNameDisplay.Size = New System.Drawing.Size(217, 20)
+        Me.lblDBNameDisplay.TabIndex = 2
+        Me.lblDBNameDisplay.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+        '
+        'btnCopyFilesBuildXML
+        '
+        Me.btnCopyFilesBuildXML.Location = New System.Drawing.Point(27, 157)
+        Me.btnCopyFilesBuildXML.Name = "btnCopyFilesBuildXML"
+        Me.btnCopyFilesBuildXML.Size = New System.Drawing.Size(97, 40)
+        Me.btnCopyFilesBuildXML.TabIndex = 9
+        Me.btnCopyFilesBuildXML.Text = "Update Files for Export"
+        Me.btnCopyFilesBuildXML.UseVisualStyleBackColor = True
+        '
+        'btnBuildBinary
+        '
+        Me.btnBuildBinary.Location = New System.Drawing.Point(135, 157)
+        Me.btnBuildBinary.Name = "btnBuildBinary"
+        Me.btnBuildBinary.Size = New System.Drawing.Size(97, 40)
+        Me.btnBuildBinary.TabIndex = 10
+        Me.btnBuildBinary.Text = "Build Binary"
+        Me.btnBuildBinary.UseVisualStyleBackColor = True
+        '
+        'lstFileInformation
+        '
+        Me.lstFileInformation.FullRowSelect = True
+        Me.lstFileInformation.GridLines = True
+        Me.lstFileInformation.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable
+        Me.lstFileInformation.Location = New System.Drawing.Point(27, 205)
+        Me.lstFileInformation.Name = "lstFileInformation"
+        Me.lstFileInformation.Size = New System.Drawing.Size(313, 233)
+        Me.lstFileInformation.TabIndex = 11
+        Me.lstFileInformation.UseCompatibleStateImageBehavior = False
+        Me.lstFileInformation.View = System.Windows.Forms.View.Details
+        '
+        'btnExit
+        '
+        Me.btnExit.Location = New System.Drawing.Point(243, 43)
+        Me.btnExit.Name = "btnExit"
+        Me.btnExit.Size = New System.Drawing.Size(97, 40)
+        Me.btnExit.TabIndex = 6
+        Me.btnExit.Text = "Exit"
+        Me.btnExit.UseVisualStyleBackColor = True
+        '
+        'pgMain
+        '
+        Me.pgMain.Location = New System.Drawing.Point(27, 93)
+        Me.pgMain.Name = "pgMain"
+        Me.pgMain.Size = New System.Drawing.Size(313, 18)
+        Me.pgMain.TabIndex = 7
+        Me.pgMain.Visible = False
+        '
+        'lblTableName
+        '
+        Me.lblTableName.Location = New System.Drawing.Point(27, 117)
+        Me.lblTableName.Name = "lblTableName"
+        Me.lblTableName.Size = New System.Drawing.Size(313, 18)
+        Me.lblTableName.TabIndex = 8
+        Me.lblTableName.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
+        '
+        'btnBuildDatabase
+        '
+        Me.btnBuildDatabase.Location = New System.Drawing.Point(27, 43)
+        Me.btnBuildDatabase.Name = "btnBuildDatabase"
+        Me.btnBuildDatabase.Size = New System.Drawing.Size(97, 40)
+        Me.btnBuildDatabase.TabIndex = 3
+        Me.btnBuildDatabase.Text = "Build DB"
+        Me.btnBuildDatabase.UseVisualStyleBackColor = True
+        '
+        'btnImageCopy
+        '
+        Me.btnImageCopy.Location = New System.Drawing.Point(135, 43)
+        Me.btnImageCopy.Name = "btnImageCopy"
+        Me.btnImageCopy.Size = New System.Drawing.Size(97, 40)
+        Me.btnImageCopy.TabIndex = 4
+        Me.btnImageCopy.Text = "Image Copy"
+        Me.btnImageCopy.UseVisualStyleBackColor = True
+        '
+        'ShapeContainer1
+        '
+        Me.ShapeContainer1.Location = New System.Drawing.Point(3, 3)
+        Me.ShapeContainer1.Margin = New System.Windows.Forms.Padding(0)
+        Me.ShapeContainer1.Name = "ShapeContainer1"
+        Me.ShapeContainer1.Shapes.AddRange(New Microsoft.VisualBasic.PowerPacks.Shape() {Me.LineShape1})
+        Me.ShapeContainer1.Size = New System.Drawing.Size(360, 458)
+        Me.ShapeContainer1.TabIndex = 0
+        Me.ShapeContainer1.TabStop = False
+        '
+        'LineShape1
+        '
+        Me.LineShape1.Name = "LineShape1"
+        Me.LineShape1.X1 = 23
+        Me.LineShape1.X2 = 329
+        Me.LineShape1.Y1 = 146
+        Me.LineShape1.Y2 = 146
+        '
+        'TabControl1
+        '
+        Me.TabControl1.Controls.Add(Me.TabPage1)
+        Me.TabControl1.Controls.Add(Me.TabPage2)
+        Me.TabControl1.Location = New System.Drawing.Point(1, 2)
+        Me.TabControl1.Name = "TabControl1"
+        Me.TabControl1.SelectedIndex = 0
+        Me.TabControl1.Size = New System.Drawing.Size(374, 490)
+        Me.TabControl1.TabIndex = 19
         '
         'frmMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.AutoSize = True
-        Me.ClientSize = New System.Drawing.Size(471, 381)
+        Me.ClientSize = New System.Drawing.Size(374, 496)
         Me.Controls.Add(Me.TabControl1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmMain"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "EVE IPH Deployment Program"
-        Me.TabControl1.ResumeLayout(False)
-        Me.TabPage1.ResumeLayout(False)
-        Me.TabPage1.PerformLayout()
         Me.TabPage2.ResumeLayout(False)
         Me.TabPage2.PerformLayout()
-        Me.TabPage3.ResumeLayout(False)
+        Me.TabPage1.ResumeLayout(False)
+        Me.TabPage1.PerformLayout()
+        Me.TabControl1.ResumeLayout(False)
         Me.ResumeLayout(False)
 
     End Sub
     Friend WithEvents FolderBrowserDialog As System.Windows.Forms.FolderBrowserDialog
     Friend WithEvents ToolTip As System.Windows.Forms.ToolTip
-    Friend WithEvents TabControl1 As System.Windows.Forms.TabControl
-    Friend WithEvents TabPage1 As System.Windows.Forms.TabPage
-    Friend WithEvents pgMain As System.Windows.Forms.ProgressBar
-    Friend WithEvents btnBuildSQLServerDB As System.Windows.Forms.Button
-    Friend WithEvents lblTableName As System.Windows.Forms.Label
-    Friend WithEvents btnBuildDatabase As System.Windows.Forms.Button
-    Friend WithEvents btnImageCopy As System.Windows.Forms.Button
-    Friend WithEvents TabPage2 As System.Windows.Forms.TabPage
-    Friend WithEvents btnExit As System.Windows.Forms.Button
-    Friend WithEvents lblRootDebugFolderPath As System.Windows.Forms.Label
-    Friend WithEvents btnSelectRootDebugPath As System.Windows.Forms.Button
-    Friend WithEvents lblRootDebugFolder As System.Windows.Forms.Label
-    Friend WithEvents lblWorkingFolderPath As System.Windows.Forms.Label
-    Friend WithEvents btnSelectWorkingPath As System.Windows.Forms.Button
-    Friend WithEvents lblWorkingFolder As System.Windows.Forms.Label
-    Friend WithEvents lblFilesPath As System.Windows.Forms.Label
-    Friend WithEvents btnSelectFilePath As System.Windows.Forms.Button
-    Friend WithEvents lblFiles As System.Windows.Forms.Label
-    Friend WithEvents btnCopyFilesBuildXML As System.Windows.Forms.Button
-    Friend WithEvents btnBuildBinary As System.Windows.Forms.Button
-    Friend WithEvents lstFileInformation As System.Windows.Forms.ListView
-    Friend WithEvents ShapeContainer1 As Microsoft.VisualBasic.PowerPacks.ShapeContainer
-    Friend WithEvents LineShape1 As Microsoft.VisualBasic.PowerPacks.LineShape
-    Friend WithEvents btnSaveFilePath As System.Windows.Forms.Button
-    Friend WithEvents lblDBNameDisplay1 As System.Windows.Forms.Label
-    Friend WithEvents lblDBNameDisplay As System.Windows.Forms.Label
-    Friend WithEvents Label1 As System.Windows.Forms.Label
-    Friend WithEvents txtVersionNumber As System.Windows.Forms.TextBox
-    Friend WithEvents lblDBName As System.Windows.Forms.Label
-    Friend WithEvents txtDBName As System.Windows.Forms.TextBox
-    Friend WithEvents lblImageVersion As System.Windows.Forms.Label
-    Friend WithEvents txtImageVersion As System.Windows.Forms.TextBox
-    Friend WithEvents btnRefreshList As System.Windows.Forms.Button
-    Friend WithEvents TabPage3 As System.Windows.Forms.TabPage
-    Friend WithEvents TreeView As System.Windows.Forms.TreeView
-    Friend WithEvents chkCreateTest As System.Windows.Forms.CheckBox
-    Friend WithEvents lblTestPath As System.Windows.Forms.Label
-    Friend WithEvents btnSelectTestFilePath As System.Windows.Forms.Button
-    Friend WithEvents lblTest As System.Windows.Forms.Label
+    Friend WithEvents TabPage2 As TabPage
     Friend WithEvents txtSqlInstanceName As TextBox
+    Friend WithEvents txtImageVersion As TextBox
+    Friend WithEvents txtVersionNumber As TextBox
+    Friend WithEvents txtDBName As TextBox
     Friend WithEvents lblSqlInstanceName As Label
+    Friend WithEvents lblTestPath As Label
+    Friend WithEvents btnSelectTestFilePath As Button
+    Friend WithEvents lblTest As Label
+    Friend WithEvents lblImageVersion As Label
+    Friend WithEvents Label1 As Label
+    Friend WithEvents lblDBName As Label
+    Friend WithEvents btnSaveFilePath As Button
+    Friend WithEvents lblFilesPath As Label
+    Friend WithEvents btnSelectFilePath As Button
+    Friend WithEvents lblFiles As Label
+    Friend WithEvents lblRootDebugFolderPath As Label
+    Friend WithEvents btnSelectRootDebugPath As Button
+    Friend WithEvents lblRootDebugFolder As Label
+    Friend WithEvents lblWorkingFolderPath As Label
+    Friend WithEvents btnSelectWorkingPath As Button
+    Friend WithEvents lblWorkingFolder As Label
+    Friend WithEvents TabPage1 As TabPage
+    Friend WithEvents chkCreateTest As CheckBox
+    Friend WithEvents btnRefreshList As Button
+    Friend WithEvents lblDBNameDisplay1 As Label
+    Friend WithEvents lblDBNameDisplay As Label
+    Friend WithEvents btnCopyFilesBuildXML As Button
+    Friend WithEvents btnBuildBinary As Button
+    Friend WithEvents lstFileInformation As ListView
+    Friend WithEvents btnExit As Button
+    Friend WithEvents pgMain As ProgressBar
+    Friend WithEvents lblTableName As Label
+    Friend WithEvents btnBuildDatabase As Button
+    Friend WithEvents btnImageCopy As Button
+    Friend WithEvents ShapeContainer1 As PowerPacks.ShapeContainer
+    Friend WithEvents LineShape1 As PowerPacks.LineShape
+    Friend WithEvents TabControl1 As TabControl
 End Class
