@@ -16,8 +16,8 @@ Public Class frmMain
     ' Directory files and paths
     Private RootDirectory As String ' For the debugging process, will copy images here as well
     Private WorkingDirectory As String ' Where the final DB and image zip is stored 
-    Private FileDirectory As String ' Where all the files we want to sync to the Media fire server for download are
-    Private FileTestDirectory As String
+    Private UploadFileDirectory As String ' Where all the files we want to sync to the server for download are
+    Private UploadFileTestDirectory As String
 
     ' DB
     Private DatabasePath As String ' Where we build the SQLite database
@@ -61,7 +61,6 @@ Public Class frmMain
     'Private EVEIPHUpdaterURL As String = "http://www.File.com/download/r9innfrf287mnd7/EVEIPH_Updater.exe"
     'Private EVEIPHDBURL As String = "http://www.File.com/download/cfylxmlq6v8i26c/EVEIPH_DB.s3db"
     'Private UpdaterManifestURL As String = "http://www.File.com/download/c149x7vcf1gab2p/EVEIPH_Updater.exe.manifest"
-    'Private IconicZipFileURL As String = "http://www.File.com/download/6ucs9it1bxjiccv/Ionic.Zip.dll"
     'Private EXEManifestURL As String = "http://www.File.com/download/sdlrk28t18gv8z0/EVE_Isk_per_Hour.exe.manifest"
     'Private ImageZipFileURL As String = "http://www.File.com/download/duq6nw4d0p59rci/EVEIPH_Images.zip"
     'Private MoreLinqDLLURL As String = "http://www.File.com/download/mckqc8cxljc5p86/MoreLinq.Portable.dll"
@@ -72,7 +71,6 @@ Public Class frmMain
     'Private TestEVEIPHUpdaterURL As String = "http://www.File.com/download/2d0dsgfap2gq299/EVEIPH_Updater.exe"
     'Private TestEVEIPHDBURL As String = "http://www.File.com/download/w69bgqr9bo7awt4/EVEIPH_DB.s3db"
     'Private TestUpdaterManifestURL As String = "http://www.File.com/download/9my8r2x78bbym9k/EVEIPH_Updater.exe.manifest"
-    'Private TestIconicZipFileURL As String = "http://www.File.com/download/w3xwdhl8vnxw0q7/Ionic.Zip.dll"
     'Private TestEXEManifestURL As String = "http://www.File.com/download/9snq0e79zbesfuq/EVE_Isk_per_Hour.exe.manifest"
     'Private TestImageZipFileURL As String = "http://www.File.com/download/eox20bz6ddey1g3/EVEIPH_Images.zip"
 
@@ -82,7 +80,6 @@ Public Class frmMain
     Private EVEIPHUpdaterURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Updater.exe"
     Private EVEIPHDBURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20DB.s3db"
     Private UpdaterManifestURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Updater.exe.manifest"
-    Private IconicZipFileURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Ionic.Zip.dll"
     Private EXEManifestURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVE%20Isk%20per%20Hour.exe.manifest"
     Private ImageZipFileURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Images.zip"
     Private MoreLinqDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/MoreLinq.Portable.dll"
@@ -93,7 +90,6 @@ Public Class frmMain
     Private TestEVEIPHUpdaterURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Updater.exe"
     Private TestEVEIPHDBURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20DB.s3db"
     Private TestUpdaterManifestURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Updater.exe.manifest"
-    Private TestIconicZipFileURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Ionic.Zip.dll"
     Private TestEXEManifestURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVE%20Isk%20per%20Hour.exe.manifest"
     Private TestImageZipFileURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Images.zip"
     Private TestMoreLinqDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/MoreLinq.Portable.dll"
@@ -183,13 +179,13 @@ Public Class frmMain
             If Not Directory.Exists(WorkingDirectory) Then
                 WorkingDirectory = ""
             End If
-            FileDirectory = BPStream.ReadLine
-            If Not Directory.Exists(FileDirectory) Then
-                FileDirectory = ""
+            UploadFileDirectory = BPStream.ReadLine
+            If Not Directory.Exists(UploadFileDirectory) Then
+                UploadFileDirectory = ""
             End If
-            FileTestDirectory = BPStream.ReadLine
-            If Not Directory.Exists(FileTestDirectory) Then
-                FileTestDirectory = ""
+            UploadFileTestDirectory = BPStream.ReadLine
+            If Not Directory.Exists(UploadFileTestDirectory) Then
+                UploadFileTestDirectory = ""
             End If
 
             If Not IsNothing(VersionNumber) Then
@@ -214,8 +210,8 @@ Public Class frmMain
             ImagesVersion = ""
             RootDirectory = ""
             WorkingDirectory = ""
-            FileDirectory = ""
-            FileTestDirectory = ""
+            UploadFileDirectory = ""
+            UploadFileTestDirectory = ""
             VersionNumber = ""
             SQLInstance = ""
         End If
@@ -236,15 +232,15 @@ Public Class frmMain
             End If
         End If
 
-        If FileDirectory <> "" Then
-            If FileDirectory.Substring(Len(FileDirectory) - 1) <> "\" Then
-                FileDirectory = FileDirectory & "\"
+        If UploadFileDirectory <> "" Then
+            If UploadFileDirectory.Substring(Len(UploadFileDirectory) - 1) <> "\" Then
+                UploadFileDirectory = UploadFileDirectory & "\"
             End If
         End If
 
-        If FileTestDirectory <> "" Then
-            If FileTestDirectory.Substring(Len(FileTestDirectory) - 1) <> "\" Then
-                FileTestDirectory = FileTestDirectory & "\"
+        If UploadFileTestDirectory <> "" Then
+            If UploadFileTestDirectory.Substring(Len(UploadFileTestDirectory) - 1) <> "\" Then
+                UploadFileTestDirectory = UploadFileTestDirectory & "\"
             End If
         End If
 
@@ -262,12 +258,12 @@ Public Class frmMain
             lblWorkingFolderPath.Text = WorkingDirectory
         End If
 
-        If FileDirectory <> "\" Then
-            lblFilesPath.Text = FileDirectory
+        If UploadFileDirectory <> "\" Then
+            lblFilesPath.Text = UploadFileDirectory
         End If
 
-        If FileTestDirectory <> "\" Then
-            lblTestPath.Text = FileTestDirectory
+        If UploadFileTestDirectory <> "\" Then
+            lblTestPath.Text = UploadFileTestDirectory
         End If
 
         If RootDirectory <> "\" Then
@@ -314,14 +310,14 @@ Public Class frmMain
     End Sub
 
     Private Sub btnSelectFilePath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectFilePath.Click
-        If FileDirectory <> "" Then
-            FolderBrowserDialog.SelectedPath = FileDirectory
+        If UploadFileDirectory <> "" Then
+            FolderBrowserDialog.SelectedPath = UploadFileDirectory
         End If
 
         If FolderBrowserDialog.ShowDialog() = DialogResult.OK Then
             Try
                 lblFilesPath.Text = FolderBrowserDialog.SelectedPath
-                FileDirectory = FolderBrowserDialog.SelectedPath
+                UploadFileDirectory = FolderBrowserDialog.SelectedPath
                 Call SetFilePaths()
             Catch ex As Exception
                 MsgBox(Err.Description, vbExclamation, Application.ProductName)
@@ -330,14 +326,14 @@ Public Class frmMain
     End Sub
 
     Private Sub btnSelectTestFilePath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectTestFilePath.Click
-        If FileTestDirectory <> "" Then
-            FolderBrowserDialog.SelectedPath = FileTestDirectory
+        If UploadFileTestDirectory <> "" Then
+            FolderBrowserDialog.SelectedPath = UploadFileTestDirectory
         End If
 
         If FolderBrowserDialog.ShowDialog() = DialogResult.OK Then
             Try
                 lblTestPath.Text = FolderBrowserDialog.SelectedPath
-                FileTestDirectory = FolderBrowserDialog.SelectedPath
+                UploadFileTestDirectory = FolderBrowserDialog.SelectedPath
                 Call SetFilePaths()
             Catch ex As Exception
                 MsgBox(Err.Description, vbExclamation, Application.ProductName)
@@ -423,8 +419,8 @@ Public Class frmMain
 
         RootDirectory = lblRootDebugFolderPath.Text
         WorkingDirectory = lblWorkingFolderPath.Text
-        FileDirectory = lblFilesPath.Text
-        FileTestDirectory = lblTestPath.Text
+        UploadFileDirectory = lblFilesPath.Text
+        UploadFileTestDirectory = lblTestPath.Text
 
         ' Set these if we have a version number
         FinalBinaryZip = "EVEIPH v" & VersionNumber & " Binaries.zip"
@@ -496,11 +492,11 @@ Public Class frmMain
         Dim TempFile As FileNameDate
         Dim di As DirectoryInfo
 
-        If FileDirectory <> "" Then
+        If UploadFileDirectory <> "" Then
             If chkCreateTest.Checked Then
-                di = New DirectoryInfo(FileTestDirectory)
+                di = New DirectoryInfo(UploadFileTestDirectory)
             Else
-                di = New DirectoryInfo(FileDirectory)
+                di = New DirectoryInfo(UploadFileDirectory)
             End If
 
             Dim fiArr As FileInfo() = di.GetFiles()
@@ -509,12 +505,14 @@ Public Class frmMain
             FileList = New List(Of FileNameDate)
 
             ' Add the names of the files.
-            Dim fri As FileInfo
-            For Each fri In fiArr
-                TempFile.FileDate = fri.LastWriteTime
-                TempFile.FileName = fri.Name
-                FileList.Add(TempFile)
-            Next fri
+            Dim FI As FileInfo
+            For Each FI In fiArr
+                If Not FI.Name.Contains("git") Then
+                    TempFile.FileDate = FI.LastWriteTime
+                    TempFile.FileName = FI.Name
+                    FileList.Add(TempFile)
+                End If
+            Next FI
 
             ' Sort the names
             Call SortListDesc(FileList, 0, FileList.Count - 1)
@@ -712,15 +710,15 @@ Public Class frmMain
         Directory.CreateDirectory(FinalBinaryFolderPath)
 
         ' Copy all these files from the media file directory (should be most up to date) to the working directory to make the zip
-        File.Copy(FileDirectory & JSONDLL, FinalBinaryFolderPath & JSONDLL)
-        File.Copy(FileDirectory & SQLiteDLL, FinalBinaryFolderPath & SQLiteDLL)
-        File.Copy(FileDirectory & EVEIPHEXE, FinalBinaryFolderPath & EVEIPHEXE)
-        File.Copy(FileDirectory & EVEIPHUpdater, FinalBinaryFolderPath & EVEIPHUpdater)
-        File.Copy(FileDirectory & UpdaterManifest, FinalBinaryFolderPath & UpdaterManifest)
-        File.Copy(FileDirectory & EXEManifest, FinalBinaryFolderPath & EXEManifest)
-        File.Copy(FileDirectory & LatestVersionXML, FinalBinaryFolderPath & LatestVersionXML)
+        File.Copy(UploadFileDirectory & JSONDLL, FinalBinaryFolderPath & JSONDLL)
+        File.Copy(UploadFileDirectory & SQLiteDLL, FinalBinaryFolderPath & SQLiteDLL)
+        File.Copy(UploadFileDirectory & EVEIPHEXE, FinalBinaryFolderPath & EVEIPHEXE)
+        File.Copy(UploadFileDirectory & EVEIPHUpdater, FinalBinaryFolderPath & EVEIPHUpdater)
+        File.Copy(UploadFileDirectory & UpdaterManifest, FinalBinaryFolderPath & UpdaterManifest)
+        File.Copy(UploadFileDirectory & EXEManifest, FinalBinaryFolderPath & EXEManifest)
+        File.Copy(UploadFileDirectory & LatestVersionXML, FinalBinaryFolderPath & LatestVersionXML)
         'File.Copy(FileDirectory & LatestVersionXML, FinalBinaryFolderPath & IonicZipFile)
-        File.Copy(FileDirectory & MoreLinqDLL, FinalBinaryFolderPath & MoreLinqDLL)
+        File.Copy(UploadFileDirectory & MoreLinqDLL, FinalBinaryFolderPath & MoreLinqDLL)
 
         ' DB
         File.Copy(WorkingDirectory & EVEIPHDB, FinalBinaryFolderPath & EVEIPHDB)
@@ -733,10 +731,10 @@ Public Class frmMain
         ' Compress the whole file for download
         Call ZipFile.CreateFromDirectory(FinalBinaryFolderPath, FinalBinaryZipPath, CompressionLevel.Optimal, False)
 
-        File.Delete(FileDirectory & FinalBinaryZip)
+        File.Delete(UploadFileDirectory & FinalBinaryZip)
 
         ' Copy binary zip file to the media file directory
-        File.Copy(FinalBinaryZipPath, FileDirectory & FinalBinaryZip)
+        File.Copy(FinalBinaryZipPath, UploadFileDirectory & FinalBinaryZip)
 
         Application.UseWaitCursor = False
         Application.DoEvents()
@@ -9654,9 +9652,9 @@ Public Class frmMain
         Dim FileDirectory As String = ""
 
         If chkCreateTest.Checked Then
-            FileDirectory = FileTestDirectory
+            FileDirectory = UploadFileTestDirectory
         Else
-            FileDirectory = FileDirectory
+            FileDirectory = UploadFileDirectory
         End If
 
         On Error Resume Next
@@ -9741,7 +9739,7 @@ Public Class frmMain
             File.Delete(LatestTestVersionXML)
 
             VersionXMLFileName = LatestTestVersionXML
-            FileDirectory = FileTestDirectory
+            FileDirectory = UploadFileTestDirectory
 
             ' Loop through the settings sent and output each name and value
             ' Copy the new XML file into the root directory - so I don't get updates and then manually upload this to media fire so people don't get crazy updates
@@ -9829,7 +9827,7 @@ Public Class frmMain
         Else
             File.Delete(LatestVersionXML)
             VersionXMLFileName = LatestVersionXML
-            FileDirectory = FileDirectory
+            FileDirectory = UploadFileDirectory
 
             ' Loop through the settings sent and output each name and value
             ' Copy the new XML file into the root directory - so I don't get updates and then manually upload this to media fire so people don't get crazy updates
@@ -9904,13 +9902,6 @@ Public Class frmMain
                 writer.WriteAttributeString("URL", EXEManifestURL)
                 writer.WriteEndElement()
 
-                'writer.WriteStartElement("row")
-                'writer.WriteAttributeString("Name", IonicZipFile)
-                'writer.WriteAttributeString("Version", "1.0")
-                'writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & IonicZipFile))
-                'writer.WriteAttributeString("URL", IconicZipFileURL)
-                'writer.WriteEndElement()
-
                 writer.WriteStartElement("row")
                 writer.WriteAttributeString("Name", MoreLinqDLL)
                 writer.WriteAttributeString("Version", "1.4")
@@ -9926,6 +9917,7 @@ Public Class frmMain
         ' Finally, replace all the update file's crlf with lf so that when it's uploaded to git, it works properly on download
         Dim FileText As String = File.ReadAllText(RootDirectory & VersionXMLFileName)
         FileText = FileText.Replace(vbCrLf, Chr(10))
+
         ' Write the file back out with new formatting
         File.WriteAllText(RootDirectory & VersionXMLFileName, FileText)
         File.WriteAllText(FileDirectory & VersionXMLFileName, FileText)
