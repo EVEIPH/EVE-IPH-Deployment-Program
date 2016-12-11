@@ -1590,6 +1590,7 @@ Public Class frmMain
         SQL = SQL & "OR (ITEM_NAME Like '%Micro%' AND ITEM_GROUP <> 'Propulsion Module' AND ITEM_NAME NOT LIKE 'Microwave%') "
         SQL = SQL & "OR ITEM_NAME Like '%Defender%' "
         SQL = SQL & "OR (ITEM_CATEGORY = 'Implant') "
+        SQL = SQL & "OR ITEM_NAME Like '% S-Set%' "
         SQL = SQL & "OR ITEM_NAME IN ('Cap Booster 25','Cap Booster 50') "
         SQL = SQL & "OR MARKET_GROUP IN ('Interdiction Probes', 'Mining Crystals', 'Nanite Repair Paste', 'Scan Probes', 'Survey Probes', 'Scripts') "
         SQL = SQL & "OR (ITEM_CATEGORY = 'Drone' AND ITEM_ID IN (SELECT typeID from invTypes where packagedVolume = 5)) "
@@ -1606,10 +1607,11 @@ Public Class frmMain
         SQL = SQL & "OR (ITEM_CATEGORY = 'Drone' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE packagedVolume = 10)) "
         SQL = SQL & "OR (ITEM_GROUP = 'Propulsion Module' AND ITEM_NAME Like '10MN%') "
         SQL = SQL & "OR (ITEM_GROUP IN ('Gang Coordinator')) "
+        SQL = SQL & "OR ITEM_NAME Like '% M-Set%' "
         SQL = SQL & "OR (ITEM_CATEGORY = 'Subsystem') "
         SQL = SQL & "OR (ITEM_CATEGORY = 'Module' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE marketGroupID IN (562,565,568,572,575,578,1673,1674))) "
         SQL = SQL & "OR (ITEM_CATEGORY IN ('Charge','Module') AND ITEM_NAME Like '%Heavy%' AND ITEM_NAME Not Like '%Jolt%')  "
-        SQL = SQL & "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE groupID IN (1201,1202,419,540,26,380,543,833,358,894,28,941,832,463,963)))) "
+        SQL = SQL & "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE groupID IN (1201,1202,419,540,26,380,543,833,358,894,28,832,463,963)))) "
         Execute_msSQL(SQL)
 
         ' Drones are Heavy, missiles are cruise/torp, towers are regular towers (Caldari Control Tower)
@@ -1620,6 +1622,7 @@ Public Class frmMain
         SQL = SQL & "OR (ITEM_CATEGORY = 'Drone' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE packagedVolume >= 25 and packagedVolume <=50)) "
         SQL = SQL & "OR (ITEM_GROUP = 'Propulsion Module' AND ITEM_NAME Like '100MN%') "
         SQL = SQL & "OR (ITEM_NAME Like ('%Control Tower')) "
+        SQL = SQL & "OR ITEM_NAME Like '% L-Set%' "
         SQL = SQL & "OR (ITEM_CATEGORY = 'Deployable' AND ITEM_GROUP <> 'Mobile Warp Disruptor') "
         SQL = SQL & "OR (ITEM_CATEGORY = 'Structure' AND ITEM_GROUP <> 'Control Tower')"
         SQL = SQL & "OR (ITEM_CATEGORY = 'Module' AND ITEM_NAME Like '%Heavy%' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE marketGroupID NOT IN (563,566,569,573,576,579,1675,1676))) "
@@ -1631,10 +1634,11 @@ Public Class frmMain
         ' Drones are fighters, missiles are citadel
         SQL = "UPDATE ALL_BLUEPRINTS SET SIZE_GROUP = 'XL' "
         SQL = SQL & "WHERE SIZE_GROUP = 'XX' AND (ITEM_NAME LIKE '% XL' "
-        SQL = SQL & "OR ITEM_NAME Like '%Capital%' "
-        SQL = SQL & "OR ITEM_NAME Like '%Huge%'"
-        SQL = SQL & "OR ITEM_NAME Like '%X-Large%' "
-        SQL = SQL & "OR ITEM_NAME Like '%Giant%' "
+        SQL = SQL & "OR ITEM_NAME LIKE '%Capital%' "
+        SQL = SQL & "OR ITEM_NAME LIKE '%Huge%'"
+        SQL = SQL & "OR ITEM_NAME LIKE '%X-Large%' "
+        SQL = SQL & "OR ITEM_NAME LIKE '%Giant%' "
+        SQL = SQL & "OR ITEM_NAME LIKE '% XL-Set%' "
         SQL = SQL & "OR ITEM_CATEGORY IN ('Infrastructure Upgrades','Sovereignty Structures','Orbitals') "
         SQL = SQL & "OR ITEM_GROUP IN ('Station Components', 'Remote ECM Burst', 'Super Weapon', 'Siege Module')"
         SQL = SQL & "OR ITEM_NAME IN ('Cap Booster 400','Cap Booster 800') "
@@ -1649,6 +1653,9 @@ Public Class frmMain
 
         ' Anything left update to small (may need to revisit later)
         SQL = "UPDATE ALL_BLUEPRINTS SET SIZE_GROUP = 'S' WHERE SIZE_GROUP = 'XX'"
+        Execute_msSQL(SQL)
+
+        SQL = "UPDATE ALL_BLUEPRINTS SET SIZE_GROUP = 'XL' WHERE ITEM_NAME = 'Orca'"
         Execute_msSQL(SQL)
 
         ' Now build the tables
