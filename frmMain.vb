@@ -1116,8 +1116,6 @@ Public Class frmMain
 
         On Error GoTo 0
 
-        Call UpdateramAssemblyLineTypeDetailPerCategory()
-
         ' Set the version value
         SQL = "CREATE TABLE DB_VERSION ("
         SQL = SQL & "VERSION_NUMBER VARCHAR(50)"
@@ -1165,9 +1163,6 @@ Public Class frmMain
 
         lblTableName.Text = "Building: ASSEMBLY_ARRAYS"
         Call Build_ASSEMBLY_ARRAYS()
-
-        lblTableName.Text = "Building: STATION_FACILITIES"
-        Call Build_STATION_FACILITIES()
 
         lblTableName.Text = "Building: STATIONS"
         Call Build_Stations()
@@ -1339,6 +1334,9 @@ Public Class frmMain
 
         lblTableName.Text = "Building: INVENTORY_TRAITS"
         Call Build_INVENTORY_TRAITS()
+
+        lblTableName.Text = "Building: STATION_FACILITIES"
+        Call Build_STATION_FACILITIES()
 
         ' After we are done with everything, use the following tables to update the RACE ID value in the ALL_BLUEPRINTS table
         lblTableName.Text = "Updating the Race ID's"
@@ -1549,8 +1547,8 @@ Public Class frmMain
         SQL = SQL & "OR (ITEM_GROUP='Tool')"
         Execute_msSQL(SQL)
 
-        ' Alliance Tournament ships added - They are set as T2 (use t2 mats to build) but come up as faction in game ('Mimir','Freki','Adrestia','Utu','Vangel','Malice','Etana','Cambion','Moracha','Chremoas','Whiptail','Chameleon')
-        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 1 WHERE BLUEPRINT_ID IN (3517, 3519, 32789, 32791, 32788, 33396, 33398, 33674, 33676)"
+        ' Alliance Tournament ships added - They are set as T2 (use t2 mats to build) but come up as faction in game ('Mimir','Freki','Adrestia','Utu','Vangel','Malice','Etana','Cambion','Moracha','Chremoas','Whiptail','Chameleon', 'Caedes')
+        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 1 WHERE BLUEPRINT_ID IN (3517, 3519, 32789, 32791, 32788, 33396, 33398, 33674, 33676, 42525)"
         Execute_msSQL(SQL)
 
         ' Quick fix to update the sql table for Rubicon - Ascendancy Implant Blueprints (and Low-Grade Ascendancy) are set to T2 implant (Alpha), not invented though so set to T1
@@ -2225,6 +2223,14 @@ Public Class frmMain
         End While
 
         msSQLReader.Close()
+
+        ' Add station's categoryID to table so that we can build in stations - this is for the No POS facility, which might not matter anymore
+        On Error Resume Next
+        msSQL = "INSERT INTO ramAssemblyLineTypeDetailPerCategory VALUES (5,3,1,1,1)"
+        Call Execute_msSQL(msSQL)
+        msSQL = "INSERT INTO ramAssemblyLineTypeDetailPerCategory VALUES (35,3,1,1,1)"
+        Call Execute_msSQL(msSQL)
+        On Error GoTo 0
 
         DB1.CloseDB()
         DB2.CloseDB()
