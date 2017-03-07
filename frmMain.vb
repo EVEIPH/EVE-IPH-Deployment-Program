@@ -28,8 +28,9 @@ Public Class frmMain
     Private SQLInstance As String ' how to log into the SQL server on the host computer
 
     ' Image folders
-    Private IECFOlder As String
+    Private ImageExportTypes As String
     Private EVEIPHImageFolder As String
+    Private RendersImageFolder As String
 
     ' When updating the image files to build the zip, update the root directory images as well so we have the updated images for running in debug mode
     Private WorkingImageFolder As String = "Root Directory\EVEIPH Images"
@@ -41,6 +42,9 @@ Public Class frmMain
 
     ' File names
     Private MSIInstaller As String = "Eve Isk per Hour " & VersionNumber & ".msi"
+
+    ' Special Processing
+    Private Const StructureRigCategory As Integer = -66
 
     Private JSONDLL As String = "Newtonsoft.Json.dll"
     Private SQLiteDLL As String = "System.Data.SQLite.dll"
@@ -276,7 +280,8 @@ Public Class frmMain
         ' When updating the image files to build the zip, update the root directory images as well so we have the updated images for running in debug mode
         WorkingImageFolder = RootDirectory & "EVEIPH Images"
 
-        IECFOlder = WorkingDirectory & "Types"
+        ImageExportTypes = WorkingDirectory & "Types"
+        RendersImageFolder = WorkingDirectory & "Renders"
         EVEIPHImageFolder = WorkingDirectory & "EVEIPH Images"
         MissingImagesFilePath = WorkingDirectory & " Missing Images.txt"
 
@@ -536,7 +541,7 @@ Public Class frmMain
     Private Sub btnImageCopy_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnImageCopy.Click
         Dim ReaderCount As Long
         Dim SQL As String
-        Dim readerBPs As SQLite.SQLiteDataReader
+        Dim rsReader As SQLite.SQLiteDataReader
         Dim DBCommand As SQLiteCommand
         Dim MissingImages As Boolean
 
@@ -590,15 +595,15 @@ Public Class frmMain
         ' Get the count first
         SQL = "SELECT COUNT(*) FROM ALL_BLUEPRINTS"
         DBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBREf)
-        readerBPs = DBCommand.ExecuteReader
-        readerBPs.Read()
-        ReaderCount = readerBPs.GetValue(0)
-        readerBPs.Close()
+        rsReader = DBCommand.ExecuteReader
+        rsReader.Read()
+        ReaderCount = rsReader.GetValue(0)
+        rsReader.Close()
 
         ' Get all the BP ID numbers we use in the program and copy those files to the directory
         SQL = "SELECT BLUEPRINT_ID, BLUEPRINT_NAME FROM ALL_BLUEPRINTS"
         DBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBREf)
-        readerBPs = DBCommand.ExecuteReader
+        rsReader = DBCommand.ExecuteReader
 
         pgMain.Value = 0
         pgMain.Maximum = ReaderCount
@@ -607,16 +612,16 @@ Public Class frmMain
         Application.DoEvents()
 
         ' Loop through and copy all the images to the new folder - use absolute value for stuff I use negative typeIDs for (outpost stuff)
-        While readerBPs.Read
+        While rsReader.Read
             Application.DoEvents()
             Try
                 ' For zip use
-                File.Copy(IECFOlder & "\" & CStr(Math.Abs(readerBPs.GetValue(0))) & "_64.png", EVEIPHImageFolder & "\" & CStr(Math.Abs(readerBPs.GetValue(0))) & "_64.png")
+                File.Copy(ImageExportTypes & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png", EVEIPHImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png")
                 ' To root Working Directory
-                File.Copy(IECFOlder & "\" & CStr(Math.Abs(readerBPs.GetValue(0))) & "_64.png", WorkingImageFolder & "\" & CStr(Math.Abs(readerBPs.GetValue(0))) & "_64.png")
+                File.Copy(ImageExportTypes & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png", WorkingImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png")
             Catch
                 ' Build a file with the BP ID's and Names that do not have a image
-                OutputFile.WriteLine(readerBPs(0).ToString & " - " & readerBPs(1).ToString)
+                OutputFile.WriteLine(rsReader(0).ToString & " - " & rsReader(1).ToString)
                 MissingImages = True
             End Try
 
@@ -627,41 +632,103 @@ Public Class frmMain
         End While
 
         ' Final images
-        File.Copy(IECFOlder & "\4276_32.png", EVEIPHImageFolder & "\4276_32.png") ' T2 Mining Ganglink image
-        File.Copy(IECFOlder & "\4276_32.png", WorkingImageFolder & "\4276_32.png") ' T2 Mining Ganglink image
-        File.Copy(IECFOlder & "\22557_32.png", EVEIPHImageFolder & "\22557_32.png") ' T1 Mining Ganglink image
-        File.Copy(IECFOlder & "\22557_32.png", WorkingImageFolder & "\22557_32.png") ' T1 Mining Ganglink image
-        File.Copy(IECFOlder & "\32880_64.png", EVEIPHImageFolder & "\32880_64.png")    ' Ore Mining Frig
-        File.Copy(IECFOlder & "\32880_64.png", WorkingImageFolder & "\32880_64.png")   ' Ore Mining Frig
-        File.Copy(IECFOlder & "\17476_64.png", EVEIPHImageFolder & "\17476_64.png")    ' Covetor
-        File.Copy(IECFOlder & "\17476_64.png", WorkingImageFolder & "\17476_64.png")   ' Covetor
-        File.Copy(IECFOlder & "\17478_64.png", EVEIPHImageFolder & "\17478_64.png")    ' Retriever
-        File.Copy(IECFOlder & "\17478_64.png", WorkingImageFolder & "\17478_64.png")   ' Retriever
-        File.Copy(IECFOlder & "\22544_64.png", EVEIPHImageFolder & "\22544_64.png")    ' Hulk
-        File.Copy(IECFOlder & "\22544_64.png", WorkingImageFolder & "\22544_64.png")   ' Hulk
-        File.Copy(IECFOlder & "\22546_64.png", EVEIPHImageFolder & "\22546_64.png")    ' Skiff
-        File.Copy(IECFOlder & "\22546_64.png", WorkingImageFolder & "\22546_64.png")   ' Skiff
-        File.Copy(IECFOlder & "\22548_64.png", EVEIPHImageFolder & "\22548_64.png")    ' Mackinaw
-        File.Copy(IECFOlder & "\22548_64.png", WorkingImageFolder & "\22548_64.png")   ' Mackinaw
-        File.Copy(IECFOlder & "\28352_64.png", EVEIPHImageFolder & "\28352_64.png")    ' Rorqual
-        File.Copy(IECFOlder & "\28352_64.png", WorkingImageFolder & "\28352_64.png")   ' Rorqual
-        File.Copy(IECFOlder & "\28606_64.png", EVEIPHImageFolder & "\28606_64.png")    ' Orca
-        File.Copy(IECFOlder & "\28606_64.png", WorkingImageFolder & "\28606_64.png")   ' Orca
-        File.Copy(IECFOlder & "\42244_64.png", EVEIPHImageFolder & "\42244_64.png")    ' Porpoise
-        File.Copy(IECFOlder & "\42244_64.png", WorkingImageFolder & "\42244_64.png")   ' Porpoise
-        File.Copy(IECFOlder & "\17480_64.png", EVEIPHImageFolder & "\17480_64.png")    ' Procurer
-        File.Copy(IECFOlder & "\17480_64.png", WorkingImageFolder & "\17480_64.png")   ' Procurer
-        File.Copy(IECFOlder & "\24698_64.png", EVEIPHImageFolder & "\24698_64.png")    ' Drake
-        File.Copy(IECFOlder & "\24698_64.png", WorkingImageFolder & "\24698_64.png")   ' Drake
-        File.Copy(IECFOlder & "\24688_64.png", EVEIPHImageFolder & "\24688_64.png")    ' Rokh
-        File.Copy(IECFOlder & "\24688_64.png", WorkingImageFolder & "\24688_64.png")   ' Rokh
-        File.Copy(IECFOlder & "\33697_64.png", EVEIPHImageFolder & "\33697_64.png")    ' Prospect
-        File.Copy(IECFOlder & "\33697_64.png", WorkingImageFolder & "\33697_64.png")   ' Prospect
-        File.Copy(IECFOlder & "\37135_64.png", EVEIPHImageFolder & "\37135_64.png")    ' Endurance
-        File.Copy(IECFOlder & "\37135_64.png", WorkingImageFolder & "\37135_64.png")   ' Endurance
+        File.Copy(ImageExportTypes & "\4276_32.png", EVEIPHImageFolder & "\4276_32.png") ' T2 Mining Ganglink image
+        File.Copy(ImageExportTypes & "\4276_32.png", WorkingImageFolder & "\4276_32.png") ' T2 Mining Ganglink image
+        File.Copy(ImageExportTypes & "\22557_32.png", EVEIPHImageFolder & "\22557_32.png") ' T1 Mining Ganglink image
+        File.Copy(ImageExportTypes & "\22557_32.png", WorkingImageFolder & "\22557_32.png") ' T1 Mining Ganglink image
+        File.Copy(ImageExportTypes & "\32880_64.png", EVEIPHImageFolder & "\32880_64.png")    ' Ore Mining Frig
+        File.Copy(ImageExportTypes & "\32880_64.png", WorkingImageFolder & "\32880_64.png")   ' Ore Mining Frig
+        File.Copy(ImageExportTypes & "\17476_64.png", EVEIPHImageFolder & "\17476_64.png")    ' Covetor
+        File.Copy(ImageExportTypes & "\17476_64.png", WorkingImageFolder & "\17476_64.png")   ' Covetor
+        File.Copy(ImageExportTypes & "\17478_64.png", EVEIPHImageFolder & "\17478_64.png")    ' Retriever
+        File.Copy(ImageExportTypes & "\17478_64.png", WorkingImageFolder & "\17478_64.png")   ' Retriever
+        File.Copy(ImageExportTypes & "\22544_64.png", EVEIPHImageFolder & "\22544_64.png")    ' Hulk
+        File.Copy(ImageExportTypes & "\22544_64.png", WorkingImageFolder & "\22544_64.png")   ' Hulk
+        File.Copy(ImageExportTypes & "\22546_64.png", EVEIPHImageFolder & "\22546_64.png")    ' Skiff
+        File.Copy(ImageExportTypes & "\22546_64.png", WorkingImageFolder & "\22546_64.png")   ' Skiff
+        File.Copy(ImageExportTypes & "\22548_64.png", EVEIPHImageFolder & "\22548_64.png")    ' Mackinaw
+        File.Copy(ImageExportTypes & "\22548_64.png", WorkingImageFolder & "\22548_64.png")   ' Mackinaw
+        File.Copy(ImageExportTypes & "\28352_64.png", EVEIPHImageFolder & "\28352_64.png")    ' Rorqual
+        File.Copy(ImageExportTypes & "\28352_64.png", WorkingImageFolder & "\28352_64.png")   ' Rorqual
+        File.Copy(ImageExportTypes & "\28606_64.png", EVEIPHImageFolder & "\28606_64.png")    ' Orca
+        File.Copy(ImageExportTypes & "\28606_64.png", WorkingImageFolder & "\28606_64.png")   ' Orca
+        File.Copy(ImageExportTypes & "\42244_64.png", EVEIPHImageFolder & "\42244_64.png")    ' Porpoise
+        File.Copy(ImageExportTypes & "\42244_64.png", WorkingImageFolder & "\42244_64.png")   ' Porpoise
+        File.Copy(ImageExportTypes & "\17480_64.png", EVEIPHImageFolder & "\17480_64.png")    ' Procurer
+        File.Copy(ImageExportTypes & "\17480_64.png", WorkingImageFolder & "\17480_64.png")   ' Procurer
+        File.Copy(ImageExportTypes & "\24698_64.png", EVEIPHImageFolder & "\24698_64.png")    ' Drake
+        File.Copy(ImageExportTypes & "\24698_64.png", WorkingImageFolder & "\24698_64.png")   ' Drake
+        File.Copy(ImageExportTypes & "\24688_64.png", EVEIPHImageFolder & "\24688_64.png")    ' Rokh
+        File.Copy(ImageExportTypes & "\24688_64.png", WorkingImageFolder & "\24688_64.png")   ' Rokh
+        File.Copy(ImageExportTypes & "\33697_64.png", EVEIPHImageFolder & "\33697_64.png")    ' Prospect
+        File.Copy(ImageExportTypes & "\33697_64.png", WorkingImageFolder & "\33697_64.png")   ' Prospect
+        File.Copy(ImageExportTypes & "\37135_64.png", EVEIPHImageFolder & "\37135_64.png")    ' Endurance
+        File.Copy(ImageExportTypes & "\37135_64.png", WorkingImageFolder & "\37135_64.png")   ' Endurance
+
+        ' Get all the Engineering Complex icons
+        SQL = "SELECT typeID, typeName FROM INVENTORY_TYPES, INVENTORY_GROUPS WHERE INVENTORY_TYPES.groupID = INVENTORY_GROUPS.groupID AND categoryID = 66 AND INVENTORY_TYPES.published <> 0"
+        DBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBREf)
+        rsReader = DBCommand.ExecuteReader
+
+        pgMain.Value = 0
+        pgMain.Maximum = ReaderCount
+        pgMain.Visible = True
+
+        Application.DoEvents()
+
+        ' Loop through and copy all the images to the new folder for citadel items
+        While rsReader.Read
+            Try
+                ' For zip use
+                File.Copy(ImageExportTypes & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png", EVEIPHImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png")
+                ' To root Working Directory
+                File.Copy(ImageExportTypes & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png", WorkingImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png")
+            Catch
+                ' Build a file with the BP ID's and Names that do not have a image
+                OutputFile.WriteLine(rsReader(0).ToString & " - " & rsReader(1).ToString)
+                MissingImages = True
+            End Try
+
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
+
+        End While
+
+        ' Finally, get all the citadel renders by typeID in the Renders folder - Look up by groupID - if these change or more are added, then need to update
+        SQL = "SELECT typeID FROM INVENTORY_TYPES, INVENTORY_GROUPS WHERE INVENTORY_GROUPS.groupID IN (1404, 1657) AND INVENTORY_TYPES.groupID = INVENTORY_GROUPS.groupid"
+        DBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBREf)
+        rsReader = DBCommand.ExecuteReader
+
+        pgMain.Value = 0
+        pgMain.Maximum = ReaderCount
+        pgMain.Visible = True
+
+        Application.DoEvents()
+
+        ' Loop through and copy all the images to the new folder for citadel items
+        While rsReader.Read
+            Try
+                ' For zip use
+                File.Copy(RendersImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & ".png", EVEIPHImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & ".png")
+                ' To root Working Directory
+                File.Copy(RendersImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & ".png", WorkingImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & ".png")
+            Catch
+                ' Build a file with the BP ID's and Names that do not have a image
+                OutputFile.WriteLine(rsReader(0).ToString & " - " & rsReader(1).ToString)
+                MissingImages = True
+            End Try
+
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
+        End While
+
+        Call rsReader.Close()
 
         ' Delete the file if it already exists
         File.Delete(WorkingDirectory & "EVEIPH Images.zip")
+
         ' Compress the images
         Call ZipFile.CreateFromDirectory(EVEIPHImageFolder, WorkingDirectory & "EVEIPH Images.zip", CompressionLevel.Optimal, False)
 
@@ -717,7 +784,6 @@ Public Class frmMain
         File.Copy(UploadFileDirectory & UpdaterManifest, FinalBinaryFolderPath & UpdaterManifest)
         File.Copy(UploadFileDirectory & EXEManifest, FinalBinaryFolderPath & EXEManifest)
         File.Copy(UploadFileDirectory & LatestVersionXML, FinalBinaryFolderPath & LatestVersionXML)
-        'File.Copy(FileDirectory & LatestVersionXML, FinalBinaryFolderPath & IonicZipFile)
         File.Copy(UploadFileDirectory & MoreLinqDLL, FinalBinaryFolderPath & MoreLinqDLL)
 
         ' DB
@@ -1280,6 +1346,9 @@ Public Class frmMain
 
         lblTableName.Text = "Building: TYPE_ATTRIBUTES"
         Call Build_Type_Attributes()
+
+        lblTableName.Text = "Building: TYPE_EFFECTS"
+        Call Build_Type_Effects()
 
         lblTableName.Text = "Building: ORES_LOCATIONS"
         Call Build_ORE_LOCATIONS()
@@ -3853,6 +3922,64 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         SQL = "CREATE INDEX IDX_TA_TYPE_ID ON TYPE_ATTRIBUTES (typeID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
+
+        pgMain.Visible = False
+
+        DB.CloseDB()
+
+    End Sub
+
+    ' TYPE_EFFECTS    
+    Private Sub Build_Type_Effects()
+        Dim SQL As String
+
+        ' MS SQL variables
+        Dim msSQLQuery As New SqlCommand
+        Dim msSQLReader As SqlDataReader
+        Dim msSQL As String
+
+        Dim DB As New msSQLDBConnection(DatabaseName, SQLInstance)
+
+        SQL = "CREATE TABLE TYPE_EFFECTS ("
+        SQL = SQL & "typeID INTEGER NOT NULL,"
+        SQL = SQL & "effectID INTEGER,"
+        SQL = SQL & "isDefault INTEGER"
+        SQL = SQL & ")"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
+
+        Call SetProgressBarValues("dgmTypeEffects")
+
+        ' Pull new data and insert
+        msSQL = "SELECT typeID, effectID, isDefault FROM dgmTypeEffects"
+        msSQLQuery = New SqlCommand(msSQL, DB.DBREf)
+        msSQLReader = msSQLQuery.ExecuteReader()
+
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
+
+        ' Add to Access table
+        While msSQLReader.Read
+            Application.DoEvents()
+
+            SQL = "INSERT INTO TYPE_EFFECTS VALUES ("
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(0)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(1)) & ","
+            SQL = SQL & BuildInsertFieldString(msSQLReader.GetValue(2)) & ")"
+
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
+
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
+
+        End While
+
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
+
+        msSQLReader.Close()
+
+        SQL = "CREATE INDEX IDX_TE_TYPE_ID ON TYPE_EFFECTS (typeID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
 
         pgMain.Visible = False
@@ -7231,6 +7358,16 @@ Public Class frmMain
 
         ' Need to insert blueprints as products for copy, ME/TE 
         Call UpdateIndustryActivityProducts()
+
+        Try
+            ' Special processing - Add a Category for 'Structure Rigs' to separate from 'Structure Modules' - use the same code just the negative
+            Call Execute_msSQL(String.Format("INSERT INTO invCategories VALUES ({0},'Structure Rigs',-1,NULL)", StructureRigCategory))
+
+            ' Special processing - Update all Structure Rigs to use the new code
+            Call Execute_msSQL(String.Format("UPDATE invGroups SET categoryID = {0} WHERE categoryID = 66 AND groupName LIKE '%Rig%'", StructureRigCategory))
+        Catch ex As Exception
+
+        End Try
 
         ' When rebuilding the DB, update the ramAssemblyLineTypeDetailPerCategory table
         ' so it is complete and not missing categories of blueprints for assembly lines in 
