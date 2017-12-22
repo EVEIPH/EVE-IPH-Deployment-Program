@@ -36,7 +36,7 @@ Partial Class frmMain
         Me.btnSelectTestFilePath = New System.Windows.Forms.Button()
         Me.lblTest = New System.Windows.Forms.Label()
         Me.lblImageVersion = New System.Windows.Forms.Label()
-        Me.Label1 = New System.Windows.Forms.Label()
+        Me.lblVersionNumber = New System.Windows.Forms.Label()
         Me.lblDBName = New System.Windows.Forms.Label()
         Me.btnSaveFilePath = New System.Windows.Forms.Button()
         Me.lblFilesPath = New System.Windows.Forms.Label()
@@ -61,8 +61,6 @@ Partial Class frmMain
         Me.lblTableName = New System.Windows.Forms.Label()
         Me.btnBuildDatabase = New System.Windows.Forms.Button()
         Me.btnImageCopy = New System.Windows.Forms.Button()
-        Me.ShapeContainer1 = New Microsoft.VisualBasic.PowerPacks.ShapeContainer()
-        Me.LineShape1 = New Microsoft.VisualBasic.PowerPacks.LineShape()
         Me.TabControl1 = New System.Windows.Forms.TabControl()
         Me.TabPage2.SuspendLayout()
         Me.TabPage1.SuspendLayout()
@@ -80,7 +78,7 @@ Partial Class frmMain
         Me.TabPage2.Controls.Add(Me.btnSelectTestFilePath)
         Me.TabPage2.Controls.Add(Me.lblTest)
         Me.TabPage2.Controls.Add(Me.lblImageVersion)
-        Me.TabPage2.Controls.Add(Me.Label1)
+        Me.TabPage2.Controls.Add(Me.lblVersionNumber)
         Me.TabPage2.Controls.Add(Me.lblDBName)
         Me.TabPage2.Controls.Add(Me.btnSaveFilePath)
         Me.TabPage2.Controls.Add(Me.lblFilesPath)
@@ -173,14 +171,14 @@ Partial Class frmMain
         Me.lblImageVersion.TabIndex = 2
         Me.lblImageVersion.Text = "Image Version:"
         '
-        'Label1
+        'lblVersionNumber
         '
-        Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(229, 53)
-        Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(85, 13)
-        Me.Label1.TabIndex = 4
-        Me.Label1.Text = "Version Number:"
+        Me.lblVersionNumber.AutoSize = True
+        Me.lblVersionNumber.Location = New System.Drawing.Point(229, 49)
+        Me.lblVersionNumber.Name = "lblVersionNumber"
+        Me.lblVersionNumber.Size = New System.Drawing.Size(85, 13)
+        Me.lblVersionNumber.TabIndex = 4
+        Me.lblVersionNumber.Text = "Version Number:"
         '
         'lblDBName
         '
@@ -295,7 +293,6 @@ Partial Class frmMain
         Me.TabPage1.Controls.Add(Me.lblTableName)
         Me.TabPage1.Controls.Add(Me.btnBuildDatabase)
         Me.TabPage1.Controls.Add(Me.btnImageCopy)
-        Me.TabPage1.Controls.Add(Me.ShapeContainer1)
         Me.TabPage1.Location = New System.Drawing.Point(4, 22)
         Me.TabPage1.Name = "TabPage1"
         Me.TabPage1.Padding = New System.Windows.Forms.Padding(3)
@@ -413,24 +410,6 @@ Partial Class frmMain
         Me.btnImageCopy.Text = "Image Copy"
         Me.btnImageCopy.UseVisualStyleBackColor = True
         '
-        'ShapeContainer1
-        '
-        Me.ShapeContainer1.Location = New System.Drawing.Point(3, 3)
-        Me.ShapeContainer1.Margin = New System.Windows.Forms.Padding(0)
-        Me.ShapeContainer1.Name = "ShapeContainer1"
-        Me.ShapeContainer1.Shapes.AddRange(New Microsoft.VisualBasic.PowerPacks.Shape() {Me.LineShape1})
-        Me.ShapeContainer1.Size = New System.Drawing.Size(360, 458)
-        Me.ShapeContainer1.TabIndex = 0
-        Me.ShapeContainer1.TabStop = False
-        '
-        'LineShape1
-        '
-        Me.LineShape1.Name = "LineShape1"
-        Me.LineShape1.X1 = 23
-        Me.LineShape1.X2 = 329
-        Me.LineShape1.Y1 = 146
-        Me.LineShape1.Y2 = 146
-        '
         'TabControl1
         '
         Me.TabControl1.Controls.Add(Me.TabPage1)
@@ -472,7 +451,7 @@ Partial Class frmMain
     Friend WithEvents btnSelectTestFilePath As Button
     Friend WithEvents lblTest As Label
     Friend WithEvents lblImageVersion As Label
-    Friend WithEvents Label1 As Label
+    Friend WithEvents lblVersionNumber As Label
     Friend WithEvents lblDBName As Label
     Friend WithEvents btnSaveFilePath As Button
     Friend WithEvents lblFilesPath As Label
@@ -497,7 +476,5 @@ Partial Class frmMain
     Friend WithEvents lblTableName As Label
     Friend WithEvents btnBuildDatabase As Button
     Friend WithEvents btnImageCopy As Button
-    Friend WithEvents ShapeContainer1 As PowerPacks.ShapeContainer
-    Friend WithEvents LineShape1 As PowerPacks.LineShape
     Friend WithEvents TabControl1 As TabControl
 End Class

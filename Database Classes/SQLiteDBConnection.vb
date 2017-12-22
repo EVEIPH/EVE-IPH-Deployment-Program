@@ -2,6 +2,7 @@
 Imports System.Data.SQLite
 
 ' Class to support SQLite Databases
+<CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable")>
 Public Class SQLiteDBConnection
 
     Private DB As SQLiteConnection
@@ -30,7 +31,7 @@ Public Class SQLiteDBConnection
     End Sub
 
     ' Provides a reference to the DB
-    Public Function DBREf() As SQLiteConnection
+    Public Function DBRef() As SQLiteConnection
         Return DB
     End Function
 
@@ -39,6 +40,7 @@ Public Class SQLiteDBConnection
     End Sub
 
     ' Executes the SQL sent, which doesn't require a return value
+    <CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")>
     Public Sub ExecuteNonQuerySQL(ByVal SQL As String)
         Dim DBExecuteCmd As SQLiteCommand = DB.CreateCommand
         DBExecuteCmd.CommandTimeout = 0
@@ -72,6 +74,7 @@ Public Class SQLiteDBConnection
     End Function
 
     ' Runs the sent recordset query and returns true if it returns data
+    <CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")>
     Public Function DataExists(ByVal SQL As String) As Boolean
         ' Run the query and if it returns rows, return true else false
         Dim SQLQuery As SQLiteCommand
