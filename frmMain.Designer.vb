@@ -296,14 +296,14 @@ Partial Class frmMain
         Me.TabPage1.Location = New System.Drawing.Point(4, 22)
         Me.TabPage1.Name = "TabPage1"
         Me.TabPage1.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPage1.Size = New System.Drawing.Size(366, 464)
+        Me.TabPage1.Size = New System.Drawing.Size(366, 486)
         Me.TabPage1.TabIndex = 0
         Me.TabPage1.Text = "DB Updater & Deployment"
         Me.TabPage1.UseVisualStyleBackColor = True
         '
         'chkCreateTest
         '
-        Me.chkCreateTest.Location = New System.Drawing.Point(121, 441)
+        Me.chkCreateTest.Location = New System.Drawing.Point(123, 462)
         Me.chkCreateTest.Name = "chkCreateTest"
         Me.chkCreateTest.Size = New System.Drawing.Size(124, 21)
         Me.chkCreateTest.TabIndex = 13
@@ -362,7 +362,7 @@ Partial Class frmMain
         Me.lstFileInformation.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable
         Me.lstFileInformation.Location = New System.Drawing.Point(27, 205)
         Me.lstFileInformation.Name = "lstFileInformation"
-        Me.lstFileInformation.Size = New System.Drawing.Size(313, 233)
+        Me.lstFileInformation.Size = New System.Drawing.Size(313, 251)
         Me.lstFileInformation.TabIndex = 11
         Me.lstFileInformation.UseCompatibleStateImageBehavior = False
         Me.lstFileInformation.View = System.Windows.Forms.View.Details
@@ -417,7 +417,7 @@ Partial Class frmMain
         Me.TabControl1.Location = New System.Drawing.Point(1, 2)
         Me.TabControl1.Name = "TabControl1"
         Me.TabControl1.SelectedIndex = 0
-        Me.TabControl1.Size = New System.Drawing.Size(374, 490)
+        Me.TabControl1.Size = New System.Drawing.Size(374, 512)
         Me.TabControl1.TabIndex = 19
         '
         'frmMain
@@ -425,7 +425,7 @@ Partial Class frmMain
         Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
         Me.AutoSize = True
-        Me.ClientSize = New System.Drawing.Size(374, 496)
+        Me.ClientSize = New System.Drawing.Size(374, 512)
         Me.Controls.Add(Me.TabControl1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmMain"

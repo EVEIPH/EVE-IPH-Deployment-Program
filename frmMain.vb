@@ -25,6 +25,7 @@ Public Class frmMain
     Private ImagesVersion As String ' Version of the images we have in the zip
     Private FinalDBName As String = "EVEIPH DB"
     Private SQLInstance As String ' how to log into the SQL server on the host computer
+    Private Const DBExtention As String = ".sqlite"
 
     ' Image folders
     Private ImageExportTypes As String
@@ -33,6 +34,7 @@ Public Class frmMain
 
     ' When updating the image files to build the zip, update the root directory images as well so we have the updated images for running in debug mode
     Private WorkingImageFolder As String = "Root Directory\EVEIPH Images"
+    Private UploadImageFolder As String = "\EVEIPH Images"
     Private MissingImagesFilePath As String
 
     ' For saving and scanning the github folder for updates - this folder is in the deployment folder (same as installer and binary)
@@ -111,6 +113,7 @@ Public Class frmMain
             MappingName = ""
             MappingList = New List(Of Mapping)
         End Sub
+
     End Class
 
     Public Sub New()
@@ -180,8 +183,8 @@ Public Class frmMain
                 ' File names
                 MSIInstaller = "Eve Isk per Hour " & VersionNumber & ".msi"
             Else
-                FinalBinaryZip = "EVEIPH v3.1 Binaries.zip"
-                MSIInstaller = "Eve Isk per Hour 3.1.msi"
+                FinalBinaryZip = "EVEIPH v4.0 Binaries.zip"
+                MSIInstaller = "Eve Isk per Hour 4.0.msi"
             End If
 
             SQLInstance = BPStream.ReadLine
@@ -530,7 +533,6 @@ Public Class frmMain
             Exit Sub
         End If
 
-
         ' Make sure we have a DB first
         If RootDirectory = "" Then
             MsgBox("Root Directory Path not set", vbExclamation, Application.ProductName)
@@ -610,38 +612,38 @@ Public Class frmMain
         End While
 
         ' Final images
-        File.Copy(ImageExportTypes & "\4276_32.png", EVEIPHImageFolder & "\43551_32.png") ' T2 Mining Ganglink image
-        File.Copy(ImageExportTypes & "\4276_32.png", WorkingImageFolder & "\43551_32.png") ' T2 Mining Ganglink image
-        File.Copy(ImageExportTypes & "\22557_32.png", EVEIPHImageFolder & "\42528_32.png") ' T1 Mining Ganglink image
-        File.Copy(ImageExportTypes & "\22557_32.png", WorkingImageFolder & "\42528_32.png") ' T1 Mining Ganglink image
-        File.Copy(ImageExportTypes & "\32880_64.png", EVEIPHImageFolder & "\32880_64.png")    ' Ore Mining Frig
-        File.Copy(ImageExportTypes & "\32880_64.png", WorkingImageFolder & "\32880_64.png")   ' Ore Mining Frig
         File.Copy(ImageExportTypes & "\17476_64.png", EVEIPHImageFolder & "\17476_64.png")    ' Covetor
         File.Copy(ImageExportTypes & "\17476_64.png", WorkingImageFolder & "\17476_64.png")   ' Covetor
-        File.Copy(ImageExportTypes & "\17478_64.png", EVEIPHImageFolder & "\17478_64.png")    ' Retriever
+        File.Copy(ImageExportTypes & "\17478_64.png", EVEIPHImageFolder & "\17478_64.png")    ' Retrieverr
         File.Copy(ImageExportTypes & "\17478_64.png", WorkingImageFolder & "\17478_64.png")   ' Retriever
+        File.Copy(ImageExportTypes & "\17480_64.png", EVEIPHImageFolder & "\17480_64.png")    ' Procurer
+        File.Copy(ImageExportTypes & "\17480_64.png", WorkingImageFolder & "\17480_64.png")   ' Procurer
         File.Copy(ImageExportTypes & "\22544_64.png", EVEIPHImageFolder & "\22544_64.png")    ' Hulk
         File.Copy(ImageExportTypes & "\22544_64.png", WorkingImageFolder & "\22544_64.png")   ' Hulk
         File.Copy(ImageExportTypes & "\22546_64.png", EVEIPHImageFolder & "\22546_64.png")    ' Skiff
         File.Copy(ImageExportTypes & "\22546_64.png", WorkingImageFolder & "\22546_64.png")   ' Skiff
         File.Copy(ImageExportTypes & "\22548_64.png", EVEIPHImageFolder & "\22548_64.png")    ' Mackinaw
         File.Copy(ImageExportTypes & "\22548_64.png", WorkingImageFolder & "\22548_64.png")   ' Mackinaw
+        File.Copy(ImageExportTypes & "\22557_32.png", EVEIPHImageFolder & "\42528_32.png") ' T1 Mining Ganglink image
+        File.Copy(ImageExportTypes & "\22557_32.png", WorkingImageFolder & "\42528_32.png") ' T1 Mining Ganglink image
+        File.Copy(ImageExportTypes & "\24688_64.png", EVEIPHImageFolder & "\24688_64.png")    ' Rokh
+        File.Copy(ImageExportTypes & "\24688_64.png", WorkingImageFolder & "\24688_64.png")   ' Rokh
+        File.Copy(ImageExportTypes & "\24698_64.png", EVEIPHImageFolder & "\24698_64.png")    ' Drake
+        File.Copy(ImageExportTypes & "\24698_64.png", WorkingImageFolder & "\24698_64.png")   ' Drake
         File.Copy(ImageExportTypes & "\28352_64.png", EVEIPHImageFolder & "\28352_64.png")    ' Rorqual
         File.Copy(ImageExportTypes & "\28352_64.png", WorkingImageFolder & "\28352_64.png")   ' Rorqual
         File.Copy(ImageExportTypes & "\28606_64.png", EVEIPHImageFolder & "\28606_64.png")    ' Orca
         File.Copy(ImageExportTypes & "\28606_64.png", WorkingImageFolder & "\28606_64.png")   ' Orca
-        File.Copy(ImageExportTypes & "\42244_64.png", EVEIPHImageFolder & "\42244_64.png")    ' Porpoise
-        File.Copy(ImageExportTypes & "\42244_64.png", WorkingImageFolder & "\42244_64.png")   ' Porpoise
-        File.Copy(ImageExportTypes & "\17480_64.png", EVEIPHImageFolder & "\17480_64.png")    ' Procurer
-        File.Copy(ImageExportTypes & "\17480_64.png", WorkingImageFolder & "\17480_64.png")   ' Procurer
-        File.Copy(ImageExportTypes & "\24698_64.png", EVEIPHImageFolder & "\24698_64.png")    ' Drake
-        File.Copy(ImageExportTypes & "\24698_64.png", WorkingImageFolder & "\24698_64.png")   ' Drake
-        File.Copy(ImageExportTypes & "\24688_64.png", EVEIPHImageFolder & "\24688_64.png")    ' Rokh
-        File.Copy(ImageExportTypes & "\24688_64.png", WorkingImageFolder & "\24688_64.png")   ' Rokh
+        File.Copy(ImageExportTypes & "\32880_64.png", EVEIPHImageFolder & "\32880_64.png")    ' Ore Mining Frig
+        File.Copy(ImageExportTypes & "\32880_64.png", WorkingImageFolder & "\32880_64.png")   ' Ore Mining Frig
         File.Copy(ImageExportTypes & "\33697_64.png", EVEIPHImageFolder & "\33697_64.png")    ' Prospect
         File.Copy(ImageExportTypes & "\33697_64.png", WorkingImageFolder & "\33697_64.png")   ' Prospect
         File.Copy(ImageExportTypes & "\37135_64.png", EVEIPHImageFolder & "\37135_64.png")    ' Endurance
         File.Copy(ImageExportTypes & "\37135_64.png", WorkingImageFolder & "\37135_64.png")   ' Endurance
+        File.Copy(ImageExportTypes & "\42244_64.png", EVEIPHImageFolder & "\42244_64.png")    ' Porpoise
+        File.Copy(ImageExportTypes & "\42244_64.png", WorkingImageFolder & "\42244_64.png")   ' Porpoise
+        File.Copy(ImageExportTypes & "\4276_32.png", EVEIPHImageFolder & "\43551_32.png") ' T2 Mining Ganglink image
+        File.Copy(ImageExportTypes & "\4276_32.png", WorkingImageFolder & "\43551_32.png") ' T2 Mining Ganglink image
 
         ' Fuel block images
         File.Copy(ImageExportTypes & "\16272_32.png", EVEIPHImageFolder & "\16272_32.png") ' Heavy Water
@@ -711,7 +713,7 @@ Public Class frmMain
         End While
 
         ' Finally, get all the upwell structures renders by typeID in the Renders folder - Look up by groupID - if these change or more are added, then need to update
-        SQL = "SELECT typeID FROM INVENTORY_TYPES, INVENTORY_GROUPS WHERE INVENTORY_GROUPS.categoryID = 65 
+        SQL = "SELECT DISTINCT typeID FROM INVENTORY_TYPES, INVENTORY_GROUPS WHERE INVENTORY_GROUPS.categoryID = 65 
                 AND INVENTORY_TYPES.groupID = INVENTORY_GROUPS.groupid AND INVENTORY_TYPES.published = 1"
         DBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBRef)
         rsReader = DBCommand.ExecuteReader
@@ -792,7 +794,7 @@ Public Class frmMain
 
         Directory.CreateDirectory(FinalBinaryFolderPath)
 
-        ' Copy all these files from the media file directory (should be most up to date) to the working directory to make the zip
+        ' Copy all these files from the latest file directory (should be most up to date) to the working directory to make the zip
         File.Copy(UploadFileDirectory & JSONDLL, FinalBinaryFolderPath & JSONDLL)
         File.Copy(UploadFileDirectory & SQLiteDLL, FinalBinaryFolderPath & SQLiteDLL)
         File.Copy(UploadFileDirectory & EVEIPHEXE, FinalBinaryFolderPath & EVEIPHEXE)
@@ -999,7 +1001,6 @@ Public Class frmMain
 
     End Function
 
-
     Public Sub Execute_SQLiteSQL(ByVal SQL As String, ByRef DBRef As SQLiteConnection)
         Dim DBExecuteCmd As SQLiteCommand
 
@@ -1087,7 +1088,7 @@ Public Class frmMain
         If Not ConnectToDBs() Then
             Try
                 ' Delete old one
-                File.Delete(DatabasePath & ".sqlite")
+                File.Delete(DatabasePath & DBExtention)
             Catch
                 ' Nothing
             End Try
@@ -1119,18 +1120,18 @@ Public Class frmMain
     Private Sub CreateDBFile(DBPathandName As String)
 
         ' Check for SQLite DB
-        If File.Exists(DBPathandName & ".sqlite") Then
+        If File.Exists(DBPathandName & DBExtention) Then
             Try
                 EVEIPHSQLiteDB.CloseDB()
             Catch
                 ' Nothing
             End Try
             ' Delete old one
-            File.Delete(DBPathandName & ".sqlite")
+            File.Delete(DBPathandName & DBExtention)
         End If
 
         ' Create new SQLite DB
-        SQLiteConnection.CreateFile(DBPathandName & ".sqlite")
+        SQLiteConnection.CreateFile(DBPathandName & DBExtention)
 
     End Sub
 
@@ -1149,15 +1150,15 @@ Public Class frmMain
         Try
 
             ' SQLite DB for saving data
-            If File.Exists(FinalDBPath & ".sqlite") Then
-                EVEIPHSQLiteDB = New SQLiteDBConnection(FinalDBPath & ".sqlite")
+            If File.Exists(FinalDBPath & DBExtention) Then
+                EVEIPHSQLiteDB = New SQLiteDBConnection(FinalDBPath & DBExtention)
                 ' Set pragma to make this faster
                 Call Execute_SQLiteSQL("PRAGMA synchronous = OFF", EVEIPHSQLiteDB.DBRef)
             End If
 
             ' SQLite DB for the SDE
-            If File.Exists(WorkingDirectory & DatabaseName & ".sqlite") Then
-                SDEDB = New SQLiteDBConnection(WorkingDirectory & DatabaseName & ".sqlite")
+            If File.Exists(WorkingDirectory & DatabaseName & DBExtention) Then
+                SDEDB = New SQLiteDBConnection(WorkingDirectory & DatabaseName & DBExtention)
                 ' Set pragma to make this faster
                 Call Execute_SQLiteSQL("PRAGMA synchronous = OFF", SDEDB.DBRef)
             Else
@@ -1212,8 +1213,8 @@ Public Class frmMain
         SQL &= "SELECT blueprintTypeID, activityID, skillID AS materialTypeID, level as quantity, 0 AS consume FROM industryActivitySkills"
         Call Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
-        lblTableName.Text = "Building: INVENTORY_NAMES"
-        Call Build_INVENTORY_NAMES()
+        'lblTableName.Text = "Building: INVENTORY_NAMES"
+        'Call Build_INVENTORY_NAMES()
 
         lblTableName.Text = "Building: INVENTORY_TYPES"
         Call Build_INVENTORY_TYPES()
@@ -1266,15 +1267,6 @@ Public Class frmMain
         lblTableName.Text = "Building: INDUSTRY_SYSTEMS_COST_INDICIES"
         Call Build_INDUSTRY_SYSTEMS_COST_INDICIES()
 
-        lblTableName.Text = "Building: INDUSTRY_TEAMS_AUCTIONS"
-        Call Build_INDUSTRY_TEAMS_AUCTIONS()
-
-        lblTableName.Text = "Building: INDUSTRY_TEAMS"
-        Call Build_INDUSTRY_TEAMS()
-
-        lblTableName.Text = "Building: INDUSTRY_SPECIALTIES"
-        Call Build_INDUSTRY_SPECIALTIES()
-
         lblTableName.Text = "Building: INDUSTRY_FACILITIES"
         Call Build_INDUSTRY_FACILITIES()
 
@@ -1307,9 +1299,6 @@ Public Class frmMain
 
         lblTableName.Text = "Building: CHARACTER_SKILLS"
         Call Build_CHARACTER_SKILLS()
-
-        lblTableName.Text = "Building: CHARACTER_IMPLANTS"
-        Call Build_CHARACTER_IMPLANTS()
 
         lblTableName.Text = "Building: ESI_CHARACTER_DATA"
         Call Build_ESI_CHARACTER_DATA()
@@ -1385,12 +1374,6 @@ Public Class frmMain
 
         lblTableName.Text = "Building: CURRENT_RESEARCH_AGENTS"
         Call Build_Current_Research_Agents()
-
-        lblTableName.Text = "Building: EMD_ITEM_PRICE_HISTORY"
-        Call Build_EMD_Item_Price_History()
-
-        lblTableName.Text = "Building: EMD_UPDATE_HISTORY"
-        Call Build_EMD_Update_History()
 
         lblTableName.Text = "Building: INDUSTRY_UPGRADE_BELTS"
         Call Build_INDUSTRY_UPGRADE_BELTS()
@@ -1613,7 +1596,7 @@ Public Class frmMain
         SQL &= "LEFT JOIN industryActivities AS IA2 ON industryBlueprints.blueprintTypeID = IA2.blueprintTypeID AND IA2.activityID = 4 " ' -- Research ML time
         SQL &= "LEFT JOIN industryActivities AS IA3 ON industryBlueprints.blueprintTypeID = IA3.blueprintTypeID AND IA3.activityID = 5 " ' -- Copy time
         SQL &= "LEFT JOIN industryActivities AS IA4 ON industryBlueprints.blueprintTypeID = IA4.blueprintTypeID AND IA4.activityID = 8 " ' -- Invention time
-        SQL &= "WHERE industryActivityProducts.activityID = 1 " ' -- only bps we can build
+        SQL &= "WHERE industryActivityProducts.activityID IN (1,11) " ' -- only bps we can build or reactions
         SQL &= "AND industryBlueprints.blueprintTypeID = industryActivityProducts.blueprintTypeID "
         SQL &= "AND invTypes1.typeID = industryBlueprints.blueprintTypeID "
         SQL &= "AND invTypes1.groupID = invGroups1.groupID "
@@ -1621,7 +1604,7 @@ Public Class frmMain
         SQL &= "AND invTypes.groupID = invGroups.groupID "
         SQL &= "AND invGroups.categoryID = invCategories.categoryID "
         SQL &= "AND industryBlueprints.blueprintTypeID = industryActivities.blueprintTypeID "
-        SQL &= "AND industryActivities.activityID = 1 " ' -- Production Time 
+        SQL &= "AND industryActivities.activityID IN (1,11) " ' -- Production Time 
         SQL &= "AND (invTypes1.published <> 0 AND invTypes.published <> 0 AND invGroups1.published <> 0 AND invGroups.published <> 0 AND invCategories.published <> 0 " ' -- 2830 bps
         SQL &= "OR industryBlueprints.blueprintTypeID < 0)" ' For all outpost "blueprints"
 
@@ -2090,6 +2073,10 @@ Public Class frmMain
         SQL = "CREATE INDEX IDX_AA_AN_AID_CID_GID ON ASSEMBLY_ARRAYS (ARRAY_NAME, ACTIVITY_ID, CATEGORY_ID, GROUP_ID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
+        ' Assembly arrays had bonuses removed when ECs came out (do this until they are removed)
+        SQL = "UPDATE ASSEMBLY_ARRAYS SET MATERIAL_MULTIPLIER = 1, TIME_MULTIPLIER = 1, COST_MULTIPLIER = 1"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
         Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
     End Sub
@@ -2241,7 +2228,6 @@ Public Class frmMain
     End Sub
 
     ' Updates the table with categories not included - this makes it easier to run the station_facilities table without joins
-
     Private Sub UpdateramAssemblyLineTypeDetailPerCategory()
         ' SQL variables
         Dim SQLCommand As New SQLiteCommand
@@ -2318,7 +2304,7 @@ Public Class frmMain
 
     End Sub
 
-    ' STATIONS - Temp table, update with CREST
+    ' STATIONS - Temp table, update with ESI
     Private Sub Build_Stations()
         Dim SQL As String
 
@@ -2431,23 +2417,6 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         SQL = "CREATE INDEX IDX_CSKILLS_SKILL_TYPE_ID ON CHARACTER_SKILLS (SKILL_TYPE_ID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-    End Sub
-
-    ' CHARACTER_IMPLANTS
-    Private Sub Build_CHARACTER_IMPLANTS()
-        Dim SQL As String
-
-        SQL = "CREATE TABLE CHARACTER_IMPLANTS ("
-        SQL &= "CHARACTER_ID INTEGER NOT NULL,"
-        SQL &= "JUMP_CLONE_ID INTEGER NOT NULL,"
-        SQL &= "IMPLANT_ID INTEGER NOT NULL,"
-        SQL &= "IMPLANT_NAME VARCHAR(100) NOT NULL)"
-
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE INDEX IDX_CI_CHARACTER_ID ON CHARACTER_IMPLANTS (CHARACTER_ID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
     End Sub
@@ -2658,6 +2627,20 @@ Public Class frmMain
 
     End Sub
 
+    ' EVEIPH DATA
+    Private Sub Build_ESI_PUBLIC_CACHE_DATES()
+        Dim SQL As String
+
+        SQL = "CREATE TABLE ESI_PUBLIC_CACHE_DATES ("
+        SQL &= "INDUSTRY_SYSTEMS_CACHED_UNTIL VARCHAR(23)," ' Date
+        SQL &= "INDUSTRY_FACILITIES_CACHED_UNTIL VARCHAR(23)," ' Date
+        SQL &= "MARKET_PRICES_CACHED_UNTIL VARCHAR(23)" ' Date
+        SQL &= ")"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+    End Sub
+
     ' PRICE_PROFILES
     Private Sub Build_PRICE_PROFILES()
         Dim SQL As String
@@ -2752,20 +2735,6 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         SQL = "CREATE INDEX IDX_PP_ID ON PRICE_PROFILES (ID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-    End Sub
-
-    ' EVEIPH DATA
-    Private Sub Build_ESI_PUBLIC_CACHE_DATES()
-        Dim SQL As String
-
-        SQL = "CREATE TABLE ESI_PUBLIC_CACHE_DATES ("
-        SQL &= "INDUSTRY_SYSTEMS_CACHED_UNTIL VARCHAR(23)," ' Date
-        SQL &= "INDUSTRY_FACILITIES_CACHED_UNTIL VARCHAR(23)," ' Date
-        SQL &= "MARKET_PRICES_CACHED_UNTIL VARCHAR(23)" ' Date
-        SQL &= ")"
-
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
     End Sub
@@ -3501,70 +3470,6 @@ Public Class frmMain
         Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         SQLReader1.Close()
-
-        pgMain.Visible = False
-
-    End Sub
-
-    ' CONTROL_TOWER_RESOURCES
-    Private Sub Build_Control_Tower_Resources()
-        Dim SQL As String
-
-        ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
-        Dim SQLReader1 As SQLiteDataReader
-        Dim mainSQL As String
-
-        SQL = "CREATE TABLE CONTROL_TOWER_RESOURCES ("
-        SQL &= "controlTowerTypeID INTEGER NOT NULL,"
-        SQL &= "resourceTypeID INTEGER NOT NULL,"
-        SQL &= "purpose INTEGER,"
-        SQL &= "quantity INTEGER,"
-        SQL &= "minSecurityLevel FLOAT,"
-        SQL &= "factionID INTEGER"
-        SQL &= ")"
-
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        Call SetProgressBarValues("invControlTowerResources")
-
-        ' Pull new data and insert
-        mainSQL = "SELECT controlTowerTypeID, resourceTypeID, purpose, quantity, minSecurityLevel, factionID FROM invControlTowerResources"
-        SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
-        SQLReader1 = SQLCommand.ExecuteReader()
-
-        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
-
-        ' Add to Access table
-        While SQLReader1.Read
-            Application.DoEvents()
-
-            SQL = "INSERT INTO CONTROL_TOWER_RESOURCES VALUES ("
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(3)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(4)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(5)) & ")"
-
-            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-            ' For each record, update the progress bar
-            Call IncrementProgressBar(pgMain)
-            Application.DoEvents()
-
-        End While
-
-        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
-
-        SQLReader1.Close()
-
-        ' Build SQL Lite indexes
-        SQL = "CREATE INDEX IDX_CT_TYPE_ID ON CONTROL_TOWER_RESOURCES (controlTowerTypeID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE INDEX IDX_RESOURCE_TYPE_ID ON CONTROL_TOWER_RESOURCES (resourceTypeID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         pgMain.Visible = False
 
@@ -5505,6 +5410,26 @@ Public Class frmMain
         Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(43892,NULL,9,5)", EVEIPHSQLiteDB.DBRef)
         Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(43893,NULL,9,5)", EVEIPHSQLiteDB.DBRef)
 
+        ' Reactions
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46484,429,NULL,11)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46485,429,NULL,11)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46486,429,NULL,11)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46487,429,NULL,11)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46488,974,NULL,11)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46489,974,NULL,11)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46490,974,NULL,11)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46491,974,NULL,11)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46492,712,NULL,11)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46493,712,NULL,11)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46494,712,NULL,11)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46495,712,NULL,11)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46496,429,NULL,11)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46496,974,NULL,11)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46496,712,NULL,11)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46497,429,NULL,11)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46497,974,NULL,11)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46497,712,NULL,11)", EVEIPHSQLiteDB.DBRef)
+
 
         SQL = "CREATE INDEX IDX_ERB_TID ON ENGINEERING_RIG_BONUSES (typeID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -6378,7 +6303,7 @@ Public Class frmMain
     End Sub
 
     ' INVENTORY_FLAGS
-    Private Sub Build_Inventory_Flags()
+    Private Sub Build_INVENTORY_FLAGS()
         Dim SQL As String
 
         ' SQL variables
@@ -6700,28 +6625,25 @@ Public Class frmMain
 
         SQL = "CREATE TABLE ITEM_PRICES_CACHE ("
         SQL &= "typeID INTEGER NOT NULL,"
-        SQL &= "allVolume REAL NOT NULL,"
-        SQL &= "allAvg REAL NOT NULL,"
-        SQL &= "allMax REAL NOT NULL,"
-        SQL &= "allMin REAL NOT NULL,"
-        SQL &= "allStdDev REAL NOT NULL,"
-        SQL &= "allMedian REAL NOT NULL,"
-        SQL &= "allPercentile REAL," ' make not null
         SQL &= "buyVolume REAL NOT NULL,"
+        SQL &= "buyweightedAvg REAL NOT NULL,"
         SQL &= "buyAvg REAL NOT NULL,"
         SQL &= "buyMax REAL NOT NULL,"
         SQL &= "buyMin REAL NOT NULL,"
         SQL &= "buyStdDev REAL NOT NULL,"
         SQL &= "buyMedian REAL NOT NULL,"
-        SQL &= "buyPercentile REAL," ' make not null
+        SQL &= "buyPercentile REAL NOT NULL,"
+        SQL &= "buyVariance REAL NOT NULL,"
         SQL &= "sellVolume REAL NOT NULL,"
+        SQL &= "sellweightedAvg REAL NOT NULL,"
         SQL &= "sellAvg REAL NOT NULL,"
         SQL &= "sellMax REAL NOT NULL,"
         SQL &= "sellMin REAL NOT NULL,"
         SQL &= "sellStdDev REAL NOT NULL,"
         SQL &= "sellMedian REAL NOT NULL,"
-        SQL &= "sellPercentile REAL," ' make not null
-        SQL &= "RegionList VARCHAR(65535) NOT NULL," ' Memo is Up to 65,535 characters
+        SQL &= "sellPercentile REAL NOT NULL,"
+        SQL &= "sellVariance REAL NOT NULL,"
+        SQL &= "RegionORSystem INTEGER NOT NULL,"
         SQL &= "UpdateDate VARCHAR(23) NOT NULL" ' Date
         SQL &= ")"
 
@@ -6730,47 +6652,7 @@ Public Class frmMain
         SQL = "CREATE INDEX IDX_IPC_TYPEID ON ITEM_PRICES_CACHE (typeID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
-        SQL = "CREATE INDEX IDX_IPC_ID_REGION ON ITEM_PRICES_CACHE (typeID, RegionList)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-    End Sub
-
-    ' EMD_ITEM_PRICE_HISTORY
-    Private Sub Build_EMD_Item_Price_History()
-        Dim SQL As String
-
-        SQL = "CREATE TABLE EMD_ITEM_PRICE_HISTORY ("
-        SQL &= "TYPE_ID INTEGER,"
-        SQL &= "REGION_ID INTEGER,"
-        SQL &= "PRICE_HISTORY_DATE VARCHAR(23)," ' Date
-        SQL &= "LOW_PRICE FLOAT,"
-        SQL &= "HIGH_PRICE FLOAT,"
-        SQL &= "AVG_PRICE FLOAT,"
-        SQL &= "TOTAL_ORDERS_FILLED INTEGER,"
-        SQL &= "TOTAL_VOLUME_FILLED INTEGER"
-        SQL &= ")"
-
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE UNIQUE INDEX IDX_EMD_HISTORY ON EMD_ITEM_PRICE_HISTORY (TYPE_ID, REGION_ID, PRICE_HISTORY_DATE)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-    End Sub
-
-    ' EMD_UPDATE_HISTORY
-    Private Sub Build_EMD_Update_History()
-        Dim SQL As String
-
-        SQL = "CREATE TABLE EMD_UPDATE_HISTORY ("
-        SQL &= "TYPE_ID INTEGER,"
-        SQL &= "DAYS INTEGER,"
-        SQL &= "REGION_ID INTEGER,"
-        SQL &= "UPDATE_LAST_RAN VARCHAR(23)" ' Date
-        SQL &= ")"
-
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE UNIQUE INDEX IDX_EMD_U_HISTORY ON EMD_UPDATE_HISTORY (TYPE_ID, DAYS, REGION_ID, UPDATE_LAST_RAN)"
+        SQL = "CREATE INDEX IDX_IPC_ID_REGION ON ITEM_PRICES_CACHE (typeID, RegionORSystem)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
     End Sub
@@ -6861,6 +6743,7 @@ Public Class frmMain
 #End Region
 
 #Region "Facility Tables"
+
     ' SAVED_FACILITIES
     Private Sub Build_SAVED_FACILITIES()
         Dim SQL As String
@@ -6890,37 +6773,38 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         ' Add default data
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,1,0,60003760,0,1529,10000002,30000142,0,1,1,1,0.1,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,1,1,60003760,0,1529,10000002,30000142,0,1,1,1,0.1,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,2,0,60003760,0,1529,10000002,30000142,0,1,1,1,0.1,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,2,1,60003760,0,1529,10000002,30000142,0,1,1,1,0.1,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,3,0,60003760,0,1529,10000002,30000142,0,1,1,1,0.1,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,3,1,60003760,0,1529,10000002,30000142,0,1,1,1,0.1,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,4,0,60003043,0,1529,10000002,30000163,0,1,1,1,0.1,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,4,1,60003043,0,1529,10000002,30000163,0,1,1,1,0.1,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,5,0,24575,1,12236,10000047,30003713,0,1,1,1,0,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,5,1,24575,1,12236,10000047,30003713,0,1,1,1,0,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,6,0,30389,1,12236,10000002,30000142,0,1,1,1,0,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,6,1,30389,1,12236,10000002,30000142,0,1,1,1,0,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,7,0,30389,1,12236,10000002,30000142,0,1,1,1,0,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,7,1,30389,1,12236,10000002,30000142,0,1,1,1,0,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,8,0,25305,1,12236,10000047,30003713,0,1,1,1,0,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,8,1,25305,1,12236,10000047,30003713,0,1,1,1,0,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,9,0,60001786,0,54,10000002,30000187,0,1,1,1,0.1,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,9,1,60001786,0,54,10000002,30000187,0,1,1,1,0.1,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,10,0,60001786,0,54,10000002,30000187,0,1,1,1,0.1,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,10,1,60001786,0,54,10000002,30000187,0,1,1,1,0.1,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,11,0,60003760,0,1529,10000002,30000163,0,1,1,1,0.1,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,11,1,60003760,0,1529,10000002,30000163,0,1,1,1,0.1,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,12,0,24567,1,12236,10000002,30000163,0,1,1,1,0,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,12,1,24567,1,12236,10000002,30000163,0,1,1,1,0,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,13,0,24653,1,12236,10000002,30000163,0,1,1,1,0,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,13,1,24653,1,12236,10000002,30000163,0,1,1,1,0,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,14,0,13780,1,12236,10000002,30000163,0,1,1,1,0,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,14,1,13780,1,12236,10000002,30000163,0,1,1,1,0,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,15,0,24660,1,12236,10000002,30000163,0,1,1,1,0,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,15,1,24660,1,12236,10000002,30000163,0,1,1,1,0,1,1,1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,16,0,29613,1,12236,10000002,30000163,0,1,1,1,0,1,1,1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,1,0,60003760,0,1529,10000002,30000142,0,1,1,1,0.1,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,1,1,60003760,0,1529,10000002,30000142,0,1,1,1,0.1,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,2,0,60003760,0,1529,10000002,30000142,0,1,1,1,0.1,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,2,1,60003760,0,1529,10000002,30000142,0,1,1,1,0.1,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,3,0,60003760,0,1529,10000002,30000142,0,1,1,1,0.1,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,3,1,60003760,0,1529,10000002,30000142,0,1,1,1,0.1,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,4,0,60003043,0,1529,10000002,30000163,0,1,1,1,0.1,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,4,1,60003043,0,1529,10000002,30000163,0,1,1,1,0.1,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,5,0,12236,1,24575,10000047,30003713,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,5,1,12236,1,24575,10000047,30003713,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,6,0,12236,1,30389,10000002,30000142,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,6,1,12236,1,30389,10000002,30000142,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,7,0,12236,1,30389,10000002,30000142,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,7,1,12236,1,30389,10000002,30000142,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,8,0,12236,1,25305,10000047,30003713,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,8,1,12236,1,25305,10000047,30003713,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,9,0,60001786,0,54,10000002,30000187,0,1,1,1,0.1,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,9,1,60001786,0,54,10000002,30000187,0,1,1,1,0.1,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,10,0,60001786,0,54,10000002,30000187,0,1,1,1,0.1,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,10,1,60001786,0,54,10000002,30000187,0,1,1,1,0.1,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,11,0,35835,3,35835,10000002,30000163,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,11,1,35835,3,35835,10000002,30000163,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,12,0,12236,1,24567,10000002,30000163,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,12,1,12236,1,24567,10000002,30000163,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,13,0,12236,1,24653,10000002,30000163,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,13,1,12236,1,24653,10000002,30000163,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,14,0,12236,1,13780,10000002,30000163,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,14,1,12236,1,13780,10000002,30000163,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,15,0,12236,1,24660,10000002,30000163,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,15,1,12236,1,24660,10000002,30000163,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,16,0,12236,1,29613,10000002,30000163,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,16,1,12236,1,29613,10000002,30000163,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
 
     End Sub
 
@@ -7065,10 +6949,12 @@ Public Class frmMain
         Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(35835,'Athanor',1,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(35835,'Athanor',5,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(35835,'Athanor',8,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(35835,'Athanor',11,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
 
         Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(35836,'Tatara',1,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(35836,'Tatara',5,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(35836,'Tatara',8,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(35836,'Tatara',11,1,.75,1,0,0);", EVEIPHSQLiteDB.DBRef)
 
     End Sub
 
@@ -7175,135 +7061,6 @@ Public Class frmMain
         pgMain.Visible = False
 
         Application.DoEvents()
-
-    End Sub
-
-#End Region
-
-#Region "CREST Tables"
-
-    ' INDUSTRY_SPECIALTIES
-    Private Sub Build_INDUSTRY_SPECIALTIES()
-        Dim SQL As String
-
-        ' Build two tables here
-        SQL = "CREATE TABLE INDUSTRY_GROUP_SPECIALTIES ("
-        SQL &= "GROUP_ID INTEGER NOT NULL,"
-        SQL &= "SPECIALTY_GROUP_ID INTEGER NOT NULL,"
-        SQL &= "SPECIALTY_GROUP_NAME VARCHAR(100) NOT NULL"
-        SQL &= ")"
-
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE INDEX IDX_SGID_GID ON INDUSTRY_GROUP_SPECIALTIES (SPECIALTY_GROUP_ID, GROUP_ID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE TABLE INDUSTRY_CATEGORY_SPECIALTIES ("
-        SQL &= "SPECIALTY_CATEGORY_ID INTEGER NOT NULL,"
-        SQL &= "SPECIALTY_CATEGORY_NAME VARCHAR(100) NOT NULL"
-        SQL &= ")"
-
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE INDEX IDX_CAT_ID ON INDUSTRY_CATEGORY_SPECIALTIES (SPECIALTY_CATEGORY_ID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-    End Sub
-
-    ' INDUSTRY_TEAMS
-    Private Sub Build_INDUSTRY_TEAMS()
-        Dim SQL As String
-
-        ' Create two tables for teams
-        SQL = "CREATE TABLE INDUSTRY_TEAMS ("
-        SQL &= "TEAM_ID INTEGER PRIMARY_KEY,"
-        SQL &= "TEAM_NAME VARCHAR(100) NOT NULL,"
-        SQL &= "TEAM_ACTIVITY_ID INTEGER NOT NULL,"
-        SQL &= "SOLAR_SYSTEM_ID INTEGER NOT NULL,"
-        SQL &= "SOLAR_SYSTEM_NAME VARCHAR(10) NOT NULL,"
-        SQL &= "COST_MODIFIER FLOAT NOT NULL,"
-        SQL &= "CREATION_TIME VARCHAR(23) NOT NULL,"
-        SQL &= "EXPIRY_TIME VARCHAR(23) NOT NULL,"
-        SQL &= "SPECIALTY_CATEGORY_ID INTEGER NOT NULL"
-        SQL &= ")"
-
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE INDEX IDX_TEAMS_TEAM_ID ON INDUSTRY_TEAMS (TEAM_ID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE INDEX IDX_TEAMS_ACTIVITY_ID ON INDUSTRY_TEAMS (TEAM_ACTIVITY_ID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE INDEX IDX_TEAMS_TEAM_NAME ON INDUSTRY_TEAMS (TEAM_NAME)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE TABLE INDUSTRY_TEAMS_BONUSES ("
-        SQL &= "TEAM_ID INTEGER NOT NULL,"
-        SQL &= "TEAM_NAME VARCHAR(100) NOT NULL,"
-        SQL &= "BONUS_ID INTEGER NOT NULL,"
-        SQL &= "BONUS_TYPE STRING NOT NULL,"
-        SQL &= "BONUS_VALUE FLOAT NOT NULL,"
-        SQL &= "SPECIALTY_GROUP_ID INTEGER NOT NULL"
-        SQL &= ")"
-
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE INDEX IDX_BONUSES_ID_GID ON INDUSTRY_TEAMS_BONUSES (TEAM_ID, SPECIALTY_GROUP_ID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE INDEX IDX_BONUSES_NAME_GID ON INDUSTRY_TEAMS_BONUSES (TEAM_NAME, SPECIALTY_GROUP_ID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-    End Sub
-
-    ' INDUSTRY_TEAMS_AUCTIONS
-    Private Sub Build_INDUSTRY_TEAMS_AUCTIONS()
-        Dim SQL As String
-
-        SQL = "CREATE TABLE INDUSTRY_TEAMS_AUCTIONS ("
-        SQL &= "TEAM_ID INTEGER PRIMARY_KEY,"
-        SQL &= "TEAM_NAME VARCHAR(100) NOT NULL,"
-        SQL &= "TEAM_ACTIVITY_ID INTEGER NOT NULL,"
-        SQL &= "SOLAR_SYSTEM_ID INTEGER NOT NULL,"
-        SQL &= "SOLAR_SYSTEM_NAME VARCHAR(100) NOT NULL,"
-        SQL &= "COST_MODIFIER FLOAT NOT NULL,"
-        SQL &= "CREATION_TIME VARCHAR(23)," ' Date
-        SQL &= "EXPIRY_TIME VARCHAR(23)," ' Date
-        SQL &= "SPECIALTY_CATEGORY_ID INTEGER NOT NULL,"
-        SQL &= "AUCTION_ID INTEGER NOT NULL PRIMARY KEY"
-        SQL &= ")"
-
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE INDEX IDX_AUCTIONS_TEAM_ID ON INDUSTRY_TEAMS_AUCTIONS (TEAM_ID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE INDEX IDX_AUCTIONS_CTIVITY_ID ON INDUSTRY_TEAMS_AUCTIONS (TEAM_ACTIVITY_ID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE INDEX IDX_AUCTIONS_TEAM_NAME ON INDUSTRY_TEAMS_AUCTIONS (TEAM_NAME)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE INDEX IDX_AUCTIONS_AUCTION_ID ON INDUSTRY_TEAMS_AUCTIONS (AUCTION_ID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        ' Make the Bids table too
-        SQL = "CREATE TABLE INDUSTRY_TEAMS_AUCTIONS_BIDS ("
-        SQL &= "AUCTION_ID INTEGER NOT NULL," ' Links to auctions
-        SQL &= "SOLAR_SYSTEM_ID INTEGER NOT NULL,"
-        SQL &= "SOLAR_SYSTEM_NAME VARCHAR(100) NOT NULL,"
-        SQL &= "BID_AMOUNT FLOAT NOT NULL,"
-        SQL &= "CHARACTER_ID INTEGER NOT NULL,"
-        SQL &= "CHARACTER_NAME VARCHAR(100) NOT NULL,"
-        SQL &= "IS_CHARACTER_NPC INTEGER NOT NULL,"
-        SQL &= "CHARACTER_BID FLOAT NOT NULL"
-        SQL &= ")"
-
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE INDEX IDX_BIDS_AUCTION_ID ON INDUSTRY_TEAMS_AUCTIONS_BIDS (AUCTION_ID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
     End Sub
 
@@ -7874,7 +7631,7 @@ Public Class frmMain
         Call Execute_SQLiteSQL("DELETE FROM invTypes where typeID IN (34457,34459,34461,34463,34465,34467,34469,34471,34473,34475,34477,34479)", SDEDB.DBRef)
 
         ' Insert all the data for outpost upgrades, and eggs here
-        Call UploadOutpostItems()
+        'Call UploadOutpostItems() ' Removed May 2018 update
 
         ' Update the T3 relic "blueprints" to require the relic blueprint as a material for its invention activity
         Call UpdateT3Relics()
@@ -10258,7 +10015,7 @@ Public Class frmMain
 
     ' Inserts blueprints as output products for copy and ME/TE activities
     Private Sub UpdateIndustryActivityProducts()
-        Dim SQL As String = "SELECT blueprintTypeID, activityID FROM industryActivities WHERE activityID NOT IN (8,1)"
+        Dim SQL As String = "SELECT blueprintTypeID, activityID FROM industryActivities WHERE activityID NOT IN (1,8,11)" ' Manufacturing, Invention, Reactions
 
         Dim SQLCommand As New SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
@@ -10365,10 +10122,8 @@ Public Class frmMain
 
         On Error GoTo 0
 
-        ' Output the Latest XML File if we have updates
-        If NewFilesAdded Then
-            Call WriteLatestXMLFile()
-        End If
+        ' Output the Latest XML File 
+        Call WriteLatestXMLFile()
 
         ' Refresh the grid
         Call LoadFileGrid()
