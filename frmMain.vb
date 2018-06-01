@@ -2573,8 +2573,8 @@ Public Class frmMain
         SQL &= "GENDER VARCHAR(6) NOT NULL,"
         SQL &= "RACE_ID INTEGER NOT NULL,"
         SQL &= "BLOODLINE_ID INTEGER NOT NULL,"
-        SQL &= "ANCESTRY_ID INTEGER NOT NULL,"
-        SQL &= "DESCRIPTION VARCHAR(500) NOT NULL,"
+        SQL &= "ANCESTRY_ID INTEGER,"
+        SQL &= "DESCRIPTION VARCHAR(500),"
         SQL &= "ACCESS_TOKEN VARCHAR(100) NOT NULL,"
         SQL &= "ACCESS_TOKEN_EXPIRE_DATE_TIME VARCHAR(23) NOT NULL," ' Date
         SQL &= "TOKEN_TYPE VARCHAR(20) NOT NULL,"
@@ -2603,17 +2603,20 @@ Public Class frmMain
         Dim SQL As String
 
         SQL = "CREATE TABLE ESI_CORPORATION_DATA ("
-        SQL &= "CORPORATION_ID Integer NOT NULL,"
+        SQL &= "CORPORATION_ID INTEGER NOT NULL,"
         SQL &= "CORPORATION_NAME VARCHAR(100) NOT NULL,"
         SQL &= "TICKER VARCHAR(5) NOT NULL,"
-        SQL &= "MEMBER_COUNT Integer NOT NULL,"
-        SQL &= "ALLIANCE_ID Integer, "
-        SQL &= "CEO_ID Integer NOT NULL,"
-        SQL &= "CREATOR_ID Integer NOT NULL,"
+        SQL &= "MEMBER_COUNT INTEGER NOT NULL,"
+        'SQL &= "FACTION_ID INTEGER,"
+        SQL &= "ALLIANCE_ID INTEGER, "
+        SQL &= "CEO_ID INTEGER NOT NULL,"
+        SQL &= "CREATOR_ID INTEGER NOT NULL,"
+        ' SQL &= "HOME_STATION_ID INTEGER,"
+        ' SQL &= "SHARES INTEGER,"
         SQL &= "TAX_RATE REAL NOT NULL,"
-        SQL &= "DESCRIPTION VARCHAR(1000) NOT NULL,"
-        SQL &= "DATE_FOUNDED VARCHAR(23) NOT NULL," ' Date
-        SQL &= "URL VARCHAR(100) NOT NULL,"
+        SQL &= "DESCRIPTION VARCHAR(1000),"
+        SQL &= "DATE_FOUNDED VARCHAR(23)," ' Date
+        SQL &= "URL VARCHAR(100),"
         SQL &= "PUBLIC_DATA_CACHE_DATE VARCHAR(23)," ' Date
         SQL &= "BLUEPRINTS_CACHE_DATE VARCHAR(23)," ' Date
         SQL &= "ASSETS_CACHE_DATE VARCHAR(23)," ' Date
@@ -2694,6 +2697,8 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Booster Materials','Min Sell', 'The Forge','Jita',0,1)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Materials','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Ships','Min Sell', 'The Forge','Jita',0,0)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -2732,6 +2737,8 @@ Public Class frmMain
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Fuel Blocks','Min Sell', 'The Forge','Jita',0,0)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Implants','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Structure Rigs','Min Sell', 'The Forge','Jita',0,0)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         SQL = "CREATE INDEX IDX_PP_ID ON PRICE_PROFILES (ID)"
@@ -6945,7 +6952,7 @@ Public Class frmMain
         Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(40340,'Upwell Palatine Keepstar',5,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(40340,'Upwell Palatine Keepstar',8,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
 
-        ' Refinerys
+        ' Refineries
         Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(35835,'Athanor',1,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(35835,'Athanor',5,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(35835,'Athanor',8,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
@@ -6955,6 +6962,27 @@ Public Class frmMain
         Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(35836,'Tatara',5,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(35836,'Tatara',8,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(35836,'Tatara',11,1,.75,1,0,0);", EVEIPHSQLiteDB.DBRef)
+
+        ' Faction Citadels
+        Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(47512,'''Moreau'' Fortizar',1,.9,1,.98,0,0);", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(47512,'''Moreau'' Fortizar',5,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(47512,'''Moreau'' Fortizar',8,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
+
+        Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(47513,'''Draccous'' Fortizar',1,1,.85,.97,0,0);", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(47513,'''Draccous'' Fortizar',5,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(47513,'''Draccous'' Fortizar',8,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
+
+        Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(47514,'''Horizon'' Fortizar',1,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(47514,'''Horizon'' Fortizar',5,1,.85,.97,0,0);", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(47514,'''Horizon'' Fortizar',8,1,.85,.97,0,0);", EVEIPHSQLiteDB.DBRef)
+
+        Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(47515,'''Marginis'' Fortizar',1,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(47515,'''Marginis'' Fortizar',5,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(47515,'''Marginis'' Fortizar',8,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
+
+        Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(47516,'''Prometheus'' Fortizar',1,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(47516,'''Prometheus'' Fortizar',5,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(47516,'''Prometheus'' Fortizar',8,1,1,1,0,0);", EVEIPHSQLiteDB.DBRef)
 
     End Sub
 
