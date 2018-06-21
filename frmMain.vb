@@ -1306,6 +1306,9 @@ Public Class frmMain
         lblTableName.Text = "Building: ESI_CORPORATION_DATA"
         Call Build_ESI_CORPORATION_DATA()
 
+        lblTableName.Text = "Building: ESI_CORPORATION_ROLES"
+        Call Build_ESI_CORPORATION_ROLES()
+
         lblTableName.Text = "Building: ESI_PUBLIC_CACHE_DATES"
         Call Build_ESI_PUBLIC_CACHE_DATES()
 
@@ -2607,12 +2610,12 @@ Public Class frmMain
         SQL &= "CORPORATION_NAME VARCHAR(100) NOT NULL,"
         SQL &= "TICKER VARCHAR(5) NOT NULL,"
         SQL &= "MEMBER_COUNT INTEGER NOT NULL,"
-        'SQL &= "FACTION_ID INTEGER,"
+        SQL &= "FACTION_ID INTEGER,"
         SQL &= "ALLIANCE_ID INTEGER, "
         SQL &= "CEO_ID INTEGER NOT NULL,"
         SQL &= "CREATOR_ID INTEGER NOT NULL,"
-        ' SQL &= "HOME_STATION_ID INTEGER,"
-        ' SQL &= "SHARES INTEGER,"
+        SQL &= "HOME_STATION_ID INTEGER,"
+        SQL &= "SHARES INTEGER,"
         SQL &= "TAX_RATE REAL NOT NULL,"
         SQL &= "DESCRIPTION VARCHAR(1000),"
         SQL &= "DATE_FOUNDED VARCHAR(23)," ' Date
@@ -2620,12 +2623,31 @@ Public Class frmMain
         SQL &= "PUBLIC_DATA_CACHE_DATE VARCHAR(23)," ' Date
         SQL &= "BLUEPRINTS_CACHE_DATE VARCHAR(23)," ' Date
         SQL &= "ASSETS_CACHE_DATE VARCHAR(23)," ' Date
-        SQL &= "INDUSTRY_JOBS_CACHE_DATE VARCHAR(23)" ' Date
+        SQL &= "INDUSTRY_JOBS_CACHE_DATE VARCHAR(23)," ' Date
+        SQL &= "CORP_ROLES_CACHE_DATE VARCHAR(23)" ' Date
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         SQL = "CREATE INDEX IDX_ECRD_CHARACTER_ID On ESI_CORPORATION_DATA (CORPORATION_ID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+    End Sub
+
+    ' ESI_CORPORATION_ROLES
+    Private Sub Build_ESI_CORPORATION_ROLES()
+        Dim SQL As String
+
+        SQL = "CREATE TABLE ESI_CORPORATION_ROLES ("
+        SQL &= "CORPORATION_ID INTEGER NOT NULL,"
+        SQL &= "CHARACTER_ID INTEGER NOT NULL,"
+        SQL &= "ROLE VARCHAR(25) NOT NULL,"
+        SQL &= "ROLE_TYPE VARCHAR(25) NOT NULL"
+        SQL &= ")"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "CREATE INDEX IDX_ESI_CORPORATION_ROLES ON ESI_CORPORATION_ROLES (CORPORATION_ID, CHARACTER_ID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
     End Sub
