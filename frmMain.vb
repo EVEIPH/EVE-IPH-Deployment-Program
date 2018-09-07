@@ -1,6 +1,9 @@
 ﻿Imports System.Data.SQLite
 Imports System.IO
 Imports System.Xml
+Imports Newtonsoft.Json
+Imports System.Net
+Imports System.Text
 
 Public Class frmMain
     Inherits Form
@@ -681,15 +684,23 @@ Public Class frmMain
         File.Copy(ImageExportTypes & "\9848_32.png", EVEIPHImageFolder & "\9848_32.png")   ' Robotics
         File.Copy(ImageExportTypes & "\9848_32.png", WorkingImageFolder & "\9848_32.png")   ' Robotics
 
+        SQL = "SELECT COUNT(typeID) FROM INVENTORY_TYPES, INVENTORY_GROUPS WHERE INVENTORY_TYPES.groupID = INVENTORY_GROUPS.groupID "
+        SQL &= "AND ABS(categoryID) = 66 AND INVENTORY_TYPES.published <> 0"
+        DBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBRef)
+        rsReader = DBCommand.ExecuteReader
+        rsReader.Read()
+        ReaderCount = rsReader.GetValue(0)
+        rsReader.Close()
+
+        pgMain.Value = 0
+        pgMain.Maximum = ReaderCount
+        pgMain.Visible = True
+
         ' Get all the Engineering Complex icons
         SQL = "SELECT typeID, typeName FROM INVENTORY_TYPES, INVENTORY_GROUPS WHERE INVENTORY_TYPES.groupID = INVENTORY_GROUPS.groupID "
         SQL &= "AND ABS(categoryID) = 66 AND INVENTORY_TYPES.published <> 0"
         DBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBRef)
         rsReader = DBCommand.ExecuteReader
-
-        pgMain.Value = 0
-        pgMain.Maximum = ReaderCount
-        pgMain.Visible = True
 
         Application.DoEvents()
 
@@ -713,14 +724,22 @@ Public Class frmMain
         End While
 
         ' Finally, get all the upwell structures renders by typeID in the Renders folder - Look up by groupID - if these change or more are added, then need to update
-        SQL = "SELECT DISTINCT typeID FROM INVENTORY_TYPES, INVENTORY_GROUPS WHERE INVENTORY_GROUPS.categoryID = 65 
+        SQL = "SELECT DISTINCT COUNT(typeID) FROM INVENTORY_TYPES, INVENTORY_GROUPS WHERE INVENTORY_GROUPS.categoryID = 65 
                 AND INVENTORY_TYPES.groupID = INVENTORY_GROUPS.groupid AND INVENTORY_TYPES.published = 1"
         DBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBRef)
         rsReader = DBCommand.ExecuteReader
+        rsReader.Read()
+        ReaderCount = rsReader.GetValue(0)
+        rsReader.Close()
 
         pgMain.Value = 0
         pgMain.Maximum = ReaderCount
         pgMain.Visible = True
+
+        SQL = "Select DISTINCT typeID FROM INVENTORY_TYPES, INVENTORY_GROUPS WHERE INVENTORY_GROUPS.categoryID = 65 
+                AND INVENTORY_TYPES.groupID = INVENTORY_GROUPS.groupid AND INVENTORY_TYPES.published = 1"
+        DBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBRef)
+        rsReader = DBCommand.ExecuteReader
 
         Application.DoEvents()
 
@@ -744,13 +763,15 @@ Public Class frmMain
 
         Call rsReader.Close()
 
+        pgMain.Visible = False
+        lblTableName.Text = "Cleaning up files..."
+        Application.DoEvents()
+
         ' Delete the file if it already exists
         File.Delete(WorkingDirectory & "EVEIPH Images.zip")
 
         ' Compress the images
         Call ZipFile.CreateFromDirectory(EVEIPHImageFolder, WorkingDirectory & "EVEIPH Images.zip", CompressionLevel.Optimal, False)
-
-        pgMain.Visible = False
 
         ' If we didn't output any missing images, delete the output fille
         If Not MissingImages Then
@@ -762,6 +783,7 @@ Public Class frmMain
         Call CloseDBs()
 
         Me.Cursor = Cursors.Default
+        lblTableName.Text = ""
         Call EnableButtons(True)
 
         MsgBox("Images Copied Successfully", vbInformation, "Complete")
@@ -1162,7 +1184,8 @@ Public Class frmMain
                 ' Set pragma to make this faster
                 Call Execute_SQLiteSQL("PRAGMA synchronous = OFF", SDEDB.DBRef)
             Else
-                Call MsgBox("Not SDE Database found", "Error", vbExclamation)
+                Me.Cursor = Cursors.Default
+                Call MsgBox("Not SDE Database found", vbExclamation, Application.ProductName)
                 Return False
             End If
 
@@ -1171,6 +1194,7 @@ Public Class frmMain
             Return True
         Catch ex As Exception
             MsgBox(Err.Description, vbExclamation, Application.ProductName)
+            Me.Cursor = Cursors.Default
             Return False
         End Try
 
@@ -2110,9 +2134,7 @@ Public Class frmMain
         SQL &= "TIME_MULTIPLIER REAL NOT NULL, "
         SQL &= "COST_MULTIPLIER REAL NOT NULL, "
         SQL &= "GROUP_ID INT NOT NULL, "
-        SQL &= "CATEGORY_ID INT NOT NULL, "
-        SQL &= "COST_INDEX REAL NOT NULL, "
-        SQL &= "OUTPOST INT NOT NULL "
+        SQL &= "CATEGORY_ID INT NOT NULL"
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -2133,8 +2155,7 @@ Public Class frmMain
         mainSQL = mainSQL & "ramAssemblyLineTypes.baseMaterialMultiplier * ramAssemblyLineTypeDetailPerGroup.materialMultiplier AS MATERIAL_MULTIPLIER, "
         mainSQL = mainSQL & "ramAssemblyLineTypes.baseTimeMultiplier * ramAssemblyLineTypeDetailPerGroup.timeMultiplier AS TIME_MULTIPLIER,  "
         mainSQL = mainSQL & "ramAssemblyLineTypes.baseCostMultiplier * ramAssemblyLineTypeDetailPerGroup.costMultiplier AS COST_MULTIPLIER,  "
-        mainSQL = mainSQL & "invGroups.groupID AS GROUP_ID, "
-        mainSQL = mainSQL & "0 AS CATEGORY_ID, 0 AS COST_INDEX, 0 AS OUTPOST "
+        mainSQL = mainSQL & "invGroups.groupID AS GROUP_ID, 0 AS CATEGORY_ID "
         mainSQL = mainSQL & "FROM staStations, invTypes, ramAssemblyLineStations, mapRegions, mapSolarSystems, "
         mainSQL = mainSQL & "ramActivities, ramAssemblyLineTypes, ramAssemblyLineTypeDetailPerGroup, invGroups "
         mainSQL = mainSQL & "WHERE staStations.stationTypeID = invTypes.typeID "
@@ -2154,18 +2175,17 @@ Public Class frmMain
         mainSQL = mainSQL & "ramAssemblyLineTypes.baseMaterialMultiplier * ramAssemblyLineTypeDetailPerCategory.materialMultiplier AS MATERIAL_MULTIPLIER, "
         mainSQL = mainSQL & "ramAssemblyLineTypes.baseTimeMultiplier * ramAssemblyLineTypeDetailPerCategory.timeMultiplier AS TIME_MULTIPLIER,  "
         mainSQL = mainSQL & "ramAssemblyLineTypes.baseCostMultiplier * ramAssemblyLineTypeDetailPerCategory.costMultiplier AS COST_MULTIPLIER,    "
-        mainSQL = mainSQL & "0 AS GROUP_ID, "
-        mainSQL = mainSQL & "invCategories.categoryID AS CATEGORY_ID, 0 AS COST_INDEX, 0 AS OUTPOST "
+        mainSQL = mainSQL & "0 AS GROUP_ID, invCategories.categoryID AS CATEGORY_ID  "
         mainSQL = mainSQL & "FROM staStations, invTypes, ramAssemblyLineStations, mapRegions, mapSolarSystems, "
         mainSQL = mainSQL & "ramActivities, ramAssemblyLineTypes, ramAssemblyLineTypeDetailPerCategory, invCategories "
         mainSQL = mainSQL & "WHERE staStations.stationTypeID = invTypes.typeID "
-        mainSQL = mainSQL & "AND ramAssemblyLineTypes.assemblyLineTypeID = ramAssemblyLineTypeDetailPerCategory.assemblyLineTypeID "
-        mainSQL = mainSQL & "AND ramAssemblyLineTypeDetailPerCategory.categoryID = invCategories.categoryID "
-        mainSQL = mainSQL & "AND staStations.regionID = mapRegions.regionID "
-        mainSQL = mainSQL & "AND staStations.solarSystemID = mapSolarSystems.solarSystemID "
-        mainSQL = mainSQL & "AND staStations.stationID = ramAssemblyLineStations.stationID "
-        mainSQL = mainSQL & "AND ramAssemblyLineTypes.activityID = ramActivities.activityID "
-        mainSQL = mainSQL & "AND ramAssemblyLineStations.assemblyLineTypeID = ramAssemblyLineTypes.assemblyLineTypeID "
+        mainSQL = mainSQL & "And ramAssemblyLineTypes.assemblyLineTypeID = ramAssemblyLineTypeDetailPerCategory.assemblyLineTypeID "
+        mainSQL = mainSQL & "And ramAssemblyLineTypeDetailPerCategory.categoryID = invCategories.categoryID "
+        mainSQL = mainSQL & "And staStations.regionID = mapRegions.regionID "
+        mainSQL = mainSQL & "And staStations.solarSystemID = mapSolarSystems.solarSystemID "
+        mainSQL = mainSQL & "And staStations.stationID = ramAssemblyLineStations.stationID "
+        mainSQL = mainSQL & "And ramAssemblyLineTypes.activityID = ramActivities.activityID "
+        mainSQL = mainSQL & "And ramAssemblyLineStations.assemblyLineTypeID = ramAssemblyLineTypes.assemblyLineTypeID "
 
         SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
         SQLReader1 = SQLCommand.ExecuteReader()
@@ -2192,9 +2212,7 @@ Public Class frmMain
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(12)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(13)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(14)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(15)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(16)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(17)) & ")"
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(15)) & ")"
 
             Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
@@ -2208,22 +2226,19 @@ Public Class frmMain
         Application.DoEvents()
 
         ' Finally do indexes
-        SQL = "CREATE INDEX IDX_SF_FN_AID ON STATION_FACILITIES (FACILITY_NAME, ACTIVITY_ID);"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
         SQL = "CREATE INDEX IDX_SF_FID_AID_GID_CID ON STATION_FACILITIES (FACILITY_ID, ACTIVITY_ID, GROUP_ID, CATEGORY_ID);"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
-        SQL = "CREATE INDEX IDX_SF_OP_FN_AID_CID ON STATION_FACILITIES (OUTPOST, FACILITY_NAME, ACTIVITY_ID, CATEGORY_ID);"
+        SQL = "CREATE INDEX IDX_SF_OP_FN_AID_CID ON STATION_FACILITIES (FACILITY_NAME, ACTIVITY_ID, CATEGORY_ID);"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
-        SQL = "CREATE INDEX IDX_SF_OP_FN_AID_GID ON STATION_FACILITIES (OUTPOST, FACILITY_NAME, ACTIVITY_ID, GROUP_ID);"
+        SQL = "CREATE INDEX IDX_SF_OP_FN_AID_GID ON STATION_FACILITIES (FACILITY_NAME, ACTIVITY_ID, GROUP_ID);"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         SQL = "CREATE INDEX IDX_SF_SSID_AID ON STATION_FACILITIES (SOLAR_SYSTEM_ID, ACTIVITY_ID);"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
-        SQL = "CREATE INDEX IDX_SF_OP_AID_GID_CID_RN_SSN ON STATION_FACILITIES (OUTPOST, ACTIVITY_ID, GROUP_ID, CATEGORY_ID, REGION_NAME, SOLAR_SYSTEM_NAME);"
+        SQL = "CREATE INDEX IDX_SF_OP_AID_GID_CID_RN_SSN ON STATION_FACILITIES (ACTIVITY_ID, GROUP_ID, CATEGORY_ID, REGION_NAME, SOLAR_SYSTEM_NAME);"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
@@ -2244,10 +2259,10 @@ Public Class frmMain
         ' Figure out what lines are not in the categories table so that we can add the missing line and categoryID
         mainSQL = "SELECT ramAssemblyLineTypes.assemblyLineTypeID, activityID "
         mainSQL = mainSQL & "FROM ramAssemblyLineTypes, ramInstallationTypeContents, invTypes "
-        mainSQL = mainSQL & "WHERE ramAssemblyLineTypes.assemblyLineTypeID NOT IN (SELECT assemblyLineTypeID FROM ramAssemblyLineTypeDetailPerCategory) "
-        mainSQL = mainSQL & "AND ramAssemblyLineTypes.assemblyLineTypeID NOT IN (SELECT assemblyLineTypeID FROM ramAssemblyLineTypeDetailPerGroup) "
-        mainSQL = mainSQL & "AND ramAssemblyLineTypes.assemblyLineTypeID = ramInstallationTypeContents.assemblyLineTypeID "
-        mainSQL = mainSQL & "AND ramInstallationTypeContents.installationTypeID = invTypes.typeID "
+        mainSQL = mainSQL & "WHERE ramAssemblyLineTypes.assemblyLineTypeID Not IN (SELECT assemblyLineTypeID FROM ramAssemblyLineTypeDetailPerCategory) "
+        mainSQL = mainSQL & "And ramAssemblyLineTypes.assemblyLineTypeID Not IN (SELECT assemblyLineTypeID FROM ramAssemblyLineTypeDetailPerGroup) "
+        mainSQL = mainSQL & "And ramAssemblyLineTypes.assemblyLineTypeID = ramInstallationTypeContents.assemblyLineTypeID "
+        mainSQL = mainSQL & "And ramInstallationTypeContents.installationTypeID = invTypes.typeID "
         mainSQL = mainSQL & "GROUP BY ramAssemblyLineTypes.assemblyLineTypeID, activityID "
         SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
         SQLReader1 = SQLCommand.ExecuteReader()
@@ -2257,10 +2272,10 @@ Public Class frmMain
             mainSQL = "SELECT invCategories.categoryID "
             mainSQL = mainSQL & "FROM industryActivityProducts, invTypes, invGroups, invCategories "
             ' This line figures out the items made with the bp, and then attaches it to the activities on the bp - not elegant but works with CCPs system
-            mainSQL = mainSQL & "WHERE (SELECT typeID FROM invTypes, industryActivityProducts AS X WHERE typeID = X.productTypeID AND X.activityID = 1 AND X.blueprintTypeID = industryActivityProducts.blueprintTypeID) = invTypes.typeID "
-            mainSQL = mainSQL & "AND invTypes.groupID = invGroups.groupID "
-            mainSQL = mainSQL & "AND invGroups.categoryID = invCategories.categoryID "
-            mainSQL = mainSQL & "AND activityID = " & SQLReader1.GetValue(1) & " "
+            mainSQL = mainSQL & "WHERE (SELECT typeID FROM invTypes, industryActivityProducts AS X WHERE typeID = X.productTypeID And X.activityID = 1 And X.blueprintTypeID = industryActivityProducts.blueprintTypeID) = invTypes.typeID "
+            mainSQL = mainSQL & "And invTypes.groupID = invGroups.groupID "
+            mainSQL = mainSQL & "And invGroups.categoryID = invCategories.categoryID "
+            mainSQL = mainSQL & "And activityID = " & SQLReader1.GetValue(1) & " "
             mainSQL = mainSQL & "GROUP BY invCategories.categoryID "
 
             SQLCommand2 = New SQLiteCommand(mainSQL, SDEDB.DBRef)
@@ -2307,7 +2322,7 @@ Public Class frmMain
 
     End Sub
 
-    ' STATIONS - Temp table, update with ESI
+    ' STATIONS
     Private Sub Build_Stations()
         Dim SQL As String
 
@@ -2320,12 +2335,13 @@ Public Class frmMain
         SQL &= "STATION_ID INTEGER PRIMARY KEY,"
         SQL &= "STATION_NAME VARCHAR(100) NOT NULL,"
         SQL &= "STATION_TYPE_ID INTEGER NOT NULL,"
-        SQL &= "SOLAR_SYSTEM_ID INTEGER,"
+        SQL &= "SOLAR_SYSTEM_ID INTEGER NOT NULL,"
         SQL &= "SOLAR_SYSTEM_SECURITY FLOAT NOT NULL,"
         SQL &= "REGION_ID INTEGER NOT NULL,"
         SQL &= "CORPORATION_ID INTEGER NOT NULL,"
         SQL &= "REPROCESSING_EFFICIENCY FLOAT NOT NULL,"
-        SQL &= "REPROCESSING_TAX_RATE FLOAT NOT NULL"
+        SQL &= "REPROCESSING_TAX_RATE FLOAT NOT NULL,"
+        SQL &= "CACHE_DATE VARCHAR(23) NOT NULL" ' Date for updating upwell structure names
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -2352,7 +2368,8 @@ Public Class frmMain
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(5)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(6)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(7)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(8)) & ")"
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(8)) & ","
+            SQL &= "'2200-01-01 00:00:00')" ' no expiration for static data
 
             Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
@@ -2375,7 +2392,7 @@ Public Class frmMain
     Private Sub Build_RACE_IDS()
         Dim SQL As String
 
-        SQL = "CREATE TABLE RACE_IDS (ID INTEGER PRIMARY KEY, RACE VARCHAR(8) NOT NULL)"
+        SQL = "CREATE TABLE RACE_IDS (ID INTEGER PRIMARY KEY, RACE VARCHAR(8) Not NULL)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         SQL = "INSERT INTO RACE_IDS VALUES (1, 'Caldari')"
@@ -3848,26 +3865,30 @@ Public Class frmMain
         SQL &= "ORE_NAME VARCHAR(50),"
         SQL &= "ORE_VOLUME REAL,"
         SQL &= "UNITS_TO_REFINE INTEGER,"
-        SQL &= "BELT_TYPE VARCHAR(3),"
+        SQL &= "BELT_TYPE VARCHAR(20),"
         SQL &= "HIGH_YIELD_ORE INTEGER)"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         ' Pull new data and insert
         mainSQL = "SELECT invTypes.typeID, invTypes.typeName, invTypes.packagedVolume, invTypes.portionSize, "
-        mainSQL = mainSQL & "CASE WHEN invTypes.groupID = 465 THEN 'Ice' WHEN invTypes.groupID = 711 THEN 'Gas' ELSE 'Ore' END, "
+        mainSQL = mainSQL & "CASE WHEN invTypes.groupID = 465 THEN 'Ice' WHEN invTypes.groupID = 711 THEN 'Gas' "
+        mainSQL = mainSQL & "WHEN invTypes.groupID IN (1884,1920,1921,1922,1923) THEN invGroups.groupName "
+        mainSQL = mainSQL & "ELSE 'Ore' END, "
         mainSQL = mainSQL & "CASE WHEN invTypes.typeName IN ('Arkonor','Bistot','Crokite','Dark Ochre','Gneiss','Hedbergite',  "
         mainSQL = mainSQL & "'Hemorphite','Jaspet','Kernite','Mercoxit','Omber','Plagioclase','Pyroxeres','Scordite','Spodumain','Veldspar') THEN 0 "
-        mainSQL = mainSQL & "WHEN invTypes.groupID = 465 THEN -1 WHEN invTypes.groupID = 711 THEN -2 ELSE 1 END "
+        mainSQL = mainSQL & "WHEN invTypes.groupID = 465 THEN -1 WHEN invTypes.groupID = 711 THEN -2 ELSE 1 END " ' 465 is ice, 711 is gas - neither have yield components
         mainSQL = mainSQL & "FROM invTypes, invGroups "
         mainSQL = mainSQL & "WHERE invTypes.groupID = invGroups.groupID "
         mainSQL = mainSQL & "AND (invGroups.categoryID = 25 OR invGroups.groupID = 711) " ' Clouds and Ores
-        mainSQL = mainSQL & "AND invTypes.marketGroupID <> 0 "
+        mainSQL = mainSQL & "AND invTypes.groupID NOT IN (903, 1911) " ' make sure this isn't ores for mining missions or legacy ice ('Ancient')
         mainSQL = mainSQL & "GROUP BY invTypes.typeID, invTypes.typeName, invTypes.packagedVolume, invTypes.portionSize, "
-        mainSQL = mainSQL & "CASE WHEN invTypes.groupID = 465 THEN 'Ice' WHEN invTypes.groupID = 711 THEN 'Gas' ELSE 'Ore' END, "
+        mainSQL = mainSQL & "CASE WHEN invTypes.groupID = 465 THEN 'Ice' WHEN invTypes.groupID = 711 THEN 'Gas' "
+        mainSQL = mainSQL & "WHEN invTypes.groupID IN (1884,1920,1921,1922,1923) THEN invGroups.groupName "
+        mainSQL = mainSQL & "ELSE 'Ore' END, "
         mainSQL = mainSQL & "CASE WHEN invTypes.typeName IN ('Arkonor','Bistot','Crokite','Dark Ochre','Gneiss','Hedbergite', "
         mainSQL = mainSQL & "'Hemorphite','Jaspet','Kernite','Mercoxit','Omber','Plagioclase','Pyroxeres','Scordite','Spodumain','Veldspar') THEN 0 "
-        mainSQL = mainSQL & "WHEN invTypes.groupID = 465 THEN -1 WHEN invTypes.groupID = 711 THEN -2 ELSE 1 END "
+        mainSQL = mainSQL & "WHEN invTypes.groupID = 465 THEN -1 WHEN invTypes.groupID = 711 THEN -2 ELSE 1 END"
 
         SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
         SQLCommand.CommandTimeout = 300
@@ -3895,7 +3916,26 @@ Public Class frmMain
 
         SQLReader1.Close()
 
-        ' Now set the 5%/10% flag
+        ' Moon ore versions of typical ores don't have a bonus, so are not high_yield. Plus need to mark them as moon asteroids
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 0, BELT_TYPE = 'Moon Asteroids' WHERE  "
+        SQL = SQL & "ORE_NAME LIKE '%Flawless Arkonor' OR "
+        SQL = SQL & "ORE_NAME LIKE '%Cubic Bistot' OR "
+        SQL = SQL & "ORE_NAME LIKE '%Pellucid Crokite' OR "
+        SQL = SQL & "ORE_NAME LIKE '%Brilliant Gneiss' OR "
+        SQL = SQL & "ORE_NAME LIKE '%Lustrous Hedbergite' OR "
+        SQL = SQL & "ORE_NAME LIKE '%Scintillating Hemorphite' OR "
+        SQL = SQL & "ORE_NAME LIKE '%Resplendant Kernite' OR "
+        SQL = SQL & "ORE_NAME LIKE '%Immaculate Jaspet' OR "
+        SQL = SQL & "ORE_NAME LIKE '%Platinoid Omber' OR "
+        SQL = SQL & "ORE_NAME LIKE '%Sparkling Plagioclase' OR "
+        SQL = SQL & "ORE_NAME LIKE '%Opulent Pyroxeres' OR "
+        SQL = SQL & "ORE_NAME LIKE '%Glossy Scordite' OR "
+        SQL = SQL & "ORE_NAME LIKE '%Dazzling Spodumain' OR "
+        SQL = SQL & "ORE_NAME LIKE '%Stable Veldspar' OR "
+        SQL = SQL & "ORE_NAME LIKE '%Jet Ochre' "
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        ' Now set the 5%/10% flag for standard ores
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Crimson Arkonor'"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Triclinic Bistot'"
@@ -3961,6 +4001,31 @@ Public Class frmMain
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Golden Omber'"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
+        ' Update the mooon mining ores for 5%/10% yield 
+        ' Set all to 0 first
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 0 WHERE BELT_TYPE LIKE '%Moon Asteroids'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Brimful%'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Glistening%'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Lavish%'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Shimmering%'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Replete%'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Glowing%'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Bountiful%'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Shining%'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Copious%'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Twinkling%'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
         SQL = "CREATE INDEX IDX_ORES_ORE_ID ON ORES (ORE_ID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
@@ -3986,7 +4051,6 @@ Public Class frmMain
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         ' Now open the saved table and insert all the values into this new table
-
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
@@ -4950,6 +5014,566 @@ Public Class frmMain
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30377,'C6','WH',-2)", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30378,'C5','WH',-2)", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30378,'C6','WH',-2)", EVEIPHSQLiteDB.DBRef)
+
+        ' Moon ores - all systems, all space
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45490,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45491,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45492,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45493,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45494,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45495,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45496,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45497,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45498,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45499,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45500,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45501,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45502,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45503,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45504,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45506,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45510,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45511,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45512,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45513,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46280,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46281,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46282,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46283,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46284,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46285,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46286,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46287,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46288,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46289,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46290,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46291,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46292,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46293,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46294,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46295,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46296,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46297,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46298,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46299,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46300,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46301,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46302,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46303,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46304,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46305,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46306,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46307,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46308,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46309,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46310,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46311,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46312,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46313,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46314,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46315,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46316,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46317,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46318,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46319,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46675,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46676,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46677,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46678,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46679,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46680,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46681,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46682,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46683,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46684,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46685,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46686,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46687,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45490,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45491,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45492,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45493,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45494,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45495,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45496,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45497,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45498,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45499,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45500,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45501,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45502,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45503,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45504,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45506,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45510,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45511,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45512,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45513,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46280,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46281,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46282,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46283,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46284,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46285,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46286,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46287,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46288,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46289,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46290,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46291,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46292,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46293,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46294,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46295,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46296,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46297,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46298,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46299,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46300,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46301,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46302,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46303,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46304,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46305,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46306,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46307,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46308,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46309,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46310,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46311,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46312,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46313,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46314,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46315,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46316,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46317,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46318,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46319,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46675,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46676,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46677,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46678,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46679,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46680,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46681,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46682,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46683,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46684,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46685,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46686,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46687,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45490,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45491,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45492,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45493,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45494,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46676,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46677,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46678,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46679,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46680,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46681,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46682,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46683,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46684,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46685,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46686,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46687,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45490,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45491,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45492,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45493,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46677,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46678,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46679,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46680,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46681,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46682,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46683,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46684,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46685,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46686,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46687,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45490,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45491,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45492,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45493,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46676,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46677,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46678,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46679,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46680,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46681,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46682,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46683,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46684,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46685,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46686,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46687,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45490,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45491,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45492,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45493,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46676,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46677,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46678,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46679,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46680,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46681,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46682,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46683,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46684,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46685,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46686,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46687,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45490,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45491,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45492,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45493,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45494,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45495,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45496,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45497,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45498,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45499,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45500,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45501,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45502,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45503,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45504,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45506,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45510,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45511,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45512,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45513,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46280,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46281,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46282,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46283,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46284,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46285,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46286,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46287,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46288,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46289,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46290,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46291,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46292,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46293,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46294,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46295,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46296,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46297,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46298,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46299,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46300,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46301,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46302,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46303,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46304,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46305,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46306,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46307,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46308,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46309,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46310,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46311,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46312,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46313,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46314,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46315,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46316,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46317,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46318,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46319,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46675,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46676,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46677,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46678,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46679,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46680,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46681,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46682,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46683,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46684,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46685,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46686,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46687,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45490,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45491,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45492,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45493,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45494,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45495,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45496,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45497,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45498,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45499,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45500,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45501,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45502,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45503,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45504,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45506,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45510,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45511,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45512,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45513,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46280,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46281,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46282,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46283,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46284,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46285,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46286,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46287,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46288,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46289,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46290,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46291,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46292,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46293,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46294,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46295,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46296,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46297,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46298,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46299,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46300,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46301,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46302,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46303,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46304,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46305,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46306,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46307,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46308,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46309,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46310,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46311,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46312,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46313,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46314,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46315,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46316,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46317,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46318,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46319,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46675,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46676,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46677,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46678,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46679,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46680,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46681,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46682,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46683,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46684,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46685,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46686,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46687,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45490,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45491,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45492,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45493,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46676,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46677,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46678,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46679,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46680,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46681,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46682,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46683,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46684,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46685,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46686,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46687,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45490,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45491,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45492,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45493,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45494,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45495,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45496,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45497,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45498,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45499,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45500,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45501,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45502,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45503,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45504,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45506,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45510,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45511,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45512,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45513,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46280,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46281,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46282,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46283,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46284,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46285,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46286,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46287,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46288,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46289,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46290,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46291,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46292,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46293,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46294,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46295,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46296,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46297,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46298,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46299,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46300,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46301,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46302,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46303,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46304,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46305,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46306,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46307,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46308,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46309,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46310,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46311,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46312,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46313,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46314,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46315,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46316,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46317,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46318,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46319,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46675,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46676,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46677,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46678,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46679,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46680,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46681,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46682,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46683,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46684,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46685,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46686,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46687,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45490,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45491,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45492,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45493,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45494,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45495,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45496,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45497,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45498,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45499,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45500,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45501,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45502,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45503,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45504,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45506,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45510,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45511,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45512,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45513,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46280,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46281,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46282,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46283,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46284,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46285,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46286,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46287,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46288,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46289,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46290,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46291,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46292,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46293,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46294,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46295,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46296,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46297,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46298,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46299,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46300,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46301,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46302,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46303,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46304,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46305,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46306,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46307,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46308,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46309,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46310,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46311,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46312,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46313,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46314,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46315,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46316,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46317,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46318,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46319,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46675,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46676,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46677,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46678,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46679,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46680,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46681,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46682,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46683,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46684,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46685,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46686,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46687,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45490,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45491,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45492,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45493,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46676,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46677,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46678,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46679,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46680,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46681,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46682,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46683,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46684,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46685,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46686,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46687,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
 
         SQL = "CREATE INDEX IDX_ORE_LOCS_ORE_ID ON ORE_LOCATIONS (ORE_ID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -6888,7 +7512,7 @@ Public Class frmMain
         Execute_SQLiteSQL("INSERT INTO FACILITY_TYPES VALUES (-1,'None');", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO FACILITY_TYPES VALUES (0,'Station');", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO FACILITY_TYPES VALUES (1,'POS');", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO FACILITY_TYPES VALUES (2,'Outpost');", EVEIPHSQLiteDB.DBRef)
+        'Execute_SQLiteSQL("INSERT INTO FACILITY_TYPES VALUES (2,'Outpost');", EVEIPHSQLiteDB.DBRef) ' no more outposts after july 2018
         Execute_SQLiteSQL("INSERT INTO FACILITY_TYPES VALUES (3,'Structure');", EVEIPHSQLiteDB.DBRef)
 
     End Sub
@@ -7682,8 +8306,8 @@ Public Class frmMain
         Call Execute_SQLiteSQL("DELETE FROM invTypes where typeID IN (34480,34478,34476,34474,34472,34470,34468,34466,34464,34462,34460,34458)", SDEDB.DBRef)
         Call Execute_SQLiteSQL("DELETE FROM invTypes where typeID IN (34457,34459,34461,34463,34465,34467,34469,34471,34473,34475,34477,34479)", SDEDB.DBRef)
 
-        ' Insert all the data for outpost upgrades, and eggs here
-        'Call UploadOutpostItems() ' Removed May 2018 update
+        ' If any typenames are null, look them up with ESI
+        Call UpdateNullTypeNames()
 
         ' Update the T3 relic "blueprints" to require the relic blueprint as a material for its invention activity
         Call UpdateT3Relics()
@@ -7729,2315 +8353,78 @@ Public Class frmMain
 
     End Sub
 
-    ' Inserts all the items for building outpost upgrades and platforms
-    Private Sub UploadOutpostItems()
-        Dim mainSQL As String = ""
-
-        ' Delete records first if they exist
-        Execute_SQLiteSQL("DELETE FROM industryBlueprints WHERE blueprintTypeID < 0", SDEDB.DBRef)
-        Execute_SQLiteSQL("DELETE FROM industryActivities WHERE blueprintTypeID < 0", SDEDB.DBRef)
-        Execute_SQLiteSQL("DELETE FROM industryActivityProducts WHERE blueprintTypeID < 0", SDEDB.DBRef)
-        Execute_SQLiteSQL("DELETE FROM industryActivityMaterials WHERE blueprintTypeID < 0", SDEDB.DBRef)
-        Execute_SQLiteSQL("DELETE FROM industryActivitySkills WHERE blueprintTypeID < 0", SDEDB.DBRef)
-        Execute_SQLiteSQL("DELETE FROM invTypes WHERE typeID < 0", SDEDB.DBRef)
-        Execute_SQLiteSQL("DELETE FROM invTypes WHERE typeID > 100000000", SDEDB.DBRef)
-
-        ' Insert all the "blueprints" into the industry tables manually - these are just the typeID's for the items but negate them and add records for invTypes
-
-        ' Add Upgrade Platforms (Three Tiers)
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27656,1)", SDEDB.DBRef) ' Foundation - Tier 1
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27656,1,3600)", SDEDB.DBRef) ' Build time is anchoring time
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27656,1,100027656,1,1)", SDEDB.DBRef)
-        ' Add all the mats we put in the egg after it's anchored to build the outpost item
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,34,86767990)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,35,7230666)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,36,1355750)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,37,271150)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,38,56490)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,39,12105)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,40,2648)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,44,275)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,3683,5975)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,3685,5621)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,3687,4245)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,3689,3968)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,3691,3468)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,3697,4539)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,3727,213)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,3828,32200)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,9826,1964)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,9828,3368)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,9832,2561)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,9838,262)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,9842,1718)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,9848,506)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,13267,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27656,1,3400,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27656,1,27656,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27656)
-
-        ' Special insert for the product, which will be 1000 added to the current type id
-        mainSQL = "INSERT INTO invTypes SELECT 100027656 AS typeID, groupID, 'Foundation Upgrade', description, mass, volume, packagedVolume, capacity, portionSize, factionID, raceID, "
-        mainSQL = mainSQL & "basePrice, published, marketGroupID, graphicID, radius, iconID, soundID, sofFactionName, sofMaterialSetID "
-        mainSQL = mainSQL & "FROM invTypes WHERE typeID = 27656"
-        Call Execute_SQLiteSQL(mainSQL, SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27658,1)", SDEDB.DBRef) ' Pedestal - Tier 2
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27658,1,3600)", SDEDB.DBRef) ' Build time is anchoring time
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27658,1,100027658,1,1)", SDEDB.DBRef)
-        ' Add all the mats we put in the egg after it's anchored to build the outpost item
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,34,347071960)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,35,28922663)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,36,5422999)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,37,1084599)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,38,225958)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,39,48419)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,40,10591)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,44,1099)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,3683,23897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,3685,22484)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,3687,16980)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,3689,15872)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,3691,13870)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,3697,18156)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,3727,851)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,3828,128798)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,9826,7855)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,9828,13469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,9832,10242)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,9838,1048)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,9842,6871)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,13267,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27658,1,3400,5)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27658,1,27658,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27658)
-
-        ' Special insert for the product, which will be 1000 added to the current type id
-        mainSQL = "INSERT INTO invTypes SELECT 100027658 AS typeID, groupID, 'Pedestal Upgrade', description, mass, volume, packagedVolume, capacity, portionSize, factionID, raceID, "
-        mainSQL = mainSQL & "basePrice, published, marketGroupID, graphicID, radius, iconID, soundID, sofFactionName, sofMaterialSetID "
-        mainSQL = mainSQL & "FROM invTypes WHERE typeID = 27658"
-        Call Execute_SQLiteSQL(mainSQL, SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27660,1)", SDEDB.DBRef) ' Monument - Tier 3
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27660,1,3600)", SDEDB.DBRef) ' Build time is anchoring time
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27660,1,100027660,1,1)", SDEDB.DBRef)
-        ' Add all the mats we put in the egg after it's anchored to build the outpost item
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,34,173535980)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,35,14461332)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,36,2711500)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,37,542300)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,38,112979)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,39,24210)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,40,5296)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,44,550)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,3683,11949)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,3685,11242)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,3687,8490)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,3689,7936)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,3691,6935)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,3697,9078)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,3727,426)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,3828,64399)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,9826,3928)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,9828,6735)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,9832,5121)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,9838,524)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,9842,3436)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,9848,1012)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,13267,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27660,1,3400,3)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27660,1,27660,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27660)
-
-        ' Special insert for the product, which will be 1000 added to the current type id
-        mainSQL = "INSERT INTO invTypes SELECT 100027660 AS typeID, groupID, 'Monument Upgrade', description, mass, volume, packagedVolume, capacity, portionSize, factionID, raceID, "
-        mainSQL = mainSQL & "basePrice, published, marketGroupID, graphicID, radius, iconID, soundID, sofFactionName, sofMaterialSetID "
-        mainSQL = mainSQL & "FROM invTypes WHERE typeID = 27660"
-        Call Execute_SQLiteSQL(mainSQL, SDEDB.DBRef)
-
-        ' Add the stations
-
-        ' Amarr Factory Outpost
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-21644,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-21644,1,3600)", SDEDB.DBRef) ' Build time is anchoring time
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-21644,1,21644,1,1)", SDEDB.DBRef)
-        ' Add all the mats we put in the egg after it's anchored to build the outpost item
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,34,347071960)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,35,28922663)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,36,5422999)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,37,1084599)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,38,225958)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,39,48419)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,40,10591)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,44,1099)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,3683,23897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,3685,22484)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,3687,16980)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,3689,15872)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,3691,13870)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,3697,18156)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,3721,7500)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,3727,851)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,3828,128798)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,9826,7855)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,9828,13469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,9832,10242)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,9838,1048)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,9842,6871)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,9848,2024)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,13267,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21644,1,10260,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-21644,1,3400,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(21644)
-
-        ' Caldari Research Outpost
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-21642,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-21642,1,3600)", SDEDB.DBRef) ' Build time is anchoring time
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-21642,1,21642,1,1)", SDEDB.DBRef)
-        ' Add all the mats we put in the egg after it's anchored to build the outpost item
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,34,293190294)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,35,24432524)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,36,4581098)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,37,916219)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,38,190879)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,39,40902)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,40,8947)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,44,5404)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,3683,29897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,3685,35489)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,3687,38724)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,3689,19546)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,3691,11654)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,3697,38465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,3727,3549)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,3828,74897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,9826,17984)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,9828,18465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,9832,8465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,9838,12111)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,9842,12441)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,9848,25987)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,13267,50)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21642,1,19758,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-21642,1,3400,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(21642)
-
-        ' Gallente Administrative Outpost
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-21645,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-21645,1,3600)", SDEDB.DBRef) ' Build time is anchoring time
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-21645,1,21645,1,1)", SDEDB.DBRef)
-        ' Add all the mats we put in the egg after it's anchored to build the outpost item
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,34,257702131)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,35,21475177)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,36,4026595)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,37,805319)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,38,167774)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,39,35951)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,40,7864)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,3683,55489)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,3685,31546)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,3687,66849)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,3689,17654)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,3691,5449)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,3697,26546)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,3699,100)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,3828,89846)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,9826,9875)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,9828,15555)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,9832,15465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,9838,6874)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,9842,9874)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,9848,14419)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,13267,100)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21645,1,10257,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-21645,1,3400,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(21645)
-
-        ' Minmatar Service Outpost
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-21646,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-21646,1,3600)", SDEDB.DBRef) ' Build time is anchoring time
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-21646,1,21646,1,1)", SDEDB.DBRef)
-        ' Add all the mats we put in the egg after it's anchored to build the outpost item
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,34,387522911)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,35,32293575)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,36,6055045)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,37,1211009)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,38,252293)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,39,54062)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,40,11826)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,44,3511)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,3683,25468)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,3685,23574)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,3687,19871)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,3689,16876)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,3691,17874)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,3697,8846)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,3727,1844)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,3828,155649)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,9826,5587)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,9828,5489)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,9832,12489)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,9838,897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,9842,7465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,9848,12499)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-21646,1,10258,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-21646,1,3400,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(21646)
-
-        ' Add the Improvement Platforms
-
-        ' Amarr - Tier 1
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27662,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27662,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27662,1,28081,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,34,86767990)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,35,7230666)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,36,1355750)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,37,271150)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,38,56490)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,39,12105)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,40,2648)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,44,275)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,3683,5975)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,3685,5621)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,3687,4245)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,3689,3968)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,3691,3468)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,3697,4539)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,3721,1875)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,3727,213)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,3828,32200)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,9826,1964)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,9828,3368)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,9832,2561)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,9838,262)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,9842,1718)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,9848,506)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,13267,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,27662,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27662,1,3400,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27662,1,27656,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27662)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27961,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27961,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27961,1,28082,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,34,86767990)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,35,7230666)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,36,1355750)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,37,271150)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,38,56490)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,39,12105)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,40,2648)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,44,275)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,3683,5975)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,3685,5621)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,3687,4245)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,3689,3968)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,3691,3468)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,3697,4539)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,3721,1875)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,3727,213)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,3828,32200)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,9826,1964)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,9828,3368)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,9832,2561)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,9838,262)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,9842,1718)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,9848,506)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,13267,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,27961,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27961,1,3400,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27961,1,27656,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27961)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27987,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27987,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27987,1,28083,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,34,86767990)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,35,7230666)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,36,1355750)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,37,271150)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,38,56490)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,39,12105)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,40,2648)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,44,275)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,3683,5975)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,3685,5621)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,3687,4245)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,3689,3968)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,3691,3468)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,3697,4539)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,3721,1875)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,3727,213)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,3828,32200)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,9826,1964)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,9828,3368)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,9832,2561)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,9838,262)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,9842,1718)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,9848,506)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,13267,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,27987,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27987,1,3400,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27987,1,27656,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27987)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28017,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28017,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28017,1,28084,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,34,86767990)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,35,7230666)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,36,1355750)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,37,271150)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,38,56490)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,39,12105)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,40,2648)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,44,275)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,3683,5975)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,3685,5621)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,3687,4245)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,3689,3968)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,3691,3468)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,3697,4539)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,3721,1875)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,3727,213)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,3828,32200)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,9826,1964)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,9828,3368)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,9832,2561)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,9838,262)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,9842,1718)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,9848,506)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,13267,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,28017,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28017,1,3400,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28017,1,27656,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28017)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28041,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28041,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28041,1,28085,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,34,86767990)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,35,7230666)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,36,1355750)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,37,271150)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,38,56490)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,39,12105)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,40,2648)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,44,275)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,3683,5975)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,3685,5621)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,3687,4245)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,3689,3968)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,3691,3468)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,3697,4539)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,3721,1875)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,3727,213)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,3828,32200)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,9826,1964)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,9828,3368)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,9832,2561)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,9838,262)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,9842,1718)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,9848,506)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,13267,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,28041,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28041,1,3400,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28041,1,27656,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28041)
-
-        ' Amarr - Tier 2
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27666,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27666,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27666,1,28086,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,34,173535980)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,35,14461332)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,36,2711500)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,37,542300)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,38,112979)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,39,24210)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,40,5296)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,44,550)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,3683,11949)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,3685,11242)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,3687,8490)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,3689,7936)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,3691,6935)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,3697,9078)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,3721,3750)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,3727,426)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,3828,64399)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,9826,3928)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,9828,6735)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,9832,5121)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,9838,524)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,9842,3436)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,9848,1012)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,13267,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,27666,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27666,1,3400,3)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27666,1,27660,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27666)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27963,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27963,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27963,1,28087,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,34,173535980)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,35,14461332)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,36,2711500)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,37,542300)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,38,112979)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,39,24210)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,40,5296)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,44,550)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,3683,11949)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,3685,11242)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,3687,8490)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,3689,7936)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,3691,6935)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,3697,9078)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,3721,3750)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,3727,426)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,3828,64399)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,9826,3928)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,9828,6735)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,9832,5121)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,9838,524)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,9842,3436)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,9848,1012)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,13267,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,27963,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27963,1,3400,3)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27963,1,27660,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27963)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27989,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27989,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27989,1,28088,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,34,173535980)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,35,14461332)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,36,2711500)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,37,542300)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,38,112979)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,39,24210)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,40,5296)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,44,550)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,3683,11949)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,3685,11242)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,3687,8490)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,3689,7936)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,3691,6935)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,3697,9078)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,3721,3750)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,3727,426)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,3828,64399)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,9826,3928)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,9828,6735)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,9832,5121)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,9838,524)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,9842,3436)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,9848,1012)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,13267,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,27989,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27989,1,3400,3)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27989,1,27660,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27989)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28019,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28019,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28019,1,28089,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,34,173535980)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,35,14461332)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,36,2711500)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,37,542300)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,38,112979)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,39,24210)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,40,5296)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,44,550)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,3683,11949)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,3685,11242)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,3687,8490)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,3689,7936)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,3691,6935)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,3697,9078)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,3721,3750)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,3727,426)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,3828,64399)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,9826,3928)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,9828,6735)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,9832,5121)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,9838,524)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,9842,3436)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,9848,1012)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,13267,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,28019,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28019,1,3400,3)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28019,1,27660,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28019)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28043,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28043,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28043,1,28090,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,34,173535980)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,35,14461332)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,36,2711500)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,37,542300)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,38,112979)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,39,24210)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,40,5296)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,44,550)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,3683,11949)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,3685,11242)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,3687,8490)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,3689,7936)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,3691,6935)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,3697,9078)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,3721,3750)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,3727,426)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,3828,64399)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,9826,3928)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,9828,6735)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,9832,5121)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,9838,524)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,9842,3436)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,9848,1012)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,13267,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,28043,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28043,1,3400,3)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28043,1,27660,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28043)
-
-        ' Amarr - Tier 3
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27664,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27664,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27664,1,28076,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,34,347071960)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,35,28922663)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,36,5422999)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,37,1084599)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,38,225958)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,39,48419)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,40,10591)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,44,1099)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,3683,23897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,3685,22484)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,3687,16980)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,3689,15872)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,3691,13870)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,3697,18156)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,3721,7500)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,3727,851)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,3828,128798)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,9826,7855)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,9828,13469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,9832,10242)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,9838,1048)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,9842,6871)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,9848,2024)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,13267,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,27664,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27664,1,3400,5)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27664,1,27658,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27664)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27965,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27965,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27965,1,28077,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,34,347071960)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,35,28922663)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,36,5422999)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,37,1084599)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,38,225958)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,39,48419)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,40,10591)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,44,1099)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,3683,23897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,3685,22484)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,3687,16980)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,3689,15872)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,3691,13870)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,3697,18156)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,3721,7500)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,3727,851)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,3828,128798)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,9826,7855)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,9828,13469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,9832,10242)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,9838,1048)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,9842,6871)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,9848,2024)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,13267,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,27965,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27965,1,3400,5)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27965,1,27658,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27965)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27991,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27991,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27991,1,28078,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,34,347071960)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,35,28922663)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,36,5422999)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,37,1084599)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,38,225958)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,39,48419)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,40,10591)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,44,1099)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,3683,23897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,3685,22484)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,3687,16980)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,3689,15872)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,3691,13870)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,3697,18156)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,3721,7500)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,3727,851)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,3828,128798)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,9826,7855)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,9828,13469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,9832,10242)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,9838,1048)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,9842,6871)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,9848,2024)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,13267,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,27991,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27991,1,3400,5)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27991,1,27658,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27991)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28021,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28021,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28021,1,28079,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,34,347071960)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,35,28922663)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,36,5422999)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,37,1084599)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,38,225958)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,39,48419)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,40,10591)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,44,1099)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,3683,23897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,3685,22484)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,3687,16980)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,3689,15872)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,3691,13870)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,3697,18156)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,3721,7500)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,3727,851)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,3828,128798)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,9826,7855)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,9828,13469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,9832,10242)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,9838,1048)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,9842,6871)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,9848,2024)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,13267,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,28021,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28021,1,3400,5)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28021,1,27658,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28021)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28045,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28045,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28045,1,28080,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,34,347071960)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,35,28922663)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,36,5422999)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,37,1084599)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,38,225958)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,39,48419)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,40,10591)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,44,1099)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,3683,23897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,3685,22484)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,3687,16980)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,3689,15872)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,3691,13870)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,3697,18156)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,3721,7500)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,3727,851)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,3828,128798)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,9826,7855)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,9828,13469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,9832,10242)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,9838,1048)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,9842,6871)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,9848,2024)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,13267,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,28045,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28045,1,3400,5)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28045,1,27658,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28045)
-
-        ' Caldari - Tier 1
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27937,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27937,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27937,1,28096,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,34,73297574)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,35,6108131)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,36,1145275)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,37,229055)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,38,47720)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,39,10226)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,40,2237)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,44,1351)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,3683,7475)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,3685,8873)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,3687,9681)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,3689,4887)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,3691,2914)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,3697,9617)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,3727,888)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,3828,18725)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,9826,4496)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,9828,4617)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,9832,2117)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,9838,3028)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,9842,3111)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,9848,6497)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,13267,13)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,27937,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27937,1,3400,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27937,1,27656,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27937)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27993,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27993,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27993,1,28097,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,34,73297574)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,35,6108131)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,36,1145275)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,37,229055)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,38,47720)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,39,10226)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,40,2237)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,44,1351)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,3683,7475)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,3685,8873)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,3687,9681)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,3689,4887)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,3691,2914)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,3697,9617)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,3727,888)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,3828,18725)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,9826,4496)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,9828,4617)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,9832,2117)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,9838,3028)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,9842,3111)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,9848,6497)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,13267,13)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,27993,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27993,1,3400,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27993,1,27656,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27993)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27999,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27999,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27999,1,28098,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,34,73297574)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,35,6108131)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,36,1145275)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,37,229055)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,38,47720)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,39,10226)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,40,2237)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,44,1351)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,3683,7475)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,3685,8873)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,3687,9681)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,3689,4887)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,3691,2914)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,3697,9617)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,3727,888)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,3828,18725)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,9826,4496)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,9828,4617)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,9832,2117)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,9838,3028)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,9842,3111)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,9848,6497)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,13267,13)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,27999,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27999,1,3400,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27999,1,27656,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27999)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28023,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28023,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28023,1,28099,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,34,73297574)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,35,6108131)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,36,1145275)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,37,229055)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,38,47720)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,39,10226)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,40,2237)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,44,1351)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,3683,7475)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,3685,8873)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,3687,9681)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,3689,4887)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,3691,2914)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,3697,9617)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,3727,888)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,3828,18725)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,9826,4496)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,9828,4617)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,9832,2117)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,9838,3028)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,9842,3111)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,9848,6497)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,13267,13)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,28023,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28023,1,3400,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28023,1,27656,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28023)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28047,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28047,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28047,1,28100,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,34,73297574)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,35,6108131)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,36,1145275)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,37,229055)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,38,47720)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,39,10226)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,40,2237)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,44,1351)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,3683,7475)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,3685,8873)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,3687,9681)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,3689,4887)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,3691,2914)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,3697,9617)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,3727,888)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,3828,18725)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,9826,4496)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,9828,4617)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,9832,2117)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,9838,3028)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,9842,3111)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,9848,6497)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,13267,13)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,28047,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28047,1,3400,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28047,1,27656,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(20847)
-
-        ' Caldari Tier 2
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27957,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27957,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27957,1,28101,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,34,146595148)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,35,12216262)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,36,2290550)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,37,458110)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,38,95440)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,39,20452)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,40,4474)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,44,2702)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,3683,14950)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,3685,17746)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,3687,19362)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,3689,9774)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,3691,5828)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,3697,19234)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,3727,1776)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,3828,37450)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,9826,8992)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,9828,9234)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,9832,4234)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,9838,6056)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,9842,6222)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,9848,12994)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,13267,26)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,27957,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27957,1,3400,3)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27957,1,27660,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27957)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27995,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27995,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27995,1,28102,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,34,146595148)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,35,12216262)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,36,2290550)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,37,458110)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,38,95440)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,39,20452)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,40,4474)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,44,2702)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,3683,14950)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,3685,17746)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,3687,19362)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,3689,9774)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,3691,5828)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,3697,19234)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,3727,1776)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,3828,37450)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,9826,8992)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,9828,9234)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,9832,4234)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,9838,6056)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,9842,6222)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,9848,12994)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,13267,26)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,27995,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27995,1,3400,3)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27995,1,27660,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27995)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28001,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28001,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28001,1,28103,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,34,146595148)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,35,12216262)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,36,2290550)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,37,458110)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,38,95440)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,39,20452)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,40,4474)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,44,2702)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,3683,14950)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,3685,17746)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,3687,19362)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,3689,9774)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,3691,5828)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,3697,19234)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,3727,1776)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,3828,37450)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,9826,8992)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,9828,9234)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,9832,4234)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,9838,6056)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,9842,6222)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,9848,12994)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,13267,26)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,28001,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28001,1,3400,3)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28001,1,27660,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28001)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28025,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28025,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28025,1,28104,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,34,146595148)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,35,12216262)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,36,2290550)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,37,458110)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,38,95440)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,39,20452)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,40,4474)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,44,2702)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,3683,14950)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,3685,17746)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,3687,19362)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,3689,9774)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,3691,5828)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,3697,19234)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,3727,1776)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,3828,37450)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,9826,8992)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,9828,9234)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,9832,4234)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,9838,6056)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,9842,6222)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,9848,12994)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,13267,26)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,28025,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28025,1,3400,3)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28025,1,27660,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28025)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28049,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28049,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28049,1,28105,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,34,146595148)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,35,12216262)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,36,2290550)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,37,458110)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,38,95440)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,39,20452)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,40,4474)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,44,2702)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,3683,14950)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,3685,17746)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,3687,19362)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,3689,9774)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,3691,5828)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,3697,19234)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,3727,1776)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,3828,37450)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,9826,8992)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,9828,9234)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,9832,4234)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,9838,6056)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,9842,6222)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,9848,12994)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,13267,26)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,28049,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28049,1,3400,3)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28049,1,27660,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28049)
-
-        ' Caldari - Tier 3
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27959,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27959,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27959,1,28091,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,34,293190294)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,35,24432524)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,36,4581098)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,37,916219)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,38,190879)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,39,40902)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,40,8947)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,44,5404)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,3683,29897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,3685,35489)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,3687,38724)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,3689,19546)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,3691,11654)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,3697,38465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,3727,3549)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,3828,74897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,9826,17984)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,9828,18465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,9832,8465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,9838,12111)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,9842,12441)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,9848,25987)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,13267,50)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,27959,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27959,1,3400,5)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27959,1,27658,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27959)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27997,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27997,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27997,1,28092,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,34,293190294)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,35,24432524)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,36,4581098)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,37,916219)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,38,190879)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,39,40902)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,40,8947)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,44,5404)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,3683,29897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,3685,35489)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,3687,38724)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,3689,19546)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,3691,11654)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,3697,38465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,3727,3549)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,3828,74897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,9826,17984)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,9828,18465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,9832,8465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,9838,12111)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,9842,12441)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,9848,25987)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,13267,50)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,27997,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27997,1,3400,5)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27997,1,27658,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27997)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28003,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28003,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28003,1,28093,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,34,293190294)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,35,24432524)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,36,4581098)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,37,916219)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,38,190879)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,39,40902)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,40,8947)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,44,5404)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,3683,29897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,3685,35489)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,3687,38724)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,3689,19546)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,3691,11654)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,3697,38465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,3727,3549)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,3828,74897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,9826,17984)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,9828,18465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,9832,8465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,9838,12111)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,9842,12441)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,9848,25987)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,13267,50)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,28003,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28003,1,3400,5)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28003,1,27658,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28003)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28027,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28027,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28027,1,28094,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,34,293190294)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,35,24432524)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,36,4581098)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,37,916219)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,38,190879)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,39,40902)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,40,8947)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,44,5404)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,3683,29897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,3685,35489)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,3687,38724)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,3689,19546)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,3691,11654)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,3697,38465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,3727,3549)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,3828,74897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,9826,17984)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,9828,18465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,9832,8465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,9838,12111)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,9842,12441)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,9848,25987)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,13267,50)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,28027,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28027,1,3400,5)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28027,1,27658,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28027)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28051,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28051,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28051,1,28095,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,34,293190294)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,35,24432524)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,36,4581098)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,37,916219)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,38,190879)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,39,40902)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,40,8947)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,44,5404)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,3683,29897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,3685,35489)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,3687,38724)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,3689,19546)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,3691,11654)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,3697,38465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,3727,3549)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,3828,74897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,9826,17984)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,9828,18465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,9832,8465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,9838,12111)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,9842,12441)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,9848,25987)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,13267,50)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,28051,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28051,1,3400,5)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28051,1,27658,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28051)
-
-        ' Gallente - Tier 1
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27939,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27939,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27939,1,28111,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,34,64425533)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,35,5368795)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,36,1006649)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,37,201330)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,38,41944)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,39,8988)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,40,1966)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,3683,13873)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,3685,7887)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,3687,16713)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,3689,4414)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,3691,1363)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,3697,6637)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,3699,25)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,3828,22462)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,9826,2469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,9828,3889)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,9832,3867)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,9838,1719)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,9842,2469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,9848,3605)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,13267,25)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,27939,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27939,1,3400,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27939,1,27656,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27939)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27983,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27983,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27983,1,28112,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,34,64425533)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,35,5368795)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,36,1006649)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,37,201330)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,38,41944)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,39,8988)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,40,1966)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,3683,13873)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,3685,7887)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,3687,16713)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,3689,4414)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,3691,1363)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,3697,6637)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,3699,25)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,3828,22462)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,9826,2469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,9828,3889)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,9832,3867)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,9838,1719)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,9842,2469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,9848,3605)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,13267,25)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,27983,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27983,1,3400,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27983,1,27656,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27983)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28005,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28005,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28005,1,28113,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,34,64425533)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,35,5368795)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,36,1006649)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,37,201330)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,38,41944)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,39,8988)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,40,1966)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,3683,13873)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,3685,7887)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,3687,16713)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,3689,4414)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,3691,1363)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,3697,6637)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,3699,25)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,3828,22462)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,9826,2469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,9828,3889)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,9832,3867)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,9838,1719)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,9842,2469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,9848,3605)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,13267,25)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,28005,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28005,1,3400,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28005,1,27656,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28005)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28029,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28029,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28029,1,28114,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,34,64425533)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,35,5368795)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,36,1006649)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,37,201330)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,38,41944)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,39,8988)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,40,1966)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,3683,13873)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,3685,7887)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,3687,16713)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,3689,4414)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,3691,1363)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,3697,6637)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,3699,25)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,3828,22462)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,9826,2469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,9828,3889)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,9832,3867)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,9838,1719)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,9842,2469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,9848,3605)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,13267,25)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,28029,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28029,1,3400,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28029,1,27656,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28029)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28053,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28053,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28053,1,28115,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,34,64425533)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,35,5368795)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,36,1006649)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,37,201330)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,38,41944)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,39,8988)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,40,1966)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,3683,13873)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,3685,7887)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,3687,16713)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,3689,4414)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,3691,1363)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,3697,6637)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,3699,25)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,3828,22462)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,9826,2469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,9828,3889)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,9832,3867)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,9838,1719)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,9842,2469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,9848,3605)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,13267,25)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,28053,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28053,1,3400,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28053,1,27656,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28053)
-
-        ' Gallente - Tier 2
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27967,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27967,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27967,1,28116,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,34,64425533)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,35,5368795)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,36,1006649)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,37,201330)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,38,41944)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,39,8988)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,40,1966)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,3683,13873)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,3685,7887)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,3687,16713)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,3689,4414)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,3691,1363)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,3697,6637)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,3699,25)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,3828,22462)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,9826,2469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,9828,3889)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,9832,3867)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,9838,1719)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,9842,2469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,9848,3605)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,13267,25)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,27967,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27967,1,3400,3)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27967,1,27660,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27967)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27975,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27975,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27975,1,28117,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,34,64425533)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,35,5368795)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,36,1006649)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,37,201330)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,38,41944)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,39,8988)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,40,1966)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,3683,13873)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,3685,7887)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,3687,16713)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,3689,4414)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,3691,1363)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,3697,6637)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,3699,25)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,3828,22462)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,9826,2469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,9828,3889)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,9832,3867)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,9838,1719)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,9842,2469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,9848,3605)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,13267,25)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,27975,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27975,1,3400,3)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27975,1,27660,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27975)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28007,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28007,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28007,1,28118,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,34,64425533)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,35,5368795)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,36,1006649)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,37,201330)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,38,41944)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,39,8988)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,40,1966)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,3683,13873)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,3685,7887)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,3687,16713)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,3689,4414)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,3691,1363)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,3697,6637)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,3699,25)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,3828,22462)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,9826,2469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,9828,3889)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,9832,3867)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,9838,1719)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,9842,2469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,9848,3605)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,13267,25)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,28007,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28007,1,3400,3)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28007,1,27660,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28007)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28031,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28031,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28031,1,28119,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,34,64425533)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,35,5368795)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,36,1006649)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,37,201330)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,38,41944)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,39,8988)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,40,1966)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,3683,13873)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,3685,7887)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,3687,16713)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,3689,4414)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,3691,1363)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,3697,6637)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,3699,25)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,3828,22462)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,9826,2469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,9828,3889)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,9832,3867)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,9838,1719)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,9842,2469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,9848,3605)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,13267,25)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,28031,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28031,1,3400,3)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28031,1,27660,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28031)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28055,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28055,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28055,1,28120,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,34,64425533)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,35,5368795)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,36,1006649)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,37,201330)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,38,41944)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,39,8988)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,40,1966)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,3683,13873)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,3685,7887)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,3687,16713)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,3689,4414)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,3691,1363)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,3697,6637)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,3699,25)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,3828,22462)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,9826,2469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,9828,3889)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,9832,3867)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,9838,1719)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,9842,2469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,9848,3605)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,13267,25)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,28055,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28055,1,3400,3)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28055,1,27660,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28055)
-
-        ' Gallente - Tier 3
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27969,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27969,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27969,1,28106,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,34,257702131)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,35,21475177)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,36,4026595)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,37,805319)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,38,167774)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,39,35951)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,40,7864)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,3683,55489)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,3685,31546)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,3687,66849)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,3689,17654)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,3691,5449)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,3697,26546)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,3699,100)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,3828,89846)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,9826,9875)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,9828,15555)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,9832,15465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,9838,6874)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,9842,9874)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,9848,14419)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,13267,100)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,27969,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27969,1,3400,5)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27969,1,27658,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27969)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27977,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27977,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27977,1,28107,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,34,257702131)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,35,21475177)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,36,4026595)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,37,805319)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,38,167774)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,39,35951)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,40,7864)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,3683,55489)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,3685,31546)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,3687,66849)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,3689,17654)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,3691,5449)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,3697,26546)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,3699,100)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,3828,89846)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,9826,9875)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,9828,15555)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,9832,15465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,9838,6874)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,9842,9874)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,9848,14419)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,13267,100)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,27977,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27977,1,3400,5)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27977,1,27658,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27977)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28009,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28009,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28009,1,28108,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,34,257702131)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,35,21475177)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,36,4026595)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,37,805319)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,38,167774)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,39,35951)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,40,7864)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,3683,55489)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,3685,31546)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,3687,66849)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,3689,17654)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,3691,5449)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,3697,26546)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,3699,100)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,3828,89846)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,9826,9875)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,9828,15555)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,9832,15465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,9838,6874)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,9842,9874)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,9848,14419)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,13267,100)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,28009,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28009,1,3400,5)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28009,1,27658,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28009)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28033,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28033,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28033,1,28109,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,34,257702131)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,35,21475177)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,36,4026595)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,37,805319)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,38,167774)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,39,35951)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,40,7864)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,3683,55489)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,3685,31546)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,3687,66849)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,3689,17654)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,3691,5449)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,3697,26546)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,3699,100)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,3828,89846)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,9826,9875)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,9828,15555)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,9832,15465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,9838,6874)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,9842,9874)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,9848,14419)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,13267,100)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,28033,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28033,1,3400,5)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28033,1,27658,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28033)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28057,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28057,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28057,1,28110,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,34,257702131)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,35,21475177)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,36,4026595)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,37,805319)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,38,167774)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,39,35951)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,40,7864)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,3683,55489)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,3685,31546)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,3687,66849)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,3689,17654)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,3691,5449)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,3697,26546)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,3699,100)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,3828,89846)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,9826,9875)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,9828,15555)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,9832,15465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,9838,6874)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,9842,9874)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,9848,14419)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,13267,100)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,28057,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28057,1,3400,5)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28057,1,27658,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28057)
-
-        ' Minmatar - Tier 1
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27941,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27941,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27941,1,28126,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,34,96880728)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,35,8073394)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,36,1513762)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,37,302753)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,38,63074)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,39,13516)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,40,2957)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,44,878)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,3683,6367)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,3685,5894)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,3687,4968)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,3689,4219)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,3691,4469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,3697,2212)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,3727,461)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,3828,38913)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,9826,1397)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,9828,1373)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,9832,3123)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,9838,225)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,9842,1867)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,9848,3125)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,27941,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27941,1,3400,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27941,1,27656,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27941)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27985,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27985,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27985,1,28127,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,34,96880728)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,35,8073394)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,36,1513762)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,37,302753)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,38,63074)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,39,13516)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,40,2957)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,44,878)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,3683,6367)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,3685,5894)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,3687,4968)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,3689,4219)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,3691,4469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,3697,2212)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,3727,461)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,3828,38913)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,9826,1397)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,9828,1373)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,9832,3123)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,9838,225)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,9842,1867)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,9848,3125)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,27985,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27985,1,3400,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27985,1,27656,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27985)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28011,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28011,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28011,1,28128,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,34,96880728)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,35,8073394)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,36,1513762)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,37,302753)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,38,63074)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,39,13516)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,40,2957)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,44,878)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,3683,6367)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,3685,5894)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,3687,4968)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,3689,4219)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,3691,4469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,3697,2212)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,3727,461)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,3828,38913)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,9826,1397)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,9828,1373)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,9832,3123)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,9838,225)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,9842,1867)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,9848,3125)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,28011,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28011,1,3400,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28011,1,27656,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28011)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28035,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28035,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28035,1,28129,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,34,96880728)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,35,8073394)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,36,1513762)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,37,302753)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,38,63074)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,39,13516)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,40,2957)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,44,878)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,3683,6367)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,3685,5894)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,3687,4968)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,3689,4219)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,3691,4469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,3697,2212)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,3727,461)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,3828,38913)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,9826,1397)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,9828,1373)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,9832,3123)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,9838,225)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,9842,1867)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,9848,3125)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,28035,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28035,1,3400,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28035,1,27656,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28035)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28059,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28059,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28059,1,28130,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,34,96880728)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,35,8073394)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,36,1513762)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,37,302753)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,38,63074)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,39,13516)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,40,2957)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,44,878)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,3683,6367)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,3685,5894)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,3687,4968)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,3689,4219)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,3691,4469)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,3697,2212)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,3727,461)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,3828,38913)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,9826,1397)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,9828,1373)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,9832,3123)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,9838,225)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,9842,1867)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,9848,3125)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,28059,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28059,1,3400,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28059,1,27656,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28059)
-
-        ' Minmatar - Tier 2
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27971,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27971,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27971,1,28131,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,34,193761456)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,35,16146788)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,36,3027523)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,37,605505)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,38,126147)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,39,27031)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,40,5913)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,44,1756)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,3683,12734)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,3685,11787)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,3687,9936)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,3689,8438)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,3691,8937)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,3697,4423)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,3727,922)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,3828,77825)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,9826,2794)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,9828,2745)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,9832,6245)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,9838,449)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,9842,3733)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,9848,6250)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,27971,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27971,1,3400,3)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27971,1,27660,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27971)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27979,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27979,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27979,1,28132,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,34,193761456)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,35,16146788)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,36,3027523)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,37,605505)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,38,126147)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,39,27031)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,40,5913)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,44,1756)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,3683,12734)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,3685,11787)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,3687,9936)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,3689,8438)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,3691,8937)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,3697,4423)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,3727,922)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,3828,77825)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,9826,2794)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,9828,2745)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,9832,6245)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,9838,449)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,9842,3733)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,9848,6250)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,27979,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27979,1,3400,3)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27979,1,27660,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27979)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28013,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28013,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28013,1,28133,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,34,193761456)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,35,16146788)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,36,3027523)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,37,605505)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,38,126147)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,39,27031)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,40,5913)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,44,1756)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,3683,12734)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,3685,11787)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,3687,9936)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,3689,8438)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,3691,8937)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,3697,4423)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,3727,922)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,3828,77825)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,9826,2794)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,9828,2745)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,9832,6245)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,9838,449)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,9842,3733)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,9848,6250)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,28013,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28013,1,3400,3)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28013,1,27660,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28013)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28037,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28037,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28037,1,28134,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,34,193761456)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,35,16146788)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,36,3027523)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,37,605505)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,38,126147)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,39,27031)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,40,5913)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,44,1756)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,3683,12734)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,3685,11787)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,3687,9936)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,3689,8438)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,3691,8937)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,3697,4423)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,3727,922)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,3828,77825)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,9826,2794)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,9828,2745)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,9832,6245)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,9838,449)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,9842,3733)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,9848,6250)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,28037,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28037,1,3400,3)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28037,1,27660,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28037)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28061,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28061,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28061,1,28135,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,34,193761456)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,35,16146788)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,36,3027523)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,37,605505)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,38,126147)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,39,27031)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,40,5913)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,44,1756)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,3683,12734)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,3685,11787)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,3687,9936)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,3689,8438)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,3691,8937)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,3697,4423)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,3727,922)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,3828,77825)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,9826,2794)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,9828,2745)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,9832,6245)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,9838,449)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,9842,3733)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,9848,6250)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,28061,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28061,1,3400,3)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28061,1,27660,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28061)
-
-        ' Minmatar - Tier 3
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27973,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27973,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27973,1,28121,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,34,387522911)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,35,32293575)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,36,6055045)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,37,1211009)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,38,252293)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,39,54062)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,40,11826)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,44,3511)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,3683,25468)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,3685,23574)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,3687,19871)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,3689,16876)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,3691,17874)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,3697,8846)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,3727,1844)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,3828,155649)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,9826,5587)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,9828,5489)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,9832,12489)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,9838,897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,9842,7465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,9848,12499)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,27973,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27973,1,3400,5)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27973,1,27658,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27973)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-27981,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-27981,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-27981,1,28122,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,34,387522911)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,35,32293575)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,36,6055045)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,37,1211009)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,38,252293)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,39,54062)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,40,11826)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,44,3511)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,3683,25468)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,3685,23574)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,3687,19871)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,3689,16876)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,3691,17874)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,3697,8846)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,3727,1844)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,3828,155649)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,9826,5587)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,9828,5489)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,9832,12489)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,9838,897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,9842,7465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,9848,12499)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,27981,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-27981,1,3400,5)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-27981,1,27658,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(27981)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28015,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28015,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28015,1,28123,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,34,387522911)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,35,32293575)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,36,6055045)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,37,1211009)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,38,252293)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,39,54062)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,40,11826)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,44,3511)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,3683,25468)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,3685,23574)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,3687,19871)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,3689,16876)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,3691,17874)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,3697,8846)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,3727,1844)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,3828,155649)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,9826,5587)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,9828,5489)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,9832,12489)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,9838,897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,9842,7465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,9848,12499)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,28015,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28015,1,3400,5)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28015,1,27658,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28015)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28039,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28039,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28039,1,28124,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,34,387522911)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,35,32293575)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,36,6055045)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,37,1211009)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,38,252293)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,39,54062)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,40,11826)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,44,3511)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,3683,25468)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,3685,23574)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,3687,19871)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,3689,16876)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,3691,17874)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,3697,8846)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,3727,1844)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,3828,155649)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,9826,5587)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,9828,5489)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,9832,12489)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,9838,897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,9842,7465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,9848,12499)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,28039,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28039,1,3400,5)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28039,1,27658,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28039)
-
-        Execute_SQLiteSQL("INSERT INTO industryBlueprints VALUES (-28063,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivities VALUES (-28063,1,3600)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityProducts VALUES (-28063,1,28125,1,1)", SDEDB.DBRef)
-
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,34,387522911)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,35,32293575)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,36,6055045)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,37,1211009)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,38,252293)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,39,54062)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,40,11826)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,44,3511)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,3683,25468)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,3685,23574)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,3687,19871)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,3689,16876)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,3691,17874)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,3697,8846)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,3727,1844)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,3828,155649)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,9826,5587)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,9828,5489)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,9832,12489)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,9838,897)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,9842,7465)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,9848,12499)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,28063,1)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivitySkills VALUES (-28063,1,3400,5)", SDEDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO industryActivityMaterials VALUES (-28063,1,27658,1)", SDEDB.DBRef)
-
-        ' Insert the "blueprint" into inventory types
-        Call InsertNegativeBPTypeIDRecord(28063)
+    Public Sub UpdateNullTypeNames()
+        Dim rsIDs As SQLiteDataReader
+        Dim SQLCommand As SQLiteCommand
+        Dim IDs As String = "["
+        Dim PublicData As String
+        Dim ESIPublicURL As String = "https://esi.tech.ccp.is/latest/"
+        Dim TranquilityDataSource As String = "?datasource=tranquility"
+        Dim ESIData As new List(Of ESINameData)
+
+        SQLCommand = New SQLiteCommand("SELECT typeID FROM invTypes WHERE typeName IS NULL", SDEDB.DBRef)
+        rsIDs = SQLCommand.ExecuteReader()
+        While rsIDs.Read
+            IDs &= CStr(rsIDs.GetInt32(0)) & ","
+        End While
+        IDs = IDs.Substring(0, Len(IDs) - 1) ' strip comma
+        IDs &= "]"
+
+        PublicData = GetPublicData(ESIPublicURL & "universe/names/" & TranquilityDataSource, IDs)
+
+        ESIData = JsonConvert.DeserializeObject(Of List(Of ESINameData))(PublicData)
+
+        For Each Record In ESIData
+            Call Execute_SQLiteSQL(String.Format("UPDATE invTypes SET typeName = '{0}' WHERE typeID = {1}", FormatDBString(Record.name), CStr(Record.id)), SDEDB.DBRef)
+        Next
 
     End Sub
+
+    ''' <summary>
+    ''' Queries the server for public data for the URL sent. If not found, returns nothing
+    ''' </summary>
+    ''' <param name="URL">Full public data URL as a string</param>
+    ''' <returns>Byte Array of response or nothing if call fails</returns>
+    Private Function GetPublicData(ByVal URL As String, Optional BodyData As String = "") As String
+        Dim Response As String = ""
+        Dim WC As New WebClient
+        Dim ErrorCode As Integer = 0
+        Dim ErrorResponse As String = ""
+
+        WC.Proxy = Nothing
+
+        Try
+
+            If BodyData <> "" Then
+                Response = Encoding.UTF8.GetString(WC.UploadData(URL, Encoding.UTF8.GetBytes(BodyData)))
+            Else
+                Response = WC.DownloadString(URL)
+            End If
+
+            Return Response
+
+        Catch ex As WebException
+            MsgBox("Web Request failed to get Public data. Code: " & ErrorCode & ", " & ex.Message & " - " & ErrorResponse)
+        Catch ex As Exception
+            If ex.Message <> "Thread was being aborted." Then
+                MsgBox("The request failed to get Public data. " & ex.Message, vbInformation, Application.ProductName)
+            End If
+        End Try
+
+        If Response <> "" Then
+            Return Response
+        Else
+            Return Nothing
+        End If
+
+    End Function
+
+
+    Public Class ESINameData
+        <JsonProperty("category")> Public category As String '[ alliance, character, constellation, corporation, inventory_type, region, solar_system, station ]
+        <JsonProperty("id")> Public id As Integer
+        <JsonProperty("name")> Public name As String
+    End Class
 
     ' Inserts a relic into the activities for itself requiring the material
     Private Sub UpdateT3Relics()
