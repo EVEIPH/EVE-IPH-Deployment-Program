@@ -73,8 +73,8 @@ Public Class frmMain
     Private EXEManifestURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVE%20Isk%20per%20Hour.exe.manifest"
     Private ImageZipFileURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Images.zip"
     Private MoreLinqDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/MoreLinq.Portable.dll"
-    Private GACoreURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/raw/master/GoogleAnalyticsTracker.Core.dll"
-    Private GASimpleURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/raw/master/GoogleAnalyticsTracker.Simple.dll"
+    Private GACoreURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/GoogleAnalyticsTracker.Core.dll"
+    Private GASimpleURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/GoogleAnalyticsTracker.Simple.dll"
 
     Private TestJSONDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Newtonsoft.Json.dll"
     Private TestSQLiteDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/System.Data.SQLite.dll"
