@@ -1106,7 +1106,11 @@ Public Class frmMain
         Call EnableButtons(False)
 
         ' Set the sde data updates
-        Call UpdateSDEData()
+        If Not UpdateSDEData() Then
+            Application.UseWaitCursor = False
+            Application.DoEvents()
+            Exit Sub
+        End If
 
         ' Build DB's and open connections
         Call CreateDBFile(FinalDBPath)
@@ -8282,18 +8286,16 @@ Public Class frmMain
 #Region "Build SQL DB"
 
     ' Updates the SDE data for use
-    Private Sub UpdateSDEData()
+    Private Function UpdateSDEData() As Boolean
 
         ' Make sure we have a DB first
         If DatabaseName = "" Then
-            MsgBox("Database Name not defined", vbExclamation, Application.ProductName)
+            MsgBox("Database Name not defined.", vbExclamation, Application.ProductName)
             Call txtDBName.Focus()
-            Exit Sub
+            Return False
         Else
             txtDBName.Text = DatabaseName
         End If
-
-        Me.Cursor = Cursors.WaitCursor
 
         Call EnableButtons(False)
 
@@ -8301,8 +8303,11 @@ Public Class frmMain
             Me.Cursor = Cursors.Default
             btnBuildDatabase.Enabled = True
             btnImageCopy.Enabled = True
-            Exit Sub
+            MsgBox("Could not connect to database.", vbExclamation, Application.ProductName)
+            Return False
         End If
+
+        Me.Cursor = Cursors.WaitCursor
 
         'Do all random updates here first
 
@@ -8355,7 +8360,9 @@ Public Class frmMain
 
         Application.DoEvents()
 
-    End Sub
+        Return True
+
+    End Function
 
     Public Sub UpdateNullTypeNames()
         Dim rsIDs As SQLiteDataReader
