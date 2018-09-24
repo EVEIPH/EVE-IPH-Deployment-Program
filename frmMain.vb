@@ -59,6 +59,8 @@ Public Class frmMain
     Private EXEManifest As String = "EVE Isk per Hour.exe.manifest"
     Private ImageZipFile As String = "EVEIPH Images.zip"
     Private MoreLinqDLL As String = "MoreLinq.Portable.dll"
+    Private GACoreDLL As String = "GoogleAnalyticsTracker.Core.dll"
+    Private GASimpleDLL As String = "GoogleAnalyticsTracker.Simple.dll"
     Private LatestVersionXML As String
     Private LatestTestVersionXML As String
 
@@ -71,6 +73,8 @@ Public Class frmMain
     Private EXEManifestURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVE%20Isk%20per%20Hour.exe.manifest"
     Private ImageZipFileURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Images.zip"
     Private MoreLinqDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/MoreLinq.Portable.dll"
+    Private GACoreURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/raw/master/GoogleAnalyticsTracker.Core.dll"
+    Private GASimpleURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/raw/master/GoogleAnalyticsTracker.Simple.dll"
 
     Private TestJSONDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Newtonsoft.Json.dll"
     Private TestSQLiteDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/System.Data.SQLite.dll"
@@ -8673,6 +8677,20 @@ Public Class frmMain
                 writer.WriteAttributeString("URL", MoreLinqDLLURL)
                 writer.WriteEndElement()
 
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", GACoreDLL)
+                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(GACoreDLL).FileVersion)
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & GACoreDLL))
+                writer.WriteAttributeString("URL", GACoreURL)
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", GASimpleDLL)
+                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(GASimpleDLL).FileVersion)
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & GASimpleDLL))
+                writer.WriteAttributeString("URL", GASimpleURL)
+                writer.WriteEndElement()
+
                 ' End document.
                 writer.WriteEndDocument()
             End Using
@@ -8700,14 +8718,14 @@ Public Class frmMain
                 ' Add each file 
                 writer.WriteStartElement("row")
                 writer.WriteAttributeString("Name", EVEIPHEXE)
-                writer.WriteAttributeString("Version", VersionNumber)
+                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & EVEIPHEXE).FileVersion)
                 writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EVEIPHEXE))
                 writer.WriteAttributeString("URL", EVEIPHEXEURL)
                 writer.WriteEndElement()
 
                 writer.WriteStartElement("row")
                 writer.WriteAttributeString("Name", EVEIPHUpdater)
-                writer.WriteAttributeString("Version", "2.0")
+                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & EVEIPHUpdater).FileVersion)
                 writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EVEIPHUpdater))
                 writer.WriteAttributeString("URL", EVEIPHUpdaterURL)
                 writer.WriteEndElement()
@@ -8728,14 +8746,14 @@ Public Class frmMain
 
                 writer.WriteStartElement("row")
                 writer.WriteAttributeString("Name", JSONDLL)
-                writer.WriteAttributeString("Version", "6.03")
+                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & JSONDLL).FileVersion)
                 writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & JSONDLL))
                 writer.WriteAttributeString("URL", JSONDLLURL)
                 writer.WriteEndElement()
 
                 writer.WriteStartElement("row")
                 writer.WriteAttributeString("Name", SQLiteDLL)
-                writer.WriteAttributeString("Version", "1.07.9.0")
+                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & SQLiteDLL).FileVersion)
                 writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & SQLiteDLL))
                 writer.WriteAttributeString("URL", SQLiteDLLURL)
                 writer.WriteEndElement()
@@ -8756,9 +8774,23 @@ Public Class frmMain
 
                 writer.WriteStartElement("row")
                 writer.WriteAttributeString("Name", MoreLinqDLL)
-                writer.WriteAttributeString("Version", "1.4")
+                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & MoreLinqDLL).FileVersion)
                 writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & MoreLinqDLL))
                 writer.WriteAttributeString("URL", MoreLinqDLLURL)
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", GACoreDLL)
+                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & GACoreDLL).FileVersion)
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & GACoreDLL))
+                writer.WriteAttributeString("URL", GACoreURL)
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", GASimpleDLL)
+                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & GASimpleDLL).FileVersion)
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & GASimpleDLL))
+                writer.WriteAttributeString("URL", GASimpleURL)
                 writer.WriteEndElement()
 
                 ' End document.
