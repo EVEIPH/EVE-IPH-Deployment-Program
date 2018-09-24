@@ -829,6 +829,8 @@ Public Class frmMain
         File.Copy(UploadFileDirectory & EXEManifest, FinalBinaryFolderPath & EXEManifest)
         File.Copy(UploadFileDirectory & LatestVersionXML, FinalBinaryFolderPath & LatestVersionXML)
         File.Copy(UploadFileDirectory & MoreLinqDLL, FinalBinaryFolderPath & MoreLinqDLL)
+        File.Copy(UploadFileDirectory & GACoreDLL, FinalBinaryFolderPath & GACoreDLL)
+        File.Copy(UploadFileDirectory & GASimpleDLL, FinalBinaryFolderPath & GASimpleDLL)
 
         ' DB
         File.Copy(WorkingDirectory & EVEIPHDB, FinalBinaryFolderPath & EVEIPHDB)
@@ -8318,6 +8320,9 @@ Public Class frmMain
         ' If any typenames are null, look them up with ESI
         Call UpdateNullTypeNames()
 
+        ' If any groupNames are null, set them to 'Unknown'
+        Call Execute_SQLiteSQL("UPDATE invGroups SET groupName = 'Unknown' WHERE groupName IS NULL", SDEDB.DBRef)
+
         ' Update the T3 relic "blueprints" to require the relic blueprint as a material for its invention activity
         Call UpdateT3Relics()
 
@@ -8431,7 +8436,6 @@ Public Class frmMain
         End If
 
     End Function
-
 
     Public Class ESINameData
         <JsonProperty("category")> Public category As String '[ alliance, character, constellation, corporation, inventory_type, region, solar_system, station ]
@@ -8569,6 +8573,16 @@ Public Class frmMain
 
         If MD5CalcFile(RootDirectory & MoreLinqDLL) <> MD5CalcFile(FileDirectory & MoreLinqDLL) Then
             File.Copy(RootDirectory & MoreLinqDLL, FileDirectory & MoreLinqDLL, True)
+            NewFilesAdded = True
+        End If
+
+        If MD5CalcFile(RootDirectory & GACoreDLL) <> MD5CalcFile(FileDirectory & GACoreDLL) Then
+            File.Copy(RootDirectory & GACoreDLL, FileDirectory & GACoreDLL, True)
+            NewFilesAdded = True
+        End If
+
+        If MD5CalcFile(RootDirectory & GASimpleDLL) <> MD5CalcFile(FileDirectory & GASimpleDLL) Then
+            File.Copy(RootDirectory & GASimpleDLL, FileDirectory & GASimpleDLL, True)
             NewFilesAdded = True
         End If
 
