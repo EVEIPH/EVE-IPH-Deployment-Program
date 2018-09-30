@@ -46,6 +46,7 @@ Public Class frmMain
 
     ' File names
     Private MSIInstaller As String = "Eve Isk per Hour " & VersionNumber & ".msi"
+    Private MSIDirectory As String = "C:\Users\Brian\EVE Stuff\EVE IPH Project\EVEIPHSetupWizard\"
 
     ' Special Processing
     Private Const StructureRigCategory As Integer = -66
@@ -8583,6 +8584,11 @@ Public Class frmMain
 
         If MD5CalcFile(RootDirectory & GASimpleDLL) <> MD5CalcFile(FileDirectory & GASimpleDLL) Then
             File.Copy(RootDirectory & GASimpleDLL, FileDirectory & GASimpleDLL, True)
+            NewFilesAdded = True
+        End If
+
+        If MD5CalcFile(MSIDirectory & MSIInstaller) <> MD5CalcFile(FileDirectory & MSIInstaller) Then
+            File.Copy(MSIDirectory & MSIInstaller, FileDirectory & MSIInstaller, True)
             NewFilesAdded = True
         End If
 
