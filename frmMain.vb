@@ -53,6 +53,7 @@ Public Class frmMain
 
     Private JSONDLL As String = "Newtonsoft.Json.dll"
     Private SQLiteDLL As String = "System.Data.SQLite.dll"
+    'Private SQLInteropDLL As String = "SQLite.Interop.dll"
     Private EVEIPHEXE As String = "EVE Isk per Hour.exe"
     Private EVEIPHUpdater As String = "EVEIPH Updater.exe"
     Private EVEIPHDB As String = "EVEIPH DB.sqlite"
@@ -67,6 +68,7 @@ Public Class frmMain
 
     Private JSONDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Newtonsoft.Json.dll"
     Private SQLiteDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/System.Data.SQLite.dll"
+    Private SQLInteropDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/SQLite.Interop.dll"
     Private EVEIPHEXEURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVE%20Isk%20per%20Hour.exe"
     Private EVEIPHUpdaterURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Updater.exe"
     Private EVEIPHDBURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20DB.sqlite"
@@ -79,6 +81,7 @@ Public Class frmMain
 
     Private TestJSONDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Newtonsoft.Json.dll"
     Private TestSQLiteDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/System.Data.SQLite.dll"
+    Private TestSQLInteropDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/SQLite.Interop.dll"
     Private TestEVEIPHEXEURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVE%20Isk%20per%20Hour.exe"
     Private TestEVEIPHUpdaterURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Updater.exe"
     Private TestEVEIPHDBURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20DB.sqlite"
@@ -824,6 +827,7 @@ Public Class frmMain
         ' Copy all these files from the latest file directory (should be most up to date) to the working directory to make the zip
         File.Copy(UploadFileDirectory & JSONDLL, FinalBinaryFolderPath & JSONDLL)
         File.Copy(UploadFileDirectory & SQLiteDLL, FinalBinaryFolderPath & SQLiteDLL)
+        ' File.Copy(UploadFileDirectory & SQLInteropDLL, FinalBinaryFolderPath & SQLInteropDLL)
         File.Copy(UploadFileDirectory & EVEIPHEXE, FinalBinaryFolderPath & EVEIPHEXE)
         File.Copy(UploadFileDirectory & EVEIPHUpdater, FinalBinaryFolderPath & EVEIPHUpdater)
         File.Copy(UploadFileDirectory & UpdaterManifest, FinalBinaryFolderPath & UpdaterManifest)
@@ -2686,7 +2690,7 @@ Public Class frmMain
 
         SQL = "CREATE TABLE ESI_PUBLIC_CACHE_DATES ("
         SQL &= "INDUSTRY_SYSTEMS_CACHED_UNTIL VARCHAR(23)," ' Date
-        SQL &= "INDUSTRY_FACILITIES_CACHED_UNTIL VARCHAR(23)," ' Date
+        SQL &= "PUBLIC_STRUCTURES_CACHED_UNTIL VARCHAR(23)," ' Date
         SQL &= "MARKET_PRICES_CACHED_UNTIL VARCHAR(23)" ' Date
         SQL &= ")"
 
@@ -8542,6 +8546,11 @@ Public Class frmMain
             NewFilesAdded = True
         End If
 
+        'If MD5CalcFile(RootDirectory & SQLInteropDLL) <> MD5CalcFile(FileDirectory & SQLInteropDLL) Then
+        '    File.Copy(RootDirectory & SQLInteropDLL, FileDirectory & SQLInteropDLL, True)
+        '    NewFilesAdded = True
+        'End If
+
         If MD5CalcFile(RootDirectory & EVEIPHEXE) <> MD5CalcFile(FileDirectory & EVEIPHEXE) Then
             File.Copy(RootDirectory & EVEIPHEXE, FileDirectory & EVEIPHEXE, True)
             NewFilesAdded = True
@@ -8683,6 +8692,13 @@ Public Class frmMain
                 writer.WriteAttributeString("URL", TestSQLiteDLLURL)
                 writer.WriteEndElement()
 
+                'writer.WriteStartElement("row")
+                'writer.WriteAttributeString("Name", SQLInteropDLL)
+                'writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(SQLInteropDLL).FileVersion)
+                'writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & SQLInteropDLL))
+                'writer.WriteAttributeString("URL", TestSQLInteropDLLURL)
+                'writer.WriteEndElement()
+
                 writer.WriteStartElement("row")
                 writer.WriteAttributeString("Name", UpdaterManifest)
                 writer.WriteAttributeString("Version", "1.0")
@@ -8784,6 +8800,13 @@ Public Class frmMain
                 writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & SQLiteDLL))
                 writer.WriteAttributeString("URL", SQLiteDLLURL)
                 writer.WriteEndElement()
+
+                'writer.WriteStartElement("row")
+                'writer.WriteAttributeString("Name", SQLInteropDLL)
+                'writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & SQLInteropDLL).FileVersion)
+                'writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & SQLInteropDLL))
+                'writer.WriteAttributeString("URL", SQLInteropDLLURL)
+                'writer.WriteEndElement()
 
                 writer.WriteStartElement("row")
                 writer.WriteAttributeString("Name", UpdaterManifest)
