@@ -53,7 +53,7 @@ Public Class frmMain
 
     Private JSONDLL As String = "Newtonsoft.Json.dll"
     Private SQLiteDLL As String = "System.Data.SQLite.dll"
-    'Private SQLInteropDLL As String = "SQLite.Interop.dll"
+    Private SQLInteropDLL As String = "SQLite.Interop.dll"
     Private EVEIPHEXE As String = "EVE Isk per Hour.exe"
     Private EVEIPHUpdater As String = "EVEIPH Updater.exe"
     Private EVEIPHDB As String = "EVEIPH DB.sqlite"
@@ -61,8 +61,7 @@ Public Class frmMain
     Private EXEManifest As String = "EVE Isk per Hour.exe.manifest"
     Private ImageZipFile As String = "EVEIPH Images.zip"
     Private MoreLinqDLL As String = "MoreLinq.Portable.dll"
-    Private GACoreDLL As String = "GoogleAnalyticsTracker.Core.dll"
-    Private GASimpleDLL As String = "GoogleAnalyticsTracker.Simple.dll"
+    Private GADLL As String = "GoogleAnalyticsClientDotNet.Net45.dll"
     Private LatestVersionXML As String
     Private LatestTestVersionXML As String
 
@@ -76,8 +75,7 @@ Public Class frmMain
     Private EXEManifestURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVE%20Isk%20per%20Hour.exe.manifest"
     Private ImageZipFileURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Images.zip"
     Private MoreLinqDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/MoreLinq.Portable.dll"
-    Private GACoreURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/GoogleAnalyticsTracker.Core.dll"
-    Private GASimpleURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/GoogleAnalyticsTracker.Simple.dll"
+    Private GAURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/GoogleAnalyticsClientDotNet.Net45.dll"
 
     Private TestJSONDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Newtonsoft.Json.dll"
     Private TestSQLiteDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/System.Data.SQLite.dll"
@@ -827,15 +825,14 @@ Public Class frmMain
         ' Copy all these files from the latest file directory (should be most up to date) to the working directory to make the zip
         File.Copy(UploadFileDirectory & JSONDLL, FinalBinaryFolderPath & JSONDLL)
         File.Copy(UploadFileDirectory & SQLiteDLL, FinalBinaryFolderPath & SQLiteDLL)
-        ' File.Copy(UploadFileDirectory & SQLInteropDLL, FinalBinaryFolderPath & SQLInteropDLL)
+        File.Copy(UploadFileDirectory & SQLInteropDLL, FinalBinaryFolderPath & SQLInteropDLL)
         File.Copy(UploadFileDirectory & EVEIPHEXE, FinalBinaryFolderPath & EVEIPHEXE)
         File.Copy(UploadFileDirectory & EVEIPHUpdater, FinalBinaryFolderPath & EVEIPHUpdater)
         File.Copy(UploadFileDirectory & UpdaterManifest, FinalBinaryFolderPath & UpdaterManifest)
         File.Copy(UploadFileDirectory & EXEManifest, FinalBinaryFolderPath & EXEManifest)
         File.Copy(UploadFileDirectory & LatestVersionXML, FinalBinaryFolderPath & LatestVersionXML)
         File.Copy(UploadFileDirectory & MoreLinqDLL, FinalBinaryFolderPath & MoreLinqDLL)
-        File.Copy(UploadFileDirectory & GACoreDLL, FinalBinaryFolderPath & GACoreDLL)
-        File.Copy(UploadFileDirectory & GASimpleDLL, FinalBinaryFolderPath & GASimpleDLL)
+        File.Copy(UploadFileDirectory & GADLL, FinalBinaryFolderPath & GADLL)
 
         ' DB
         File.Copy(WorkingDirectory & EVEIPHDB, FinalBinaryFolderPath & EVEIPHDB)
@@ -1300,6 +1297,12 @@ Public Class frmMain
         lblTableName.Text = "Building: MARKET_ORDERS_UPDATE_CACHE"
         Call Build_MARKET_ORDERS_UPDATE_CACHE()
 
+        lblTableName.Text = "Building: STRUCTURE_MARKET_ORDERS_UPDATE_CACHE"
+        Call Build_STRUCTURE_MARKET_ORDERS_UPDATE_CACHE()
+
+        lblTableName.Text = "Building: STRUCTURE_MARKET_ORDERS"
+        Call Build_STRUCTURE_MARKET_ORDERS()
+
         lblTableName.Text = "Building: INVENTORY_FLAGS"
         Call Build_Inventory_Flags()
 
@@ -1347,6 +1350,12 @@ Public Class frmMain
 
         lblTableName.Text = "Building: ESI_CORPORATION_ROLES"
         Call Build_ESI_CORPORATION_ROLES()
+
+        lblTableName.Text = "Building: ESI_STATUS_ITEMS"
+        Call Build_ESI_STATUS_ITEMS()
+
+        lblTableName.Text = "Building: ESI_ENDPOINT_ROUTE_TO_SCOPE"
+        Call Build_ESI_ENDPOINT_ROUTE_TO_SCOPE()
 
         lblTableName.Text = "Building: ESI_PUBLIC_CACHE_DATES"
         Call Build_ESI_PUBLIC_CACHE_DATES()
@@ -1588,6 +1597,8 @@ Public Class frmMain
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
 
+        Application.DoEvents()
+
         ' See if the table exists and delete if so
         SQL = "SELECT COUNT(*) FROM sqlite_master where tbl_name = 'ALL_BLUEPRINTS' AND type = 'table'"
         SQLCommand = New SQLiteCommand(SQL, SDEDB.DBRef)
@@ -1647,8 +1658,8 @@ Public Class frmMain
         SQL &= "AND invGroups.categoryID = invCategories.categoryID "
         SQL &= "AND industryBlueprints.blueprintTypeID = industryActivities.blueprintTypeID "
         SQL &= "AND industryActivities.activityID IN (1,11) " ' -- Production Time 
-        SQL &= "AND (invTypes1.published <> 0 AND invTypes.published <> 0 AND invGroups1.published <> 0 AND invGroups.published <> 0 AND invCategories.published <> 0 " ' -- 2830 bps
-        SQL &= "OR industryBlueprints.blueprintTypeID < 0)" ' For all outpost "blueprints"
+        SQL &= "AND (invTypes1.published <> 0 AND invTypes.published <> 0 AND invGroups1.published <> 0 AND invGroups.published <> 0 AND invCategories.published <> 0 "
+        SQL &= "OR industryBlueprints.blueprintTypeID < 0)" ' For structure rigs
 
         ' Build table
         Call Execute_SQLiteSQL(SQL, SDEDB.DBRef)
@@ -1662,7 +1673,11 @@ Public Class frmMain
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
         SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 3 WHERE ITEM_CATEGORY = 'Subsystem' OR ITEM_GROUP = 'Strategic Cruiser' OR ITEM_GROUP = 'Tactical Destroyer'"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
-        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 1 WHERE TECH_LEVEL = 0" ' Anything not updated should be a 0
+        ' for abyssal - it uses meta value where attributeid = 1692 for some reason
+        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = META_GROUP, ITEM_TYPE = META_GROUP WHERE META_GROUP IN (1,2) AND ITEM_TYPE IS NULL AND META_GROUP IS NOT NULL"
+        Execute_SQLiteSQL(SQL, SDEDB.DBRef)
+        ' Anything not updated yet should be a 0
+        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 1 WHERE TECH_LEVEL = 0"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
         ' Tech's first
@@ -2356,7 +2371,8 @@ Public Class frmMain
         SQL &= "CORPORATION_ID INTEGER NOT NULL,"
         SQL &= "REPROCESSING_EFFICIENCY FLOAT NOT NULL,"
         SQL &= "REPROCESSING_TAX_RATE FLOAT NOT NULL,"
-        SQL &= "CACHE_DATE VARCHAR(23) NOT NULL" ' Date for updating upwell structure names
+        SQL &= "CACHE_DATE VARCHAR(23) NOT NULL," ' Date for updating upwell structure names
+        SQL &= "MANUAL_ENTRY INTEGER NOT NULL" ' If we added the staton/structure manually
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -2384,7 +2400,7 @@ Public Class frmMain
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(6)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(7)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(8)) & ","
-            SQL &= "'2200-01-01 00:00:00')" ' no expiration for static data
+            SQL &= "'2200-01-01 00:00:00',0)" ' not a manual entry and no expiration for static data
 
             Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
@@ -2442,7 +2458,8 @@ Public Class frmMain
         SQL &= "SKILL_TYPE_ID INTEGER NOT NULL,"
         SQL &= "SKILL_NAME VARCHAR(50) NOT NULL,"
         SQL &= "SKILL_POINTS INTEGER NOT NULL,"
-        SQL &= "SKILL_LEVEL INTEGER NOT NULL,"
+        SQL &= "TRAINED_SKILL_LEVEL INTEGER NOT NULL,"
+        SQL &= "ACTIVE_SKILL_LEVEL INTEGER NOT NULL,"
         SQL &= "OVERRIDE_SKILL INTEGER NOT NULL,"
         SQL &= "OVERRIDE_LEVEL INTEGER NOT NULL)"
 
@@ -2684,6 +2701,67 @@ Public Class frmMain
 
     End Sub
 
+    ' ESI_STATUS_ITEMS
+    Private Sub Build_ESI_STATUS_ITEMS()
+        Dim SQL As String
+
+        SQL = "CREATE TABLE ESI_STATUS_ITEMS("
+        SQL &= "endpoint VARCHAR(50) NOT NULL, "
+        SQL &= "method VARCHAR(10) NOT NULL,"
+        SQL &= "route VARCHAR(100) NOT NULL,"
+        SQL &= "status VARCHAR(10) NOT NULL, "
+        SQL &= "tag1 VARCHAR(20),"
+        SQL &= "tag2 VARCHAR(20),"
+        SQL &= "tag3 VARCHAR(20)"
+        SQL &= ")"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+    End Sub
+
+    ' ESI_ENDPOINT_ROUTE_TO_SCOPE
+    Private Sub Build_ESI_ENDPOINT_ROUTE_TO_SCOPE()
+        Dim SQL As String
+
+        SQL = "CREATE TABLE ESI_ENDPOINT_ROUTE_TO_SCOPE("
+        SQL &= "endpoint_route VARCHAR(100) NOT NULL, "
+        SQL &= "scope VARCHAR(50) NOT NULL,"
+        SQL &= "purpose VARCHAR(100) NOT NULL"
+        SQL &= ")"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        ' Add data
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/assets/','esi-assets.read_assets','to import character assets')"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/agents_research/','esi-characters.read_agents_research','to import a character`s research agents')"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/blueprints/','esi-characters.read_blueprints','to import all character blueprints')"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/standings/','esi-characters.read_standings','to import all character standings')"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/industry/jobs/','esi-industry.read_character_jobs','to load all character industry jobs')"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/skills/','esi-skills.read_skill', 'to import character skills')"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/corporations/{corporation_id}/assets/','esi-assets.read_corporation_assets','to import corporation assets')"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/corporations/{corporation_id}/blueprints/','esi-corporations.read_blueprints','to import all corporation blueprints')"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/corporations/{corporation_id}/industry/jobs/','esi-industry.read_corporation_jobs','to import all corporation industry jobs for a selected character')"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/corporations/{corporation_id}/roles/','esi-corporations.read_corporation_membership','to import character roles within a corporation')"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/universe/structures/','esi-universe.read_structures','to import public market structures')"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/markets/structures/{structure_id}/','esi-markets.structure_markets','to import prices from structures')"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "CREATE INDEX IDX_EERTS_ER ON ESI_ENDPOINT_ROUTE_TO_SCOPE (endpoint_route)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+    End Sub
+
     ' EVEIPH DATA
     Private Sub Build_ESI_PUBLIC_CACHE_DATES()
         Dim SQL As String
@@ -2691,7 +2769,8 @@ Public Class frmMain
         SQL = "CREATE TABLE ESI_PUBLIC_CACHE_DATES ("
         SQL &= "INDUSTRY_SYSTEMS_CACHED_UNTIL VARCHAR(23)," ' Date
         SQL &= "PUBLIC_STRUCTURES_CACHED_UNTIL VARCHAR(23)," ' Date
-        SQL &= "MARKET_PRICES_CACHED_UNTIL VARCHAR(23)" ' Date
+        SQL &= "MARKET_PRICES_CACHED_UNTIL VARCHAR(23)," ' Date
+        SQL &= "PUBLIC_ESI_STATUS_CACHED_UNTIL VARCHAR(23)" ' Date
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -6529,6 +6608,9 @@ Public Class frmMain
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
+        SQL = "CREATE INDEX IDX_IJ_IID ON INDUSTRY_JOBS (installerID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
     End Sub
 
     ' ASSETS
@@ -7410,6 +7492,49 @@ Public Class frmMain
 
     End Sub
 
+    ' STRUCTURE_MARKET_ORDERS_UPDATE_CACHE
+    Private Sub Build_STRUCTURE_MARKET_ORDERS_UPDATE_CACHE()
+        Dim SQL As String
+
+        SQL = "CREATE TABLE STRUCTURE_MARKET_ORDERS_UPDATE_CACHE ("
+        SQL &= "STRUCTURE_ID INTEGER NOT NULL,"
+        SQL &= "CACHE_DATE VARCHAR(23)"
+        SQL &= ")"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "CREATE UNIQUE INDEX IDX_SMOUC_SID ON STRUCTURE_MARKET_ORDERS_UPDATE_CACHE (STRUCTURE_ID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+    End Sub
+
+    ' STRUCTURE_MARKET_ORDERS
+    Private Sub Build_STRUCTURE_MARKET_ORDERS()
+        Dim SQL As String
+
+        SQL = "CREATE TABLE STRUCTURE_MARKET_ORDERS ("
+        SQL &= "ORDER_ID INTEGER,"
+        SQL &= "TYPE_ID INTEGER,"
+        SQL &= "LOCATION_ID INTEGER,"
+        SQL &= "REGION_ID INTEGER,"
+        SQL &= "SOLAR_SYSTEM_ID INTEGER,"
+        SQL &= "ORDER_ISSUED VARCHAR(23)," ' Date
+        SQL &= "DURATION INTEGER,"
+        SQL &= "IS_BUY_ORDER INTEGER," ' boolean
+        SQL &= "PRICE FLOAT,"
+        SQL &= "VOLUME_TOTAL INTEGER,"
+        SQL &= "MINIMUM_VOLUME INTEGER,"
+        SQL &= "VOLUME_REMAINING INTEGER,"
+        SQL &= "RANGE VARCHAR(15) "
+        SQL &= ")"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "CREATE INDEX IDX_SMO_TID_RID_SID ON STRUCTURE_MARKET_ORDERS (TYPE_ID, REGION_ID, SOLAR_SYSTEM_ID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+    End Sub
+
 #End Region
 
 #Region "Facility Tables"
@@ -7529,6 +7654,9 @@ Public Class frmMain
         Execute_SQLiteSQL("INSERT INTO FACILITY_TYPES VALUES (1,'POS');", EVEIPHSQLiteDB.DBRef)
         'Execute_SQLiteSQL("INSERT INTO FACILITY_TYPES VALUES (2,'Outpost');", EVEIPHSQLiteDB.DBRef) ' no more outposts after july 2018
         Execute_SQLiteSQL("INSERT INTO FACILITY_TYPES VALUES (3,'Structure');", EVEIPHSQLiteDB.DBRef)
+
+        SQL = "CREATE INDEX IDX_FT_FTID ON FACILITY_TYPES (FACILITY_TYPE_ID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
     End Sub
 
@@ -8379,7 +8507,7 @@ Public Class frmMain
         Dim SQLCommand As SQLiteCommand
         Dim IDs As String = "["
         Dim PublicData As String
-        Dim ESIPublicURL As String = "https://esi.tech.ccp.is/latest/"
+        Dim ESIPublicURL As String = "https://esi.evetech.net/latest/"
         Dim TranquilityDataSource As String = "?datasource=tranquility"
         Dim ESIData As new List(Of ESINameData)
 
@@ -8394,11 +8522,12 @@ Public Class frmMain
         If IDs <> "]" Then
             PublicData = GetPublicData(ESIPublicURL & "universe/names/" & TranquilityDataSource, IDs)
 
-            ESIData = JsonConvert.DeserializeObject(Of List(Of ESINameData))(PublicData)
-
-            For Each Record In ESIData
-                Call Execute_SQLiteSQL(String.Format("UPDATE invTypes SET typeName = '{0}' WHERE typeID = {1}", FormatDBString(Record.name), CStr(Record.id)), SDEDB.DBRef)
-            Next
+            If Not IsNothing(PublicData) Then
+                ESIData = JsonConvert.DeserializeObject(Of List(Of ESINameData))(PublicData)
+                For Each Record In ESIData
+                    Call Execute_SQLiteSQL(String.Format("UPDATE invTypes SET typeName = '{0}' WHERE typeID = {1}", FormatDBString(Record.name), CStr(Record.id)), SDEDB.DBRef)
+                Next
+            End If
         End If
 
     End Sub
@@ -8546,10 +8675,10 @@ Public Class frmMain
             NewFilesAdded = True
         End If
 
-        'If MD5CalcFile(RootDirectory & SQLInteropDLL) <> MD5CalcFile(FileDirectory & SQLInteropDLL) Then
-        '    File.Copy(RootDirectory & SQLInteropDLL, FileDirectory & SQLInteropDLL, True)
-        '    NewFilesAdded = True
-        'End If
+        If MD5CalcFile(RootDirectory & SQLInteropDLL) <> MD5CalcFile(FileDirectory & SQLInteropDLL) Then
+            File.Copy(RootDirectory & SQLInteropDLL, FileDirectory & SQLInteropDLL, True)
+            NewFilesAdded = True
+        End If
 
         If MD5CalcFile(RootDirectory & EVEIPHEXE) <> MD5CalcFile(FileDirectory & EVEIPHEXE) Then
             File.Copy(RootDirectory & EVEIPHEXE, FileDirectory & EVEIPHEXE, True)
@@ -8586,13 +8715,8 @@ Public Class frmMain
             NewFilesAdded = True
         End If
 
-        If MD5CalcFile(RootDirectory & GACoreDLL) <> MD5CalcFile(FileDirectory & GACoreDLL) Then
-            File.Copy(RootDirectory & GACoreDLL, FileDirectory & GACoreDLL, True)
-            NewFilesAdded = True
-        End If
-
-        If MD5CalcFile(RootDirectory & GASimpleDLL) <> MD5CalcFile(FileDirectory & GASimpleDLL) Then
-            File.Copy(RootDirectory & GASimpleDLL, FileDirectory & GASimpleDLL, True)
+        If MD5CalcFile(RootDirectory & GADLL) <> MD5CalcFile(FileDirectory & GADLL) Then
+            File.Copy(RootDirectory & GADLL, FileDirectory & GADLL, True)
             NewFilesAdded = True
         End If
 
@@ -8692,12 +8816,12 @@ Public Class frmMain
                 writer.WriteAttributeString("URL", TestSQLiteDLLURL)
                 writer.WriteEndElement()
 
-                'writer.WriteStartElement("row")
-                'writer.WriteAttributeString("Name", SQLInteropDLL)
-                'writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(SQLInteropDLL).FileVersion)
-                'writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & SQLInteropDLL))
-                'writer.WriteAttributeString("URL", TestSQLInteropDLLURL)
-                'writer.WriteEndElement()
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", SQLInteropDLL)
+                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(SQLInteropDLL).FileVersion)
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & SQLInteropDLL))
+                writer.WriteAttributeString("URL", TestSQLInteropDLLURL)
+                writer.WriteEndElement()
 
                 writer.WriteStartElement("row")
                 writer.WriteAttributeString("Name", UpdaterManifest)
@@ -8721,17 +8845,10 @@ Public Class frmMain
                 writer.WriteEndElement()
 
                 writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", GACoreDLL)
-                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(GACoreDLL).FileVersion)
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & GACoreDLL))
-                writer.WriteAttributeString("URL", GACoreURL)
-                writer.WriteEndElement()
-
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", GASimpleDLL)
-                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(GASimpleDLL).FileVersion)
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & GASimpleDLL))
-                writer.WriteAttributeString("URL", GASimpleURL)
+                writer.WriteAttributeString("Name", GADLL)
+                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(GADLL).FileVersion)
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & GADLL))
+                writer.WriteAttributeString("URL", GAURL)
                 writer.WriteEndElement()
 
                 ' End document.
@@ -8801,12 +8918,12 @@ Public Class frmMain
                 writer.WriteAttributeString("URL", SQLiteDLLURL)
                 writer.WriteEndElement()
 
-                'writer.WriteStartElement("row")
-                'writer.WriteAttributeString("Name", SQLInteropDLL)
-                'writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & SQLInteropDLL).FileVersion)
-                'writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & SQLInteropDLL))
-                'writer.WriteAttributeString("URL", SQLInteropDLLURL)
-                'writer.WriteEndElement()
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", SQLInteropDLL)
+                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & SQLInteropDLL).FileVersion)
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & SQLInteropDLL))
+                writer.WriteAttributeString("URL", SQLInteropDLLURL)
+                writer.WriteEndElement()
 
                 writer.WriteStartElement("row")
                 writer.WriteAttributeString("Name", UpdaterManifest)
@@ -8830,17 +8947,10 @@ Public Class frmMain
                 writer.WriteEndElement()
 
                 writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", GACoreDLL)
-                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & GACoreDLL).FileVersion)
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & GACoreDLL))
-                writer.WriteAttributeString("URL", GACoreURL)
-                writer.WriteEndElement()
-
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", GASimpleDLL)
-                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & GASimpleDLL).FileVersion)
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & GASimpleDLL))
-                writer.WriteAttributeString("URL", GASimpleURL)
+                writer.WriteAttributeString("Name", GADLL)
+                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & GADLL).FileVersion)
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & GADLL))
+                writer.WriteAttributeString("URL", GAURL)
                 writer.WriteEndElement()
 
                 ' End document.
