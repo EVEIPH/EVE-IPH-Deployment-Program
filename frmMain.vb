@@ -6973,7 +6973,7 @@ Public Class frmMain
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(16)) & "," ' iconID
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(17)) & "," ' soundID
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(18)) & "," ' sofFactionName
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(19)) & ")" ' sofMaterialSetID
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(19)) & "," ' sofMaterialSetID
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(20)) & "," ' metaGroupID
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(21)) & ")" ' variationparentTypeID
 
