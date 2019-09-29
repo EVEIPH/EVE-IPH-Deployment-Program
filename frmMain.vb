@@ -6933,7 +6933,9 @@ Public Class frmMain
         SQL &= "iconID INTEGER,"
         SQL &= "soundID INTEGER,"
         SQL &= "sofFactionName INTEGER,"
-        SQL &= "sofMaterialSetID INTEGER"
+        SQL &= "sofMaterialSetID INTEGER,"
+        SQL &= "metaGroupID INTEGER,"
+        SQL &= "variationparentTypeID INTEGER"
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -6972,6 +6974,8 @@ Public Class frmMain
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(17)) & "," ' soundID
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(18)) & "," ' sofFactionName
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(19)) & ")" ' sofMaterialSetID
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(20)) & "," ' metaGroupID
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(21)) & ")" ' variationparentTypeID
 
             Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
