@@ -37,7 +37,7 @@ Public Class frmMain
 
     ' When updating the image files to build the zip, update the root directory images as well so we have the updated images for running in debug mode
     Private WorkingImageFolder As String = "Root Directory\EVEIPH Images"
-    Private UploadImageFolder As String = "\EVEIPH Images"
+    Private DownloadImageFolder As String = "Root Directory\TempImages"
     Private MissingImagesFilePath As String
 
     ' For saving and scanning the github folder for updates - this folder is in the deployment folder (same as installer and binary)
@@ -276,7 +276,7 @@ Public Class frmMain
         ImageExportTypes = WorkingDirectory & "Types"
         RendersImageFolder = WorkingDirectory & "Renders"
         EVEIPHImageFolder = WorkingDirectory & "EVEIPH Images"
-        MissingImagesFilePath = WorkingDirectory & " Missing Images.txt"
+        MissingImagesFilePath = WorkingDirectory & "Missing Images.txt"
 
     End Sub
 
@@ -611,6 +611,13 @@ Public Class frmMain
             Catch
                 ' Build a file with the BP ID's and Names that do not have a image
                 OutputFile.WriteLine(rsReader(0).ToString & " - " & rsReader(1).ToString)
+                ' Try to download
+                If DownloadImageFromServer(CLng(rsReader.GetValue(0)), ImageType.BP, 64, ImageExportTypes & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png") <> "" Then
+                    ' For zip use
+                    File.Copy(ImageExportTypes & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png", EVEIPHImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png")
+                    ' To root Working Directory
+                    File.Copy(ImageExportTypes & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png", WorkingImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png")
+                End If
                 MissingImages = True
             End Try
 
@@ -620,7 +627,7 @@ Public Class frmMain
 
         End While
 
-        ' Final images
+        ' Ship images for mining tab
         File.Copy(ImageExportTypes & "\17476_64.png", EVEIPHImageFolder & "\17476_64.png")    ' Covetor
         File.Copy(ImageExportTypes & "\17476_64.png", WorkingImageFolder & "\17476_64.png")   ' Covetor
         File.Copy(ImageExportTypes & "\17478_64.png", EVEIPHImageFolder & "\17478_64.png")    ' Retrieverr
@@ -633,8 +640,6 @@ Public Class frmMain
         File.Copy(ImageExportTypes & "\22546_64.png", WorkingImageFolder & "\22546_64.png")   ' Skiff
         File.Copy(ImageExportTypes & "\22548_64.png", EVEIPHImageFolder & "\22548_64.png")    ' Mackinaw
         File.Copy(ImageExportTypes & "\22548_64.png", WorkingImageFolder & "\22548_64.png")   ' Mackinaw
-        File.Copy(ImageExportTypes & "\22557_32.png", EVEIPHImageFolder & "\42528_32.png") ' T1 Mining Ganglink image
-        File.Copy(ImageExportTypes & "\22557_32.png", WorkingImageFolder & "\42528_32.png") ' T1 Mining Ganglink image
         File.Copy(ImageExportTypes & "\24688_64.png", EVEIPHImageFolder & "\24688_64.png")    ' Rokh
         File.Copy(ImageExportTypes & "\24688_64.png", WorkingImageFolder & "\24688_64.png")   ' Rokh
         File.Copy(ImageExportTypes & "\24698_64.png", EVEIPHImageFolder & "\24698_64.png")    ' Drake
@@ -651,8 +656,11 @@ Public Class frmMain
         File.Copy(ImageExportTypes & "\37135_64.png", WorkingImageFolder & "\37135_64.png")   ' Endurance
         File.Copy(ImageExportTypes & "\42244_64.png", EVEIPHImageFolder & "\42244_64.png")    ' Porpoise
         File.Copy(ImageExportTypes & "\42244_64.png", WorkingImageFolder & "\42244_64.png")   ' Porpoise
-        File.Copy(ImageExportTypes & "\4276_32.png", EVEIPHImageFolder & "\43551_32.png") ' T2 Mining Ganglink image
-        File.Copy(ImageExportTypes & "\4276_32.png", WorkingImageFolder & "\43551_32.png") ' T2 Mining Ganglink image
+
+        File.Copy(ImageExportTypes & "\22557_32.png", EVEIPHImageFolder & "\42528_32.png")    ' T1 Mining Ganglink image
+        File.Copy(ImageExportTypes & "\22557_32.png", WorkingImageFolder & "\42528_32.png")   ' T1 Mining Ganglink image
+        File.Copy(ImageExportTypes & "\4276_32.png", EVEIPHImageFolder & "\43551_32.png")     ' T2 Mining Ganglink image
+        File.Copy(ImageExportTypes & "\4276_32.png", WorkingImageFolder & "\43551_32.png")    ' T2 Mining Ganglink image
 
         ' Fuel block images
         File.Copy(ImageExportTypes & "\16272_32.png", EVEIPHImageFolder & "\16272_32.png") ' Heavy Water
@@ -720,6 +728,13 @@ Public Class frmMain
             Catch
                 ' Build a file with the BP ID's and Names that do not have a image
                 OutputFile.WriteLine(rsReader(0).ToString & " - " & rsReader(1).ToString)
+                ' Try to download
+                If DownloadImageFromServer(CLng(rsReader.GetValue(0)), ImageType.BP, 64, ImageExportTypes & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png") <> "" Then
+                    ' For zip use
+                    File.Copy(ImageExportTypes & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png", EVEIPHImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png")
+                    ' To root Working Directory
+                    File.Copy(ImageExportTypes & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png", WorkingImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png")
+                End If
                 MissingImages = True
             End Try
 
@@ -759,6 +774,13 @@ Public Class frmMain
             Catch
                 ' Build a file with the BP ID's and Names that do not have a image
                 OutputFile.WriteLine(rsReader(0).ToString & " - " & rsReader(1).ToString)
+                ' Try to download
+                If DownloadImageFromServer(CLng(rsReader.GetValue(0)), ImageType.Render, 0, ImageExportTypes & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png") <> "" Then
+                    ' For zip use
+                    File.Copy(RendersImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & ".png", EVEIPHImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & ".png")
+                    ' To root Working Directory
+                    File.Copy(RendersImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & ".png", WorkingImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & ".png")
+                End If
                 MissingImages = True
             End Try
 
@@ -795,6 +817,83 @@ Public Class frmMain
         MsgBox("Images Copied Successfully", vbInformation, "Complete")
 
     End Sub
+
+    Public Enum ImageType
+        BP = 0
+        BPC = 1
+        Icon = 2
+        Render = 3
+    End Enum
+
+    ' Downloads the sent file from server and saves it to the root directory as the sent file name
+    Public Function DownloadImageFromServer(ByVal ImageID As Long, IT As ImageType, Size As Integer, ByVal FileName As String) As String
+        ' Creating the request And getting the response
+        Dim Response As HttpWebResponse
+        Dim Request As HttpWebRequest
+        Dim TypeCode As String = ""
+        Dim ValidSizes As New List(Of Integer)(New Integer() {32, 64, 128, 256, 512, 1024})
+
+        Select Case IT
+            Case ImageType.BP
+                TypeCode = "bp"
+            Case ImageType.BPC
+                TypeCode = "bpc"
+            Case ImageType.Icon
+                TypeCode = "icon"
+            Case ImageType.Render
+                TypeCode = "render"
+        End Select
+
+        If TypeCode = "" Or Not ValidSizes.Contains(Size) Then
+            Return ""
+        End If
+
+        Dim URL As String = "https://images.evetech.net/types/" & CStr(ImageID) & "/" & TypeCode
+
+        If Size <> 0 Then
+            URL &= "?size=" & CStr(Size)
+        End If
+
+        ' For reading in chunks of data
+        Dim readBytes(4095) As Byte
+        ' Create directory if it doesn't exist already
+        If Not Directory.Exists(Path.GetDirectoryName(FileName)) Then
+            Directory.CreateDirectory(Path.GetDirectoryName(FileName))
+        End If
+        Dim writeStream As New FileStream(FileName, FileMode.Create)
+        Dim bytesread As Integer
+
+        Try 'Checks if the file exist
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12
+            Request = DirectCast(HttpWebRequest.Create(URL), HttpWebRequest)
+            Request.Proxy = Nothing
+            Request.Credentials = CredentialCache.DefaultCredentials ' Added 9/27 to attempt to fix error: (407) Proxy Authentication Required.
+            Request.Timeout = 50000
+            Response = CType(Request.GetResponse, HttpWebResponse)
+        Catch ex As Exception
+            ' Show error and exit
+            'Close the streams
+            writeStream.Close()
+            Return ""
+        End Try
+
+        ' Loop through and get the file in chunks, save out
+        Do
+            bytesread = Response.GetResponseStream.Read(readBytes, 0, 4096)
+
+            ' No more bytes to read
+            If bytesread = 0 Then Exit Do
+
+            writeStream.Write(readBytes, 0, bytesread)
+        Loop
+
+        'Close the streams
+        Response.GetResponseStream.Close()
+        writeStream.Close()
+
+        Return FileName
+
+    End Function
 
     ' Builds the binary zip file
     Private Sub btnBuildBinary_Click(sender As System.Object, e As System.EventArgs) Handles btnBuildBinary.Click
@@ -1249,9 +1348,6 @@ Public Class frmMain
         SQL &= "SELECT blueprintTypeID, activityID, skillID AS materialTypeID, level as quantity, 0 AS consume FROM industryActivitySkills"
         Call Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
-        'lblTableName.Text = "Building: INVENTORY_NAMES"
-        'Call Build_INVENTORY_NAMES()
-
         lblTableName.Text = "Building: INVENTORY_TYPES"
         Call Build_INVENTORY_TYPES()
 
@@ -1396,14 +1492,11 @@ Public Class frmMain
         lblTableName.Text = "Building: ORES"
         Call Build_ORES()
 
-        lblTableName.Text = "Building: OreRefine"
-        Call Build_OreRefine()
+        'lblTableName.Text = "Building: OreRefine"
+        'Call Build_OreRefine()
 
         lblTableName.Text = "Building: ENGINEERING_RIG_BONUSES"
         Call Build_StructureRigBonuses()
-
-        lblTableName.Text = "Building: REACTIONS"
-        Call Build_Reactions()
 
         lblTableName.Text = "Building: SKILLS"
         Call Build_Skills()
@@ -1468,112 +1561,123 @@ Public Class frmMain
         lblTableName.Text = "Building: MAP_DISALLOWED_ANCHOR_GROUPS"
         Call Build_MAP_DISALLOWED_ANCHOR_GROUPS()
 
-        'lblTableName.Text = "Building: LP_OFFER_REQUIREMENTS"
-        'Call Build_LP_OFFER_REQUIREMENTS()
-
-        'lblTableName.Text = "Building: LP_STORE"
-        'Call Build_LP_STORE()
-
         ' After we are done with everything, use the following tables to update the RACE ID value in the ALL_BLUEPRINTS table
         lblTableName.Text = "Updating the Race ID's"
 
         ' Set null to zero
-        SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = 0 WHERE RACE_ID IS NULL "
+        SQL = "UPDATE ALL_BLUEPRINTS_FACT SET RACE_ID = 0 WHERE RACE_ID IS NULL "
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         ' 1 = Caldari
-        SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = 1 "
-        SQL &= "WHERE "
-        SQL &= "BLUEPRINT_ID IN (SELECT DISTINCT BLUEPRINT_ID FROM ALL_BLUEPRINT_MATERIALS WHERE MATERIAL = 'Caldari Encryption Methods') OR "
+        SQL = "SELECT DISTINCT BLUEPRINT_ID FROM ALL_BLUEPRINTS WHERE BLUEPRINT_ID IN (SELECT DISTINCT BLUEPRINT_ID FROM ALL_BLUEPRINT_MATERIALS WHERE MATERIAL = 'Caldari Encryption Methods') OR "
         SQL &= "BLUEPRINT_ID IN (SELECT DISTINCT productTypeID FROM INDUSTRY_ACTIVITY_PRODUCTS WHERE blueprintTypeID IN "
         SQL &= "(SELECT DISTINCT BLUEPRINT_ID FROM ALL_BLUEPRINT_MATERIALS WHERE MATERIAL = 'Caldari Encryption Methods')) "
         SQL &= "OR MARKET_GROUP ='Caldari' OR BLUEPRINT_GROUP IN ('Missile Blueprint','Missile Launcher Blueprint') "
-        SQL &= "OR BLUEPRINT_NAME LIKE 'Caldari%'  OR BLUEPRINT_NAME LIKE 'Caldari%' "
-        SQL &= "AND RACE_ID = 0 "
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL &= "OR BLUEPRINT_NAME LIKE 'Caldari%'  OR BLUEPRINT_NAME LIKE 'Caldari%' AND RACE_ID = 0 "
+        SQLiteDBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBRef)
+        SQLiteReader = SQLiteDBCommand.ExecuteReader
+
+        While SQLiteReader.Read
+            SQL = "UPDATE ALL_BLUEPRINTS_FACT SET RACE_ID = 1 WHERE BLUEPRINT_ID = " & SQLiteReader.GetInt32(0)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        End While
 
         ' 2 = Minmatar
-        SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = 2 "
-        SQL &= "WHERE "
-        SQL &= "BLUEPRINT_ID IN (SELECT DISTINCT BLUEPRINT_ID FROM ALL_BLUEPRINT_MATERIALS WHERE MATERIAL = 'Minmatar Encryption Methods') OR "
+        SQL = "SELECT DISTINCT BLUEPRINT_ID FROM ALL_BLUEPRINTS WHERE BLUEPRINT_ID IN (SELECT DISTINCT BLUEPRINT_ID FROM ALL_BLUEPRINT_MATERIALS WHERE MATERIAL = 'Minmatar Encryption Methods') OR "
         SQL &= "BLUEPRINT_ID IN (SELECT DISTINCT productTypeID FROM INDUSTRY_ACTIVITY_PRODUCTS WHERE blueprintTypeID IN "
         SQL &= "(SELECT DISTINCT BLUEPRINT_ID FROM ALL_BLUEPRINT_MATERIALS WHERE MATERIAL = 'Minmatar Encryption Methods')) "
         SQL &= "OR MARKET_GROUP ='Minmatar' OR BLUEPRINT_GROUP IN ('Projectile Ammo Blueprint','Projectile Weapon Blueprint') "
         SQL &= "OR BLUEPRINT_NAME LIKE 'Republic%'  OR BLUEPRINT_NAME LIKE 'Minmatar%' "
         SQL &= "AND RACE_ID = 0 "
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQLiteDBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBRef)
+        SQLiteReader = SQLiteDBCommand.ExecuteReader
+
+        While SQLiteReader.Read
+            SQL = "UPDATE ALL_BLUEPRINTS_FACT SET RACE_ID = 2 WHERE BLUEPRINT_ID = " & SQLiteReader.GetInt32(0)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        End While
 
         ' 4 = Amarr
-        SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = 4 "
-        SQL &= "WHERE "
-        SQL &= "BLUEPRINT_ID IN (SELECT DISTINCT BLUEPRINT_ID FROM ALL_BLUEPRINT_MATERIALS WHERE MATERIAL = 'Amarr Encryption Methods') OR "
+        SQL = "SELECT DISTINCT BLUEPRINT_ID FROM ALL_BLUEPRINTS WHERE BLUEPRINT_ID IN (SELECT DISTINCT BLUEPRINT_ID FROM ALL_BLUEPRINT_MATERIALS WHERE MATERIAL = 'Amarr Encryption Methods') OR "
         SQL &= "BLUEPRINT_ID IN (SELECT DISTINCT productTypeID FROM INDUSTRY_ACTIVITY_PRODUCTS WHERE blueprintTypeID IN "
         SQL &= "(SELECT DISTINCT BLUEPRINT_ID FROM ALL_BLUEPRINT_MATERIALS WHERE MATERIAL = 'Amarr Encryption Methods')) "
         SQL &= "OR MARKET_GROUP ='Amarr' OR BLUEPRINT_GROUP IN ('Energy Weapon Blueprint','Frequency Crystal Blueprint') "
         SQL &= "OR BLUEPRINT_NAME LIKE 'Ammatar%' OR BLUEPRINT_NAME LIKE 'Imperial Navy%' OR BLUEPRINT_NAME LIKE 'Khanid Navy%' OR BLUEPRINT_NAME LIKE 'Amarr%' "
         SQL &= "AND RACE_ID = 0"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQLiteDBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBRef)
+        SQLiteReader = SQLiteDBCommand.ExecuteReader
+
+        While SQLiteReader.Read
+            SQL = "UPDATE ALL_BLUEPRINTS_FACT SET RACE_ID = 4 WHERE BLUEPRINT_ID = " & SQLiteReader.GetInt32(0)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        End While
 
         ' 8 = Gallente
-        SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = 8 "
-        SQL &= "WHERE "
-        SQL &= "BLUEPRINT_ID IN (SELECT DISTINCT BLUEPRINT_ID FROM ALL_BLUEPRINT_MATERIALS WHERE MATERIAL = 'Gallente Encryption Methods') OR "
+        SQL = "SELECT DISTINCT BLUEPRINT_ID FROM ALL_BLUEPRINTS WHERE BLUEPRINT_ID IN (SELECT DISTINCT BLUEPRINT_ID FROM ALL_BLUEPRINT_MATERIALS WHERE MATERIAL = 'Gallente Encryption Methods') OR "
         SQL &= "BLUEPRINT_ID IN (SELECT DISTINCT productTypeID FROM INDUSTRY_ACTIVITY_PRODUCTS WHERE blueprintTypeID IN "
         SQL &= "(SELECT DISTINCT BLUEPRINT_ID FROM ALL_BLUEPRINT_MATERIALS WHERE MATERIAL = 'Gallente Encryption Methods')) "
         SQL &= "OR MARKET_GROUP ='Gallente' OR BLUEPRINT_GROUP IN ('Hybrid Charge Blueprint','Hybrid Weapon Blueprint', 'Capacitor Booster Charge Blueprint', 'Bomb Blueprint') "
         SQL &= "OR BLUEPRINT_NAME LIKE 'Federation%' OR BLUEPRINT_NAME LIKE 'Gallente%' "
         SQL &= "AND RACE_ID = 0"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = 15 WHERE MARKET_GROUP = 'Pirate Faction' OR RACE_ID > 15"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = 15 WHERE BLUEPRINT_NAME LIKE 'Serpentis%' OR BLUEPRINT_NAME LIKE 'Angel%' OR BLUEPRINT_NAME LIKE 'Blood%'"
-        SQL &= "OR BLUEPRINT_NAME LIKE 'Domination%' OR BLUEPRINT_NAME LIKE 'Dread Guristas%' OR BLUEPRINT_NAME LIKE 'Guristas%' "
-        SQL &= "OR BLUEPRINT_NAME LIKE 'True Sansha%' OR BLUEPRINT_NAME LIKE 'Sansha%' OR BLUEPRINT_NAME LIKE 'Shadow%' OR BLUEPRINT_NAME LIKE 'Dark Blood%'"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        ' Set all the structures now that are zero
-        SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = 1 WHERE RACE_ID <> 15 AND ITEM_CATEGORY = 'Structure' "
-        SQL &= "AND ITEM_GROUP IN ('Mobile Missile Sentry')"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = 2 WHERE RACE_ID <> 15 AND ITEM_CATEGORY = 'Structure' "
-        SQL &= "AND ITEM_GROUP IN ('Mobile Projectile Sentry')"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = 4 WHERE RACE_ID <> 15 AND ITEM_CATEGORY = 'Structure' "
-        SQL &= "AND ITEM_GROUP IN ('Mobile Laser Sentry')"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = 8 WHERE RACE_ID <> 15 AND ITEM_CATEGORY = 'Structure' "
-        SQL &= "AND ITEM_GROUP IN ('Mobile Hybrid Sentry')"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        ' Update any remaining by blueprint group
-        SQL = "SELECT DISTINCT BLUEPRINT_GROUP, RACE_ID FROM ALL_BLUEPRINTS WHERE RACE_ID <> 0 "
         SQLiteDBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBRef)
         SQLiteReader = SQLiteDBCommand.ExecuteReader
 
         While SQLiteReader.Read
-            SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = " & SQLiteReader.GetInt32(1) & " "
-            SQL &= "WHERE BLUEPRINT_GROUP = '" & SQLiteReader.GetString(0) & "' "
-            SQL &= "AND RACE_ID = 0 AND ITEM_CATEGORY IN ('Module', 'Drone')"
+            SQL = "UPDATE ALL_BLUEPRINTS_FACT SET RACE_ID = 8 WHERE BLUEPRINT_ID = " & SQLiteReader.GetInt32(0)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        End While
+
+        SQL = "UPDATE ALL_BLUEPRINTS_FACT SET RACE_ID = 15 WHERE MARKET_GROUP = 'Pirate Faction' OR RACE_ID > 15"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "SELECT BLUEPRINT_ID FROM ALL_BLUEPRINTS WHERE BLUEPRINT_NAME LIKE 'Serpentis%' OR BLUEPRINT_NAME LIKE 'Angel%' OR BLUEPRINT_NAME LIKE 'Blood%'"
+        SQL &= "OR BLUEPRINT_NAME LIKE 'Domination%' OR BLUEPRINT_NAME LIKE 'Dread Guristas%' OR BLUEPRINT_NAME LIKE 'Guristas%' "
+        SQL &= "OR BLUEPRINT_NAME LIKE 'True Sansha%' OR BLUEPRINT_NAME LIKE 'Sansha%' OR BLUEPRINT_NAME LIKE 'Shadow%' OR BLUEPRINT_NAME LIKE 'Dark Blood%'"
+        SQLiteDBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBRef)
+        SQLiteReader = SQLiteDBCommand.ExecuteReader
+
+        While SQLiteReader.Read
+            SQL = "UPDATE ALL_BLUEPRINTS_FACT SET RACE_ID = 8 WHERE BLUEPRINT_ID = " & SQLiteReader.GetInt32(0)
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        End While
+
+        ' Set all the structures now that are zero
+        SQL = "UPDATE ALL_BLUEPRINTS_FACT SET RACE_ID = 1 WHERE RACE_ID <> 15 AND ITEM_CATEGORY_ID = 65 AND ITEM_GROUP_ID = 417"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "UPDATE ALL_BLUEPRINTS_FACT SET RACE_ID = 2 WHERE RACE_ID <> 15 AND ITEM_CATEGORY_ID = 65 AND ITEM_GROUP_ID = 426"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "UPDATE ALL_BLUEPRINTS_FACT SET RACE_ID = 4 WHERE RACE_ID <> 15 AND ITEM_CATEGORY_ID = 65 AND ITEM_GROUP_ID = 430"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "UPDATE ALL_BLUEPRINTS_FACT SET RACE_ID = 8 WHERE RACE_ID <> 15 AND ITEM_CATEGORY_ID = 65 AND ITEM_GROUP_ID = 449"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        ' Update any remaining by blueprint group
+        SQL = "SELECT DISTINCT BLUEPRINT_GROUP_ID, RACE_ID FROM ALL_BLUEPRINTS WHERE RACE_ID <> 0 "
+        SQLiteDBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBRef)
+        SQLiteReader = SQLiteDBCommand.ExecuteReader
+
+        While SQLiteReader.Read
+            SQL = "UPDATE ALL_BLUEPRINTS_FACT SET RACE_ID = " & SQLiteReader.GetInt32(1) & " "
+            SQL &= "WHERE BLUEPRINT_GROUP_ID = '" & SQLiteReader.GetInt32(0) & "' "
+            SQL &= "AND RACE_ID = 0 AND ITEM_CATEGORY_ID IN (7,18)"
             Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         End While
 
         ' Station Parts should be 'Other'
-        SQL = "UPDATE ALL_BLUEPRINTS SET RACE_ID = 0 WHERE ITEM_GROUP_ID = 536 "
+        SQL = "UPDATE ALL_BLUEPRINTS_FACT SET RACE_ID = 0 WHERE ITEM_GROUP_ID = 536 "
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         ' Fix for Pheobe SDE issues - These were removed from game but haven't been deleted from SDE
-        SQL = "DELETE FROM ALL_BLUEPRINT_MATERIALS WHERE MATERIAL_CATEGORY = 'Decryptors'"
+        SQL = "DELETE FROM ALL_BLUEPRINT_MATERIALS_FACT WHERE MATERIAL_CATEGORY_ID = 35"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
-        SQL = "DELETE FROM ALL_BLUEPRINT_MATERIALS WHERE BLUEPRINT_NAME LIKE '%Data Interface Blueprint'"
+        SQL = "DELETE FROM ALL_BLUEPRINT_MATERIALS_FACT WHERE BLUEPRINT_ID IN (SELECT BLUEPRINT_ID FROM ALL_BLUEPRINTS WHERE BLUEPRINT_NAME LIKE '%Data Interface Blueprint')"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
-        SQL = "DELETE FROM ALL_BLUEPRINTS WHERE ITEM_GROUP = 'Data Interfaces'"
+        SQL = "DELETE FROM ALL_BLUEPRINTS_FACT WHERE ITEM_GROUP_ID = 716"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         lblTableName.Text = "Finalizing..."
@@ -1613,6 +1717,7 @@ Public Class frmMain
         ' Build ALL_BLUEPRINTS from this query
         SQL = "CREATE TABLE ALL_BLUEPRINTS AS SELECT industryBlueprints.blueprintTypeID AS BLUEPRINT_ID, "
         SQL &= "invTypes1.typeName AS BLUEPRINT_NAME, "
+        SQL &= "invGroups1.groupID AS BLUEPRINT_GROUP_ID, "
         SQL &= "invGroups1.groupName AS  BLUEPRINT_GROUP, "
         SQL &= "invTypes.typeID AS ITEM_ID, "
         SQL &= "invTypes.typeName AS ITEM_NAME, "
@@ -1630,14 +1735,15 @@ Public Class frmMain
         SQL &= "IA3.time AS BASE_COPY_TIME, "
         SQL &= "IA4.time AS BASE_INVENTION_TIME, "
         SQL &= "industryBlueprints.maxProductionLimit AS MAX_PRODUCTION_LIMIT, "
-        SQL &= "COALESCE(dgmTypeAttributes.valueInt,dgmTypeAttributes.valueFloat) AS ITEM_TYPE, "
+        SQL &= "dogmaTypeAttributes.value AS ITEM_TYPE, "
         SQL &= "invTypes.raceID AS RACE_ID, "
         SQL &= "invTypes.metaGroupID AS META_GROUP, "
         SQL &= "'XX' AS SIZE_GROUP, "
-        SQL &= "0 AS IGNORE "
+        SQL &= "0 AS IGNORE, "
+        SQL &= "0 AS FAVORITE "
         SQL &= "FROM invTypes "
         SQL &= "LEFT JOIN marketGroups ON invTypes.marketGroupID = marketGroups.marketGroupID "
-        SQL &= "LEFT JOIN dgmTypeAttributes ON invTypes.typeID = dgmTypeAttributes.typeID AND attributeID = 633, "
+        SQL &= "LEFT JOIN dogmaTypeAttributes ON invTypes.typeID = dogmaTypeAttributes.typeID AND attributeID = 633, "
         SQL &= "invTypes AS invTypes1, invGroups, invGroups AS invGroups1, invCategories, "
         SQL &= "industryActivityProducts, industryActivities, "
         SQL &= "industryBlueprints "
@@ -1795,18 +1901,14 @@ Public Class frmMain
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
         ' Now build the tables
-        SQL = "CREATE TABLE ALL_BLUEPRINTS ("
+        SQL = "CREATE TABLE ALL_BLUEPRINTS_FACT ("
         SQL &= "BLUEPRINT_ID INTEGER PRIMARY KEY,"
-        SQL &= "BLUEPRINT_NAME VARCHAR(" & GetLenSQLExpField("BLUEPRINT_NAME", "ALL_BLUEPRINTS") & ") NOT NULL,"
-        SQL &= "BLUEPRINT_GROUP VARCHAR(" & GetLenSQLExpField("BLUEPRINT_GROUP", "ALL_BLUEPRINTS") & ") NOT NULL,"
+        SQL &= "BLUEPRINT_GROUP_ID INTEGER NOT NULL,"
         SQL &= "ITEM_ID INTEGER NOT NULL,"
-        SQL &= "ITEM_NAME VARCHAR(" & GetLenSQLExpField("ITEM_NAME", "ALL_BLUEPRINTS") & ") NOT NULL,"
         SQL &= "ITEM_GROUP_ID INTEGER NOT NULL,"
-        SQL &= "ITEM_GROUP VARCHAR(" & GetLenSQLExpField("ITEM_GROUP", "ALL_BLUEPRINTS") & ") NOT NULL,"
         SQL &= "ITEM_CATEGORY_ID INTEGER NOT NULL,"
-        SQL &= "ITEM_CATEGORY VARCHAR(" & GetLenSQLExpField("ITEM_CATEGORY", "ALL_BLUEPRINTS") & ") NOT NULL,"
         SQL &= "MARKET_GROUP_ID INTEGER,"
-        SQL &= "MARKET_GROUP VARCHAR(" & GetLenSQLExpField("MARKET_GROUP", "ALL_BLUEPRINTS") & "),"
+        SQL &= "MARKET_GROUP VARCHAR(50),"
         SQL &= "TECH_LEVEL INTEGER NOT NULL,"
         SQL &= "PORTION_SIZE INTEGER NOT NULL,"
         SQL &= "BASE_PRODUCTION_TIME INTEGER NOT NULL,"
@@ -1819,7 +1921,8 @@ Public Class frmMain
         SQL &= "RACE_ID INTEGER, "
         SQL &= "META_GROUP INTEGER,"
         SQL &= "SIZE_GROUP VARCHAR(2) NOT NULL, "
-        SQL &= "IGNORE INTEGER NOT NULL"
+        SQL &= "IGNORE INTEGER NOT NULL,"
+        SQL &= "FAVORITE INTEGER NOT NULL"
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -1828,7 +1931,9 @@ Public Class frmMain
         Call SetProgressBarValues("ALL_BLUEPRINTS")
 
         ' Now select the final query of data
-        mainSQL = "SELECT * FROM ALL_BLUEPRINTS"
+        mainSQL = "SELECT BLUEPRINT_ID, BLUEPRINT_GROUP_ID, ITEM_ID, ITEM_GROUP_ID, ITEM_CATEGORY_ID, MARKET_GROUP_ID, MARKET_GROUP, TECH_LEVEL, PORTION_SIZE, "
+        mainSQL &= "BASE_PRODUCTION_TIME, BASE_RESEARCH_TL_TIME, BASE_RESEARCH_ML_TIME, BASE_COPY_TIME, BASE_INVENTION_TIME, "
+        mainSQL &= "MAX_PRODUCTION_LIMIT, ITEM_TYPE, RACE_ID, META_GROUP, SIZE_GROUP, IGNORE, FAVORITE FROM ALL_BLUEPRINTS"
         SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
         SQLReader1 = SQLCommand.ExecuteReader()
 
@@ -1838,7 +1943,7 @@ Public Class frmMain
         While SQLReader1.Read
             Application.DoEvents()
 
-            SQL = "INSERT INTO ALL_BLUEPRINTS VALUES ("
+            SQL = "INSERT INTO ALL_BLUEPRINTS_FACT VALUES ("
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ","
@@ -1859,10 +1964,7 @@ Public Class frmMain
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(17)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(18)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(19)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(20)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(21)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(22)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(23)) & ")"
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(20)) & ")"
 
             Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
@@ -1872,21 +1974,34 @@ Public Class frmMain
 
         End While
 
+        ' Finally, create the view
+        SQL = "CREATE VIEW ALL_BLUEPRINTS AS SELECT "
+        SQL &= "BLUEPRINT_ID, ITBP.typeName AS BLUEPRINT_NAME, IGBP.groupID AS BLUEPRINT_GROUP_ID, IGBP.groupName AS BLUEPRINT_GROUP, ITEM_ID, INVENTORY_TYPES.typeName AS ITEM_NAME, "
+        SQL &= "ITEM_GROUP_ID, INVENTORY_GROUPS.groupName AS ITEM_GROUP, ITEM_CATEGORY_ID, INVENTORY_CATEGORIES.categoryName AS ITEM_CATEGORY, "
+        SQL &= "MARKET_GROUP_ID, MARKET_GROUP, TECH_LEVEL, PORTION_SIZE, "
+        SQL &= "BASE_PRODUCTION_TIME, BASE_RESEARCH_TL_TIME, BASE_RESEARCH_ML_TIME, BASE_COPY_TIME, BASE_INVENTION_TIME, "
+        SQL &= "MAX_PRODUCTION_LIMIT, ITEM_TYPE, RACE_ID, META_GROUP, SIZE_GROUP, IGNORE, FAVORITE "
+        SQL &= "FROM ALL_BLUEPRINTS_FACT, INVENTORY_TYPES AS ITBP, INVENTORY_GROUPS AS IGBP, INVENTORY_TYPES,  INVENTORY_GROUPS,  INVENTORY_CATEGORIES "
+        SQL &= "WHERE BLUEPRINT_ID = ITBP.typeID AND ITBP.groupID = IGBP.groupID "
+        SQL &= "AND ITEM_ID = INVENTORY_TYPES.typeID AND ITEM_CATEGORY_ID = INVENTORY_CATEGORIES.categoryID AND ITEM_GROUP_ID = INVENTORY_GROUPS.groupID "
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
         Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         SQLReader1.Close()
 
         ' Build SQL Lite indexes
-        SQL = "CREATE INDEX IDX_AB_ITEM_ID ON ALL_BLUEPRINTS (ITEM_ID)"
+        SQL = "CREATE INDEX IDX_AB_ITEM_ID ON ALL_BLUEPRINTS_FACT (ITEM_ID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
-        SQL = "CREATE INDEX IDX_AB_BP_NAME ON ALL_BLUEPRINTS (BLUEPRINT_NAME)"
+        SQL = "CREATE INDEX IDX_AB_BP_ID ON ALL_BLUEPRINTS_FACT (BLUEPRINT_ID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
-        SQL = "CREATE INDEX IDX_AB_CAT_ITEM ON ALL_BLUEPRINTS (ITEM_CATEGORY)"
+        SQL = "CREATE INDEX IDX_AB_CAT_ITEM_ID ON ALL_BLUEPRINTS_FACT (ITEM_CATEGORY_ID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
-        SQL = "CREATE INDEX IDX_AB_GROUP_ITEM ON ALL_BLUEPRINTS (ITEM_GROUP,ITEM_TYPE)"
+        SQL = "CREATE INDEX IDX_AB_GROUP_ITEM_ID ON ALL_BLUEPRINTS_FACT (ITEM_GROUP_ID,ITEM_TYPE)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         pgMain.Visible = False
@@ -1922,8 +2037,8 @@ Public Class frmMain
 
         ' Build the temp table in SQL Server first
         SQL = "CREATE TABLE ALL_BLUEPRINT_MATERIALS AS SELECT industryBlueprints.blueprintTypeID AS BLUEPRINT_ID, invTypes.typeName AS BLUEPRINT_NAME, industryActivityProducts.productTypeID AS PRODUCT_ID, "
-        SQL &= "MY_INDUSTRY_MATERIALS.materialTypeID AS MATERIAL_ID, matTypes.typeName AS MATERIAL, matGroups.groupName AS MATERIAL_GROUP,  "
-        SQL &= "matCategories.categoryName AS MATERIAL_CATEGORY, matTypes.packagedVolume AS MATERIAL_VOLUME, MY_INDUSTRY_MATERIALS.quantity AS QUANTITY, "
+        SQL &= "MY_INDUSTRY_MATERIALS.materialTypeID AS MATERIAL_ID, matTypes.typeName AS MATERIAL, matGroups.groupID AS MAT_GROUP_ID, matGroups.groupName AS MATERIAL_GROUP,  "
+        SQL &= "matCategories.categoryID AS MAT_CATEGORY_ID, matCategories.categoryName AS MATERIAL_CATEGORY, matTypes.packagedVolume AS MATERIAL_VOLUME, MY_INDUSTRY_MATERIALS.quantity AS QUANTITY, "
         SQL &= "MY_INDUSTRY_MATERIALS.activityID AS ACTIVITY, MY_INDUSTRY_MATERIALS.consume AS CONSUME "
         SQL &= "FROM industryBlueprints, invTypes, industryActivityProducts, MY_INDUSTRY_MATERIALS, invGroups, invCategories, "
         SQL &= "invTypes AS matTypes, invGroups AS matGroups, invCategories AS matCategories "
@@ -1960,14 +2075,13 @@ Public Class frmMain
         SQLReader1.Close()
 
         ' Create SQLite table
-        SQL = "CREATE TABLE ALL_BLUEPRINT_MATERIALS ("
+        SQL = "CREATE TABLE ALL_BLUEPRINT_MATERIALS_FACT ("
         SQL &= "BLUEPRINT_ID INTEGER,"
-        SQL &= "BLUEPRINT_NAME VARCHAR(100) NOT NULL,"
         SQL &= "PRODUCT_ID INTEGER NOT NULL,"
         SQL &= "MATERIAL_ID INTEGER NOT NULL,"
-        SQL &= "MATERIAL VARCHAR(100) NOT NULL,"
-        SQL &= "MATERIAL_GROUP VARCHAR(100) NOT NULL,"
-        SQL &= "MATERIAL_CATEGORY VARCHAR(100) NOT NULL,"
+        SQL &= "MATERIAL_GROUP_ID,"
+        SQL &= "MATERIAL_CATEGORY_ID,"
+        SQL &= "MATERIAL VARCHAR(100) NOT NULL," ' Keep this since we might have updated with blueprint copy info
         SQL &= "MATERIAL_VOLUME REAL,"
         SQL &= "QUANTITY INTEGER NOT NULL,"
         SQL &= "ACTIVITY INTEGER NOT NULL,"
@@ -1979,8 +2093,8 @@ Public Class frmMain
         ' Now select the count of the final query of data
         Call SetProgressBarValues("ALL_BLUEPRINT_MATERIALS")
 
-        ' Now select the final query of data
-        mainSQL = "SELECT * FROM ALL_BLUEPRINT_MATERIALS"
+        ' Now select the final query of data from the temp table
+        mainSQL = "SELECT BLUEPRINT_ID, PRODUCT_ID, MATERIAL_ID, MAT_GROUP_ID, MAT_CATEGORY_ID, MATERIAL, MATERIAL_VOLUME, QUANTITY, ACTIVITY, CONSUME FROM ALL_BLUEPRINT_MATERIALS"
         SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
         SQLReader1 = SQLCommand.ExecuteReader()
 
@@ -1988,7 +2102,7 @@ Public Class frmMain
 
         ' Insert the data into the new SQLite table
         While SQLReader1.Read
-            SQL = "INSERT INTO ALL_BLUEPRINT_MATERIALS VALUES ("
+            SQL = "INSERT INTO ALL_BLUEPRINT_MATERIALS_FACT VALUES ("
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ","
@@ -1998,8 +2112,7 @@ Public Class frmMain
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(6)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(7)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(8)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(9)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(10)) & ")"
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(9)) & ")"
 
             Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
@@ -2009,18 +2122,28 @@ Public Class frmMain
 
         End While
 
+        ' Finally, create the view
+        SQL = "CREATE VIEW ALL_BLUEPRINT_MATERIALS AS SELECT "
+        SQL &= "BLUEPRINT_ID, INVENTORY_TYPES.typeName AS BLUEPRINT_NAME, PRODUCT_ID, MATERIAL_ID, MATERIAL, "
+        SQL &= "INVENTORY_GROUPS.groupName AS MATERIAL_GROUP, INVENTORY_CATEGORIES.categoryName AS MATERIAL_CATEGORY, "
+        SQL &= "MATERIAL_VOLUME, QUANTITY, ACTIVITY, CONSUME "
+        SQL &= "FROM ALL_BLUEPRINT_MATERIALS_FACT, INVENTORY_TYPES, INVENTORY_GROUPS, INVENTORY_CATEGORIES "
+        SQL &= "WHERE BLUEPRINT_ID = INVENTORY_TYPES.typeID AND MATERIAL_CATEGORY_ID = INVENTORY_CATEGORIES.categoryID "
+        SQL &= "AND MATERIAL_GROUP_ID = INVENTORY_GROUPS.groupID "
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
         Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         SQLReader1.Close()
 
         ' Build SQL Lite indexes
-        SQL = "CREATE INDEX IDX_ABM_BP_ID_ACTIVITY ON ALL_BLUEPRINT_MATERIALS (BLUEPRINT_ID,ACTIVITY)"
+        SQL = "CREATE INDEX IDX_ABM_BP_ID_ACTIVITY ON ALL_BLUEPRINT_MATERIALS_FACT (BLUEPRINT_ID,ACTIVITY)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
-        SQL = "CREATE INDEX IDX_ABM_PRODUCT_ID_ACTIVITY ON ALL_BLUEPRINT_MATERIALS (PRODUCT_ID, ACTIVITY)"
+        SQL = "CREATE INDEX IDX_ABM_PRODUCT_ID_ACTIVITY ON ALL_BLUEPRINT_MATERIALS_FACT (PRODUCT_ID, ACTIVITY)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
-        SQL = "CREATE INDEX IDX_ABM_REQCOMP_ID_PRODUCT ON ALL_BLUEPRINT_MATERIALS (MATERIAL_ID, PRODUCT_ID)"
+        SQL = "CREATE INDEX IDX_ABM_REQCOMP_ID_PRODUCT ON ALL_BLUEPRINT_MATERIALS_FACT (MATERIAL_ID, PRODUCT_ID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         pgMain.Visible = False
@@ -2831,6 +2954,7 @@ Public Class frmMain
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Materials','Min Sell', 'The Forge','Jita',0,1)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
+        ' Manufactured Items
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Ships','Min Sell', 'The Forge','Jita',0,0)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Charges','Min Sell', 'The Forge','Jita',0,0)"
@@ -2870,6 +2994,8 @@ Public Class frmMain
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Implants','Min Sell', 'The Forge','Jita',0,0)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Structure Rigs','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Structure Components','Min Sell', 'The Forge','Jita',0,0)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         SQL = "CREATE INDEX IDX_PP_ID ON PRICE_PROFILES (ID)"
@@ -3620,16 +3746,16 @@ Public Class frmMain
 
         SQL = "CREATE TABLE ATTRIBUTE_TYPES ("
         SQL &= "attributeID INTEGER PRIMARY KEY,"
-        SQL &= "attributeName VARCHAR(" & GetLenSQLExpField("attributeName", "dgmAttributeTypes") & "),"
-        SQL &= "displayName VARCHAR(" & GetLenSQLExpField("displayName", "dgmAttributeTypes") & ")"
+        SQL &= "attributeName VARCHAR(" & GetLenSQLExpField("attributeName", "dogmaAttributes") & "),"
+        SQL &= "displayNameID VARCHAR(" & GetLenSQLExpField("displayNameID", "dogmaAttributes") & ")"
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
-        Call SetProgressBarValues("dgmAttributeTypes")
+        Call SetProgressBarValues("dogmaAttributes")
 
         ' Pull new data and insert
-        mainSQL = "SELECT attributeID, attributeName, displayName FROM dgmAttributeTypes"
+        mainSQL = "SELECT attributeID, attributeName, displayNameID FROM dogmaAttributes"
         SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
         SQLReader1 = SQLCommand.ExecuteReader()
 
@@ -3672,16 +3798,15 @@ Public Class frmMain
         SQL = "CREATE TABLE TYPE_ATTRIBUTES ("
         SQL &= "typeID INTEGER NOT NULL,"
         SQL &= "attributeID INTEGER,"
-        SQL &= "valueInt INTEGER,"
-        SQL &= "valueFloat REAL"
+        SQL &= "value REAL"
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
-        Call SetProgressBarValues("dgmTypeAttributes")
+        Call SetProgressBarValues("dogmaTypeAttributes")
 
         ' Pull new data and insert
-        mainSQL = "SELECT typeID, attributeID, valueInt, valueFloat FROM dgmTypeAttributes"
+        mainSQL = "SELECT typeID, attributeID, value FROM dogmaTypeAttributes"
         SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
         SQLReader1 = SQLCommand.ExecuteReader()
 
@@ -3694,8 +3819,7 @@ Public Class frmMain
             SQL = "INSERT INTO TYPE_ATTRIBUTES VALUES ("
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(3)) & ")"
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ")"
 
             Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
@@ -3736,10 +3860,10 @@ Public Class frmMain
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
-        Call SetProgressBarValues("dgmTypeEffects")
+        Call SetProgressBarValues("dogmaTypeEffects")
 
         ' Pull new data and insert
-        mainSQL = "SELECT typeID, effectID, isDefault FROM dgmTypeEffects"
+        mainSQL = "SELECT typeID, effectID, isDefault FROM dogmaTypeEffects"
         SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
         SQLReader1 = SQLCommand.ExecuteReader()
 
@@ -3915,8 +4039,8 @@ Public Class frmMain
         mainSQL = mainSQL & "WHEN invTypes.groupID IN (1884,1920,1921,1922,1923) THEN invGroups.groupName "
         mainSQL = mainSQL & "ELSE 'Ore' END, "
         mainSQL = mainSQL & "CASE WHEN invTypes.typeName IN ('Arkonor','Bistot','Crokite','Dark Ochre','Gneiss','Hedbergite',  "
-        mainSQL = mainSQL & "'Hemorphite','Jaspet','Kernite','Mercoxit','Omber','Plagioclase','Pyroxeres','Scordite','Spodumain','Veldspar') THEN 0 "
-        mainSQL = mainSQL & "WHEN invTypes.groupID = 465 THEN -1 WHEN invTypes.groupID = 711 THEN -2 ELSE 1 END " ' 465 is ice, 711 is gas - neither have yield components
+        mainSQL = mainSQL & "'Hemorphite','Jaspet','Kernite','Mercoxit','Omber','Plagioclase','Pyroxeres','Scordite','Spodumain','Veldspar','Talassonite','Rakovene','Bezdnacine') THEN 0 "
+        mainSQL = mainSQL & "WHEN invTypes.groupID = 465 THEN -1 WHEN invTypes.groupID = 711 THEN -2 ELSE 1 END " ' 465 is ice, 711 is gas - neither have high yield components
         mainSQL = mainSQL & "FROM invTypes, invGroups "
         mainSQL = mainSQL & "WHERE invTypes.groupID = invGroups.groupID "
         mainSQL = mainSQL & "AND (invGroups.categoryID = 25 OR invGroups.groupID = 711) " ' Clouds and Ores
@@ -3926,7 +4050,7 @@ Public Class frmMain
         mainSQL = mainSQL & "WHEN invTypes.groupID IN (1884,1920,1921,1922,1923) THEN invGroups.groupName "
         mainSQL = mainSQL & "ELSE 'Ore' END, "
         mainSQL = mainSQL & "CASE WHEN invTypes.typeName IN ('Arkonor','Bistot','Crokite','Dark Ochre','Gneiss','Hedbergite', "
-        mainSQL = mainSQL & "'Hemorphite','Jaspet','Kernite','Mercoxit','Omber','Plagioclase','Pyroxeres','Scordite','Spodumain','Veldspar') THEN 0 "
+        mainSQL = mainSQL & "'Hemorphite','Jaspet','Kernite','Mercoxit','Omber','Plagioclase','Pyroxeres','Scordite','Spodumain','Veldspar','Talassonite','Rakovene','Bezdnacine') THEN 0 "
         mainSQL = mainSQL & "WHEN invTypes.groupID = 465 THEN -1 WHEN invTypes.groupID = 711 THEN -2 ELSE 1 END"
 
         SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
@@ -5730,6 +5854,48 @@ Public Class frmMain
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
 
+        ' Talassonite
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52306,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52306,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52306,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52306,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52306,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52306,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52306,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52306,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52306,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52306,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52306,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52306,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+
+        ' Rakovene
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52315,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52315,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52315,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52315,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52315,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52315,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52315,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52315,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52315,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52315,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52315,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52315,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+
+        ' Bezdnacine
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52316,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52316,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52316,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52316,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52316,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52316,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52316,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52316,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52316,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52316,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52316,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52316,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+
         SQL = "CREATE INDEX IDX_ORE_LOCS_ORE_ID ON ORE_LOCATIONS (ORE_ID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
@@ -6281,7 +6447,7 @@ Public Class frmMain
 
         mainSQL = "SELECT IT.typeID, IT.typeName, IT.packagedVolume, IT.portionSize, "
         mainSQL = mainSQL & "IT2.typeID, IT2.typeName, IG2.groupName, IT2.packagedVolume, ITM.quantity "
-        mainSQL = mainSQL & "FROM invTypes AS IT, invTypeMaterials AS ITM, invGroups AS IG, invCategories as IC, "
+        mainSQL = mainSQL & "FROM invTypes AS IT, typeMaterials AS ITM, invGroups AS IG, invCategories as IC, "
         mainSQL = mainSQL & "invTypes AS IT2, invGroups AS IG2 "
         mainSQL = mainSQL & "WHERE IT.typeID = ITM.typeID AND IT.groupID = IG.groupID AND IG.categoryID = IC.categoryID "
         mainSQL = mainSQL & "AND ITM.materialTypeID = IT2.typeID AND IT2.groupID = IG2.groupID "
@@ -6329,106 +6495,6 @@ Public Class frmMain
         SQLReader1.Close()
 
         SQL = "CREATE INDEX IDX_REPRO_ITEM_MAT_ID On REPROCESSING (ITEM_ID, REFINED_MATERIAL_ID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        pgMain.Visible = False
-
-    End Sub
-
-    ' REACTIONS
-    Private Sub Build_Reactions()
-        Dim SQL As String
-
-        ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
-        Dim SQLReader1 As SQLiteDataReader
-        Dim mySQLReader2 As SQLiteDataReader
-        Dim mainSQL As String
-        Dim msSQL2 As String
-
-        Dim i As Integer
-
-        SQL = "CREATE TABLE REACTIONS ("
-        SQL &= "REACTION_TYPE_ID Integer Not NULL,"
-        SQL &= "REACTION_NAME VARCHAR(100),"
-        SQL &= "REACTION_GROUP VARCHAR(100),"
-        SQL &= "REACTION_TYPE VARCHAR(255),"
-        SQL &= "MATERIAL_TYPE_ID Integer,"
-        SQL &= "MATERIAL_NAME VARCHAR(100),"
-        SQL &= "MATERIAL_GROUP VARCHAR(100),"
-        SQL &= "MATERIAL_CATEGORY  VARCHAR(100),"
-        SQL &= "MATERIAL_QUANTITY Integer,"
-        SQL &= "MATERIAL_VOLUME REAL"
-        SQL &= ")"
-
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        ' Pull new data and insert
-        mainSQL = "Select invTypeReactions.reactionTypeID, "
-        mainSQL = mainSQL & "invTypes.typeName, "
-        mainSQL = mainSQL & "invGroups.groupName, "
-        mainSQL = mainSQL & "CASE When invTypeReactions.input = 0 Then 'Output' ELSE 'Input' END, "
-        mainSQL = mainSQL & "invTypeReactions.typeID, invTypes_1.typeName, "
-        mainSQL = mainSQL & "invGroups_1.groupName, "
-        mainSQL = mainSQL & "invCategories.categoryName, "
-        mainSQL = mainSQL & "CASE WHEN COALESCE(valueInt, valueFloat) IS NULL THEN invTypeReactions.quantity ELSE COALESCE(valueInt, valueFloat) * invTypeReactions.quantity END AS Quantity, "
-        mainSQL = mainSQL & "invTypes_1.packagedVolume "
-
-        msSQL2 = "FROM invTypeReactions LEFT JOIN dgmTypeAttributes ON invTypeReactions.typeID = dgmTypeAttributes.typeID AND dgmTypeAttributes.attributeID =726,"
-        msSQL2 = msSQL2 & "invTypes, invTypes AS invTypes_1, invGroups, invGroups AS invGroups_1, invCategories "
-        msSQL2 = msSQL2 & "WHERE invTypeReactions.reactionTypeID = invTypes.typeID "
-        msSQL2 = msSQL2 & "AND invTypeReactions.typeID = invTypes_1.typeID "
-        msSQL2 = msSQL2 & "AND invTypes.groupID = invGroups.groupID "
-        msSQL2 = msSQL2 & "AND invTypes_1.groupID = invGroups_1.groupID "
-        msSQL2 = msSQL2 & "AND invGroups_1.categoryID = invCategories.categoryID "
-        msSQL2 = msSQL2 & "AND invTypes.published <> 0 AND invTypes_1.published <> 0 AND invCategories.published <> 0 AND invGroups.published <> 0 AND invGroups_1.published <> 0 "
-
-        SQLCommand = New SQLiteCommand("SELECT COUNT(*) " & msSQL2, SDEDB.DBRef)
-        mySQLReader2 = SQLCommand.ExecuteReader()
-        mySQLReader2.Read()
-        pgMain.Maximum = mySQLReader2.GetValue(0)
-        pgMain.Value = 0
-        i = 0
-        pgMain.Visible = True
-        mySQLReader2.Close()
-
-        SQLCommand = New SQLiteCommand(mainSQL & msSQL2, SDEDB.DBRef)
-        SQLReader1 = SQLCommand.ExecuteReader()
-
-        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
-
-        ' Add to Access table
-        While SQLReader1.Read
-            Application.DoEvents()
-
-            SQL = "INSERT INTO REACTIONS VALUES ("
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(3)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(4)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(5)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(6)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(7)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(8)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(9)) & ")"
-
-            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-            ' For each record, update the progress bar
-            Call IncrementProgressBar(pgMain)
-            Application.DoEvents()
-
-        End While
-
-        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
-
-        SQLReader1.Close()
-
-        SQL = "CREATE INDEX IDX_REACTION_MAT_TYPE_ID ON REACTIONS (MATERIAL_TYPE_ID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE INDEX IDX_REACTION_MAT_GROUP ON REACTIONS (MATERIAL_GROUP)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         pgMain.Visible = False
@@ -6659,7 +6725,7 @@ Public Class frmMain
         SQL &= "licensedRuns INTEGER, "
         SQL &= "probability FLOAT, "
         SQL &= "productTypeID INTEGER, "
-        SQL &= "status INTEGER, "
+        SQL &= "status VARCHAR(10), "
         SQL &= "duration INTEGER, "
 
         ' Dates
@@ -7234,7 +7300,9 @@ Public Class frmMain
         mainSQL = mainSQL & "ALL_BLUEPRINTS.ITEM_NAME, "
         mainSQL = mainSQL & "ALL_BLUEPRINTS.TECH_LEVEL, "
         mainSQL = mainSQL & "0 AS PRICE, "
+        mainSQL = mainSQL & "ALL_BLUEPRINTS.ITEM_CATEGORY_ID, "
         mainSQL = mainSQL & "ALL_BLUEPRINTS.ITEM_CATEGORY, "
+        mainSQL = mainSQL & "ALL_BLUEPRINTS.ITEM_GROUP_ID, "
         mainSQL = mainSQL & "ALL_BLUEPRINTS.ITEM_GROUP, "
         mainSQL = mainSQL & "1 AS MANUFACTURE, "
         mainSQL = mainSQL & "ALL_BLUEPRINTS.ITEM_TYPE,"
@@ -7260,15 +7328,16 @@ Public Class frmMain
 
         mainSQL = "CREATE VIEW PRICES_NOBUILD AS SELECT * FROM ("
         ' Get all the materials used to build stuff
-        mainSQL = mainSQL & "SELECT DISTINCT MATERIAL_ID, MATERIAL, 0 AS TECH_LEVEL, 0 AS PRICE, MATERIAL_CATEGORY, MATERIAL_GROUP, 0 AS MANUFACTURE, "
+        mainSQL = mainSQL & "SELECT DISTINCT MATERIAL_ID, MATERIAL, 0 AS TECH_LEVEL, 0 AS PRICE, MAT_CATEGORY_ID, MATERIAL_CATEGORY, MAT_GROUP_ID, MATERIAL_GROUP, 0 AS MANUFACTURE, "
         mainSQL = mainSQL & "0 AS ITEM_TYPE, 'None' AS PRICE_TYPE "
         mainSQL = mainSQL & "FROM ALL_BLUEPRINT_MATERIALS "
         mainSQL = mainSQL & "WHERE MATERIAL_ID NOT IN (SELECT ITEM_ID FROM ALL_BLUEPRINTS) "
         mainSQL = mainSQL & "AND MATERIAL_CATEGORY <> 'Skill' "
         mainSQL = mainSQL & "UNION "
         ' Get specific materials for later use or other areas in IPH (ie asteroids) - include items for LP Store
-        mainSQL = mainSQL & "SELECT DISTINCT typeID AS MATERIAL_ID, typeName AS MATERIAL, 0 AS TECH_LEVEL, 0 AS PRICE, categoryName AS MATERIAL_CATEGORY, "
-        mainSQL = mainSQL & "groupName AS MATERIAL_GROUP, 0 AS MANUFACTURE, 0 AS ITEM_TYPE, 'None' AS PRICE_TYPE "
+        mainSQL = mainSQL & "SELECT DISTINCT typeID AS MATERIAL_ID, typeName AS MATERIAL, 0 AS TECH_LEVEL, 0 AS PRICE, "
+        mainSQL = MAINSQL & "invCategories.categoryID As MAT_CATEGORY_ID, categoryName As MATERIAL_CATEGORY, "
+        mainSQL = mainSQL & "invGroups.groupID As MAT_GROUP_ID, groupName As MATERIAL_GROUP, 0 As MANUFACTURE, 0 As ITEM_TYPE, 'None' AS PRICE_TYPE "
         mainSQL = mainSQL & "FROM invTypes, invGroups, invCategories "
         mainSQL = mainSQL & "WHERE invTypes.groupID = invGroups.groupID "
         mainSQL = mainSQL & "AND invGroups.categoryID = invCategories.categoryID "
@@ -7280,73 +7349,6 @@ Public Class frmMain
         mainSQL = mainSQL & "OR typeID in (41, 3699, 3773, 9850, 33195))) AS X " ' Garbage, Quafe, Hydrochloric Acid, Spirits, Spatial Attunment
         mainSQL = mainSQL & "WHERE MATERIAL_ID NOT IN (SELECT ITEM_ID FROM PRICES_BUILD)"
         Execute_SQLiteSQL(mainSQL, SDEDB.DBRef)
-
-        '' See if the view exists and delete if so
-        'SQL = "SELECT COUNT(*) FROM sqlite_master WHERE tbl_name = 'PRICES_LP_OFFERS' AND type = 'view'"
-        'SQLCommand = New SQLiteCommand(SQL, SDEDB.DBRef)
-        'SQLReader1 = SQLCommand.ExecuteReader()
-        'SQLReader1.Read()
-
-        'If CInt(SQLReader1.GetValue(0)) = 1 Then
-        '    SQL = "DROP VIEW PRICES_LP_OFFERS"
-        '    SQLReader1.Close()
-        '    Execute_SQLiteSQL(SQL, SDEDB.DBRef)
-        'Else
-        '    SQLReader1.Close()
-        'End If
-
-        '' Build a view for items that are LP offers and requirements for those items
-        'mainSQL = "CREATE VIEW PRICES_LP_OFFERS AS SELECT * FROM ("
-        'mainSQL = mainSQL & "SELECT DISTINCT lpOfferRequirements.typeID AS MATERIAL_ID, typeName AS MATERIAL, "
-        '' If we can build this group, then mark the item as a tech 1 (lp stores don't have tech 2 items) and manufacture as 1 too
-        'mainSQL = mainSQL & "CASE WHEN groupName IN (SELECT ITEM_GROUP FROM ALL_BLUEPRINTS GROUP BY ITEM_GROUP) AND groupName NOT IN ('Cyberimplant','Miscellaneous') THEN 1 ELSE 0 END AS TECH_LEVEL, "
-        'mainSQL = mainSQL & "0 AS PRICE, categoryName AS MATERIAL_CATEGORY, groupName AS MATERIAL_GROUP, "
-        'mainSQL = mainSQL & "CASE WHEN groupName IN (SELECT ITEM_GROUP FROM ALL_BLUEPRINTS GROUP BY ITEM_GROUP) AND groupName NOT IN ('Cyberimplant','Miscellaneous') THEN 1 ELSE 0 END AS MANUFACTURE, "
-        'mainSQL = mainSQL & "CASE WHEN (typeName LIKE '%Navy%' OR typeName LIKE '%Fleet%' OR typeName LIKE '%Sisters%' OR typeName LIKE '%ORE%' OR typeName LIKE '%Thukker%') THEN 15 ELSE 16 END as ITEM_TYPE, 'None' AS PRICE_TYPE "
-        'mainSQL = mainSQL & "FROM invTypes, invGroups, invCategories, lpOfferRequirements "
-        'mainSQL = mainSQL & "WHERE lpOfferRequirements.typeID = invTypes.typeID "
-        'mainSQL = mainSQL & "AND invTypes.groupID = invGroups.groupID "
-        'mainSQL = mainSQL & "AND invGroups.categoryID = invCategories.categoryID "
-        'mainSQL = mainSQL & "UNION "
-        'mainSQL = mainSQL & "SELECT DISTINCT lpOffers.typeID AS MATERIAL_ID, typeName AS MATERIAL, "
-        'mainSQL = mainSQL & "CASE WHEN groupName IN (SELECT ITEM_GROUP FROM ALL_BLUEPRINTS GROUP BY ITEM_GROUP) AND groupName NOT IN ('Cyberimplant','Miscellaneous') THEN 1 ELSE 0 END AS TECH_LEVEL, "
-        'mainSQL = mainSQL & "0 AS PRICE, categoryName AS MATERIAL_CATEGORY, groupName AS MATERIAL_GROUP, "
-        'mainSQL = mainSQL & "CASE WHEN groupName IN (SELECT ITEM_GROUP FROM ALL_BLUEPRINTS GROUP BY ITEM_GROUP) AND groupName NOT IN ('Cyberimplant','Miscellaneous') THEN 1 ELSE 0 END AS MANUFACTURE, "
-        'mainSQL = mainSQL & "CASE WHEN (typeName LIKE '%Navy%' OR typeName LIKE '%Fleet%' OR typeName LIKE '%Sisters%' OR typeName LIKE '%ORE%' OR typeName LIKE '%Thukker%') THEN 15 ELSE 16 END as ITEM_TYPE, 'None' AS PRICE_TYPE "
-        'mainSQL = mainSQL & "FROM invTypes, invGroups, invCategories, lpOffers "
-        'mainSQL = mainSQL & "WHERE lpOffers.typeID = invTypes.typeID "
-        'mainSQL = mainSQL & "AND invTypes.groupID = invGroups.groupID "
-        'mainSQL = mainSQL & "AND invGroups.categoryID = invCategories.categoryID) AS X "
-        'mainSQL = mainSQL & "WHERE MATERIAL_ID NOT IN (SELECT ITEM_ID FROM PRICES_BUILD) AND MATERIAL_ID NOT IN (SELECT MATERIAL_ID FROM PRICES_NOBUILD)"
-        'Execute_SQLiteSQL(mainSQL, EVEIPHSQLiteDB.DBRef)
-
-        '' See if the view exists and delete if so
-        'SQL = "SELECT COUNT(*) FROM sqlite_master WHERE tbl_name = 'PRICES_LP_BP_ITEMS' AND type = 'view'"
-        'SQLCommand = New SQLiteCommand(SQL, SDEDB.DBRef)
-        'SQLReader1 = SQLCommand.ExecuteReader()
-        'SQLReader1.Read()
-
-        'If CInt(SQLReader1.GetValue(0)) = 1 Then
-        '    SQL = "DROP VIEW PRICES_LP_BP_ITEMS"
-        '    SQLReader1.Close()
-        '    Execute_SQLiteSQL(SQL, SDEDB.DBRef)
-        'Else
-        '    SQLReader1.Close()
-        'End If
-
-        '' Finally make sure all the items that we can build from BP's are included
-        'mainSQL = "CREATE VIEW PRICES_LP_BP_ITEMS AS SELECT * FROM ("
-        'mainSQL = mainSQL & "SELECT DISTINCT industryActivityProducts.productTypeID AS MATERIAL_ID, typeName AS MATERIAL, 1 AS TECH_LEVEL, 0 AS PRICE, "
-        'mainSQL = mainSQL & "categoryName AS MATERIAL_CATEGORY, groupName AS MATERIAL_GROUP, 1 AS MANUFACTURE, 0 AS ITEM_TYPE, 'None' AS PRICE_TYPE "
-        'mainSQL = mainSQL & "FROM lpOffers, industryActivityProducts, invTypes, invGroups, invCategories "
-        'mainSQL = mainSQL & "WHERE lpOffers.typeID = industryActivityProducts.blueprintTypeID "
-        'mainSQL = mainSQL & "AND industryActivityProducts.productTypeID = invTypes.typeID "
-        'mainSQL = mainSQL & "AND invTypes.groupID = invGroups.groupID "
-        'mainSQL = mainSQL & "AND invGroups.categoryID = invCategories.categoryID "
-        'mainSQL = mainSQL & "AND activityID = 1) AS X "
-        'mainSQL = mainSQL & "WHERE MATERIAL_ID NOT IN (SELECT ITEM_ID FROM PRICES_BUILD) AND MATERIAL_ID NOT IN (SELECT MATERIAL_ID FROM PRICES_NOBUILD) "
-        'mainSQL = mainSQL & "AND MATERIAL_ID NOT IN (SELECT MATERIAL_ID FROM PRICES_LP_OFFERS)"
-        'Execute_SQLiteSQL(mainSQL, EVEIPHSQLiteDB.DBRef)
 
         ' See if the union view exists and delete if so
         SQL = "SELECT COUNT(*) FROM sqlite_master WHERE tbl_name = 'ITEM_PRICES_UNION' AND type = 'table'"
@@ -7366,13 +7368,12 @@ Public Class frmMain
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
         ' Create SQLite table
-        SQL = "CREATE TABLE ITEM_PRICES ("
+        SQL = "CREATE TABLE ITEM_PRICES_FACT ("
         SQL &= "ITEM_ID INTEGER PRIMARY KEY,"
-        SQL &= "ITEM_NAME VARCHAR(" & GetLenSQLExpField("ITEM_NAME", "ITEM_PRICES_UNION") & ") NOT NULL,"
+        SQL &= "ITEM_GROUP_ID INTEGER NOT NULL,"
+        SQL &= "ITEM_CATEGORY_ID INTEGER NOT NULL,"
         SQL &= "TECH_LEVEL INTEGER NOT NULL,"
         SQL &= "PRICE REAL,"
-        SQL &= "ITEM_CATEGORY VARCHAR(" & GetLenSQLExpField("ITEM_CATEGORY", "ITEM_PRICES_UNION") & ") NOT NULL,"
-        SQL &= "ITEM_GROUP VARCHAR(" & GetLenSQLExpField("ITEM_GROUP", "ITEM_PRICES_UNION") & ") NOT NULL,"
         SQL &= "MANUFACTURE INTEGER NOT NULL,"
         SQL &= "ITEM_TYPE INTEGER NOT NULL,"
         SQL &= "PRICE_TYPE VARCHAR(20) NOT NULL,"
@@ -7386,8 +7387,8 @@ Public Class frmMain
         Call SetProgressBarValues("ITEM_PRICES_UNION")
 
         ' Now select the final query of data into a temp table
-        mainSQL = "SELECT ITEM_ID, ITEM_NAME, TECH_LEVEL, PRICE, ITEM_CATEGORY, ITEM_GROUP, MANUFACTURE, ITEM_TYPE, PRICE_TYPE FROM ITEM_PRICES_UNION "
-        mainSQL = mainSQL & "GROUP BY ITEM_ID, ITEM_NAME, TECH_LEVEL, PRICE, ITEM_CATEGORY, ITEM_GROUP, MANUFACTURE, ITEM_TYPE, PRICE_TYPE"
+        mainSQL = "SELECT ITEM_ID, ITEM_GROUP_ID, ITEM_CATEGORY_ID, TECH_LEVEL, PRICE, MANUFACTURE, ITEM_TYPE, PRICE_TYPE FROM ITEM_PRICES_UNION "
+        mainSQL = mainSQL & "GROUP BY ITEM_ID, ITEM_GROUP_ID, ITEM_CATEGORY_ID, TECH_LEVEL, PRICE, MANUFACTURE, ITEM_TYPE, PRICE_TYPE"
         SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
         SQLReader1 = SQLCommand.ExecuteReader()
 
@@ -7395,7 +7396,7 @@ Public Class frmMain
 
         ' Insert the data into the table
         While SQLReader1.Read
-            SQL = "INSERT INTO ITEM_PRICES VALUES ("
+            SQL = "INSERT INTO ITEM_PRICES_FACT VALUES ("
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ","
@@ -7403,8 +7404,7 @@ Public Class frmMain
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(4)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(5)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(6)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(7)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(8)) & ",0,0)" ' For Adjusted market price and Average market price from CREST
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(7)) & ",0,0)" ' For Adjusted market price and Average market price from CREST
 
             Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
@@ -7414,22 +7414,30 @@ Public Class frmMain
 
         End While
 
+        ' Create view
+        SQL = "CREATE VIEW ITEM_PRICES AS SELECT "
+        SQL &= "ITEM_ID, INVENTORY_TYPES.typeName AS ITEM_NAME, TECH_LEVEL, PRICE, INVENTORY_CATEGORIES.categoryName AS ITEM_CATEGORY, "
+        SQL &= "INVENTORY_GROUPS.groupName AS ITEM_GROUP, MANUFACTURE, ITEM_TYPE, PRICE_TYPE, ADJUSTED_PRICE, AVERAGE_PRICE "
+        SQL &= "FROM ITEM_PRICES_FACT, INVENTORY_TYPES, INVENTORY_GROUPS, INVENTORY_CATEGORIES "
+        SQL &= "WHERE ITEM_ID = INVENTORY_TYPES.typeID AND ITEM_CATEGORY_ID = INVENTORY_CATEGORIES.categoryID AND ITEM_GROUP_ID = INVENTORY_GROUPS.groupID "
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
         Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         SQLReader1.Close()
 
         ' Update the item types fields to make sure they are all able to be found
-        SQL = "UPDATE ITEM_PRICES SET ITEM_TYPE = 1 WHERE ITEM_TYPE = 0 AND TECH_LEVEL = 1"
+        SQL = "UPDATE ITEM_PRICES_FACT SET ITEM_TYPE = 1 WHERE ITEM_TYPE = 0 AND TECH_LEVEL = 1"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         ' Build SQL Lite indexes
-        SQL = "CREATE INDEX IDX_IP_GROUP ON ITEM_PRICES (ITEM_GROUP)"
+        SQL = "CREATE INDEX IDX_IP_GROUP_ID ON ITEM_PRICES_FACT (ITEM_GROUP_ID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
-        SQL = "CREATE INDEX IDX_IP_TYPE ON ITEM_PRICES (ITEM_TYPE)"
+        SQL = "CREATE INDEX IDX_IP_TYPE ON ITEM_PRICES_FACT (ITEM_TYPE)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
-        SQL = "CREATE INDEX IDX_IP_CATEGORY ON ITEM_PRICES (ITEM_CATEGORY)"
+        SQL = "CREATE INDEX IDX_IP_CATEGORY ON ITEM_PRICES_FACT (ITEM_CATEGORY_ID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         ' Drop the Temp table
@@ -8234,258 +8242,6 @@ Public Class frmMain
         Application.DoEvents()
 
     End Sub
-
-#End Region
-
-#Region "LP Store Tables"
-
-    ' LP_OFFER_REQUIREMENTS
-    'Private Sub Build_LP_OFFER_REQUIREMENTS()
-    '    Dim SQL As String
-
-    '    ' SQL variables
-    '    Dim SQLCommand As New SQLiteCommand
-    '    Dim SQLReader1 As SQLiteDataReader
-    '    Dim mainSQL As String
-
-    '    SQL = "CREATE TABLE LP_OFFER_REQUIREMENTS ("
-    '    SQL &= "OFFER_ID INTEGER NOT NULL,"
-    '    SQL &= "REQ_TYPE_ID INTEGER NOT NULL,"
-    '    SQL &= "REQ_QUANTITY INTEGER NOT NULL"
-    '    SQL &= ")"
-
-    '    Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-    '    ' Now select the count of the final query of data
-
-    '    ' Pull new data and insert
-    '    mainSQL = "SELECT * FROM lpOfferRequirements WHERE offerID <> 1201" '1201 seems to be extra
-    '    SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
-    '    SQLReader1 = SQLCommand.ExecuteReader()
-
-    '    Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
-
-    '    While SQLReader1.Read
-    '        Application.DoEvents()
-
-    '        SQL = "INSERT INTO LP_OFFER_REQUIREMENTS VALUES ("
-    '        SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
-    '        SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
-    '        SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ")"
-
-    '        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-    '    End While
-
-    '    Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
-
-    '    SQLReader1.Close()
-    '    SQLReader1 = Nothing
-    '    SQLCommand = Nothing
-
-    '    ' Now index and PK the table
-    '    SQL = "CREATE INDEX IDX_LO_OID_RTID ON LP_OFFER_REQUIREMENTS (OFFER_ID, REQ_TYPE_ID)"
-    '    Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-    '    SQL = "CREATE INDEX IDX_LO_RTID ON LP_OFFER_REQUIREMENTS (REQ_TYPE_ID)"
-    '    Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-    '    pgMain.Visible = False
-
-    '    Application.DoEvents()
-
-    'End Sub
-
-    '' LP_OFFERS
-    'Private Sub Build_LP_OFFERS()
-    '    Dim SQL As String
-
-    '    ' SQL variables
-    '    Dim SQLCommand As New SQLiteCommand
-    '    Dim SQLReader1 As SQLiteDataReader
-    '    Dim mainSQL As String
-
-    '    SQL = "CREATE TABLE LP_OFFERS ("
-    '    SQL &= "offerID INTEGER PRIMARY KEY,"
-    '    SQL &= "typeID INTEGER NOT NULL,"
-    '    SQL &= "quantity INTEGER NOT NULL,"
-    '    SQL &= "lpCost FLOAT NOT NULL,"
-    '    SQL &= "iskCost FLOAT NOT NULL"
-    '    SQL &= ")"
-
-    '    Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
-
-    '    ' Now select the count of the final query of data
-
-    '    ' Pull new data and insert
-    '    mainSQL = "SELECT * FROM lpOffers"
-    '    SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
-    '    SQLReader1 = SQLCommand.ExecuteReader()
-
-    '    Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
-
-    '    While SQLReader1.Read
-    '        Application.DoEvents()
-
-    '        SQL = "INSERT INTO LP_OFFERS VALUES ("
-    '        SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
-    '        SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
-    '        SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ","
-    '        SQL &= BuildInsertFieldString(SQLReader1.GetValue(3)) & ","
-    '        SQL &= BuildInsertFieldString(SQLReader1.GetValue(4)) & ")"
-
-    '        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
-
-    '    End While
-
-    '    Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
-
-    '    SQLReader1.Close()
-    '    SQLReader1 = Nothing
-    '    SQLCommand = Nothing
-
-    '    ' Now index and PK the table
-    '    SQL = "CREATE INDEX IDX_LO_OID ON LP_OFFERS (offerID)"
-    '    Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
-
-    '    pgMain.Visible = False
-    '    Application.DoEvents()
-
-    'End Sub
-
-    '' LP_STORE
-    'Private Sub Build_LP_STORE()
-    '    Dim SQL As String
-
-    '    ' SQL variables
-    '    Dim SQLCommand As New SQLiteCommand
-    '    Dim SQLReader1 As SQLiteDataReader
-    '    Dim mainSQL As String
-
-    '    SQL = "CREATE TABLE LP_STORE ("
-    '    SQL &= "OFFER_ID INTEGER NOT NULL,"
-    '    SQL &= "CORP_ID INTEGER NOT NULL,"
-    '    SQL &= "CORP_NAME VARCHAR(200) NOT NULL,"
-    '    SQL &= "ITEM_ID INTEGER NOT NULL,"
-    '    SQL &= "ITEM VARCHAR (100) NOT NULL,"
-    '    SQL &= "ITEM_QUANTITY INTEGER NOT NULL,"
-    '    SQL &= "LP_COST INTEGER NOT NULL,"
-    '    SQL &= "ISK_COST INTEGER NOT NULL,"
-    '    SQL &= "RACE_ID INTEGER NOT NULL"
-    '    SQL &= ")"
-
-    '    Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-    '    ' Now select the count of the final query of data
-
-    '    ' Pull new data and insert
-    '    mainSQL = "SELECT lpOffers.offerID AS OFFER_ID, lpStore.corporationID AS CORP_ID, invNames.itemName AS CORP_NAME, "
-    '    mainSQL = mainSQL & "invTypes.typeID AS ITEM_ID, invTypes.typeName AS ITEM, lpOffers.quantity AS ITEM_QUANTITY, "
-    '    mainSQL = mainSQL & "lpCost AS LP_COST, iskCost AS ISK_COST, chrFactions.raceIDs AS RACE_ID "
-    '    mainSQL = mainSQL & "FROM invTypes, lpOffers, lpStore, invNames, crpNPCCorporations, chrFactions "
-    '    mainSQL = mainSQL & "WHERE lpOffers.typeID = invTypes.typeID "
-    '    mainSQL = mainSQL & "AND lpStore.corporationID = invNames.itemID "
-    '    mainSQL = mainSQL & "AND lpOffers.offerID = lpStore.offerID "
-    '    mainSQL = mainSQL & "AND lpStore.corporationID = crpNPCCorporations.corporationID "
-    '    mainSQL = mainSQL & "AND crpNPCCorporations.factionID = chrFactions.factionID "
-
-    '    SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
-    '    SQLReader1 = SQLCommand.ExecuteReader()
-
-    '    Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
-
-    '    While SQLReader1.Read
-    '        Application.DoEvents()
-
-    '        SQL = "INSERT INTO LP_STORE VALUES ("
-    '        SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
-    '        SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
-    '        SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ","
-    '        SQL &= BuildInsertFieldString(SQLReader1.GetValue(3)) & ","
-    '        SQL &= BuildInsertFieldString(SQLReader1.GetValue(4)) & ","
-    '        SQL &= BuildInsertFieldString(SQLReader1.GetValue(5)) & ","
-    '        SQL &= BuildInsertFieldString(SQLReader1.GetValue(6)) & ","
-    '        SQL &= BuildInsertFieldString(SQLReader1.GetValue(7)) & ","
-    '        SQL &= BuildInsertFieldString(SQLReader1.GetValue(8)) & ")"
-
-    '        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-    '    End While
-
-    '    Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
-
-    '    SQLReader1.Close()
-    '    SQLReader1 = Nothing
-    '    SQLCommand = Nothing
-
-    '    ' Now index and PK the table
-    '    SQL = "CREATE INDEX IDX_LS_OID ON LP_STORE (OFFER_ID)"
-    '    Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-    '    SQL = "CREATE INDEX IDX_LS_CID ON LP_STORE (CORP_ID)"
-    '    Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-    '    SQL = "CREATE INDEX IDX_LS_IID ON LP_STORE (ITEM_ID)"
-    '    Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-    '    pgMain.Visible = False
-
-    '    Application.DoEvents()
-
-    'End Sub
-
-    '' LP_VERIFIED
-    'Private Sub Build_LP_VERIFIED()
-    '    Dim SQL As String
-
-    '    ' SQL variables
-    '    Dim SQLCommand As New SQLiteCommand
-    '    Dim SQLReader1 As SQLiteDataReader
-    '    Dim mainSQL As String
-
-    '    SQL = "CREATE TABLE LP_VERIFIED ("
-    '    SQL &= "corporationID INTEGER PRIMARY KEY,"
-    '    SQL &= "verified INTEGER NOT NULL,"
-    '    SQL &= "verifiedWith INTEGER"
-    '    SQL &= ")"
-
-    '    Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
-
-    '    ' Now select the count of the final query of data
-
-    '    ' Pull new data and insert
-    '    mainSQL = "SELECT * FROM lpVerified"
-    '    SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
-    '    SQLReader1 = SQLCommand.ExecuteReader()
-
-    '    Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
-
-    '    While SQLReader1.Read
-    '        Application.DoEvents()
-
-    '        SQL = "INSERT INTO LP_VERIFIED VALUES ("
-    '        SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
-    '        SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
-    '        SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ")"
-
-    '        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
-
-    '    End While
-
-    '    Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
-
-    '    SQLReader1.Close()
-    '    SQLReader1 = Nothing
-    '    SQLCommand = Nothing
-
-    '    ' Now index and PK the table
-    '    SQL = "CREATE INDEX IDX_LO_COID ON LP_VERIFIED (corporationID)"
-    '    Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBREf)
-
-    '    pgMain.Visible = False
-    '    Application.DoEvents()
-
-    'End Sub
 
 #End Region
 
