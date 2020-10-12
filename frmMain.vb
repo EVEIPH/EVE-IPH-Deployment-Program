@@ -16,8 +16,8 @@ Public Class frmMain
     Private VersionNumber As String = ""
 
     ' Directory files and paths
-    Private RootDirectory As String ' For the debugging process, will copy images here as well
-    Private WorkingDirectory As String ' Where the main db, final DB, and image zip is stored 
+    Private EVEIPHRootDirectory As String ' For the debugging process, will copy images here as well
+    Private SDEWorkingDirectory As String ' Where the main db, final DB, and image zip is stored 
     Private UploadFileDirectory As String ' Where all the files we want to sync to the server for download are
     Private UploadFileTestDirectory As String
 
@@ -25,19 +25,16 @@ Public Class frmMain
     Private DatabasePath As String ' Where we build the SQLite database
     Private FinalDBPath As String ' Final DB
     Private DatabaseName As String
-    Private ImagesVersion As String ' Version of the images we have in the zip
     Private FinalDBName As String = "EVEIPH DB"
     Private SQLInstance As String ' how to log into the SQL server on the host computer
     Private Const DBExtention As String = ".sqlite"
 
-    ' Image folders
-    Private ImageExportTypes As String
+    ' Image folder
     Private EVEIPHImageFolder As String
-    Private RendersImageFolder As String
+    Private BaseImageFolder As String = "EVEIPH Images"
 
     ' When updating the image files to build the zip, update the root directory images as well so we have the updated images for running in debug mode
-    Private WorkingImageFolder As String = "Root Directory\EVEIPH Images"
-    Private DownloadImageFolder As String = "Root Directory\TempImages"
+    Private DebugImageFolder As String
     Private MissingImagesFilePath As String
 
     ' For saving and scanning the github folder for updates - this folder is in the deployment folder (same as installer and binary)
@@ -136,7 +133,6 @@ Public Class frmMain
         Call SetFilePaths()
 
         ToolTip.SetToolTip(txtDBName, "Name of the database file and database in SQL Server - Use the name saved on the SDE Zip file")
-        ToolTip.SetToolTip(txtImageVersion, "Version of the images from the Types directory")
         ToolTip.SetToolTip(btnCopyFilesBuildXML, "Copies all the files from directories and then builds the xml file and saves them all in the github folder for upload")
 
         ' Set the grid - scrollbar is 21
@@ -165,16 +161,15 @@ Public Class frmMain
             BPStream = New System.IO.StreamReader(SettingsFileName)
 
             DatabaseName = BPStream.ReadLine
-            ImagesVersion = BPStream.ReadLine
             VersionNumber = BPStream.ReadLine
 
-            RootDirectory = BPStream.ReadLine
-            If Not Directory.Exists(RootDirectory) Then
-                RootDirectory = ""
+            EVEIPHRootDirectory = BPStream.ReadLine
+            If Not Directory.Exists(EVEIPHRootDirectory) Then
+                EVEIPHRootDirectory = ""
             End If
-            WorkingDirectory = BPStream.ReadLine
-            If Not Directory.Exists(WorkingDirectory) Then
-                WorkingDirectory = ""
+            SDEWorkingDirectory = BPStream.ReadLine
+            If Not Directory.Exists(SDEWorkingDirectory) Then
+                SDEWorkingDirectory = ""
             End If
             UploadFileDirectory = BPStream.ReadLine
             If Not Directory.Exists(UploadFileDirectory) Then
@@ -196,36 +191,29 @@ Public Class frmMain
                 MSIInstaller = "Eve Isk per Hour 4.0.msi"
             End If
 
-            SQLInstance = BPStream.ReadLine
-            If Not Directory.Exists(RootDirectory) Then
-                SQLInstance = ""
-            End If
-
             BPStream.Close()
         Else
             DatabaseName = ""
-            ImagesVersion = ""
-            RootDirectory = ""
-            WorkingDirectory = ""
+            EVEIPHRootDirectory = ""
+            SDEWorkingDirectory = ""
             UploadFileDirectory = ""
             UploadFileTestDirectory = ""
             VersionNumber = ""
-            SQLInstance = ""
         End If
     End Sub
 
     Private Sub SetFilePaths()
 
         ' Add the slash if not there
-        If RootDirectory <> "" Then
-            If RootDirectory.Substring(Len(RootDirectory) - 1) <> "\" Then
-                RootDirectory = RootDirectory & "\"
+        If EVEIPHRootDirectory <> "" Then
+            If EVEIPHRootDirectory.Substring(Len(EVEIPHRootDirectory) - 1) <> "\" Then
+                EVEIPHRootDirectory = EVEIPHRootDirectory & "\"
             End If
         End If
 
-        If WorkingDirectory <> "" Then
-            If WorkingDirectory.Substring(Len(WorkingDirectory) - 1) <> "\" Then
-                WorkingDirectory = WorkingDirectory & "\"
+        If SDEWorkingDirectory <> "" Then
+            If SDEWorkingDirectory.Substring(Len(SDEWorkingDirectory) - 1) <> "\" Then
+                SDEWorkingDirectory = SDEWorkingDirectory & "\"
             End If
         End If
 
@@ -241,18 +229,16 @@ Public Class frmMain
             End If
         End If
 
-        WorkingImageFolder = WorkingDirectory
-        DatabasePath = WorkingDirectory & DatabaseName
-        FinalDBPath = WorkingDirectory & FinalDBName
+        DebugImageFolder = EVEIPHRootDirectory & BaseImageFolder
+        DatabasePath = SDEWorkingDirectory & DatabaseName
+        FinalDBPath = SDEWorkingDirectory & FinalDBName
 
         txtDBName.Text = DatabaseName
-        txtImageVersion.Text = ImagesVersion
         lblDBNameDisplay.Text = DatabaseName
         txtVersionNumber.Text = VersionNumber
-        txtSqlInstanceName.Text = SQLInstance
 
-        If WorkingDirectory <> "\" Then
-            lblWorkingFolderPath.Text = WorkingDirectory
+        If SDEWorkingDirectory <> "\" Then
+            lblWorkingFolderPath.Text = SDEWorkingDirectory
         End If
 
         If UploadFileDirectory <> "\" Then
@@ -263,20 +249,16 @@ Public Class frmMain
             lblTestPath.Text = UploadFileTestDirectory
         End If
 
-        If RootDirectory <> "\" Then
-            lblRootDebugFolderPath.Text = RootDirectory
+        If EVEIPHRootDirectory <> "\" Then
+            lblRootDebugFolderPath.Text = EVEIPHRootDirectory
         End If
 
         LatestVersionXML = "LatestVersionIPH.xml"
         LatestTestVersionXML = "LatestVersionIPH Test.xml"
 
         ' When updating the image files to build the zip, update the root directory images as well so we have the updated images for running in debug mode
-        WorkingImageFolder = RootDirectory & "EVEIPH Images"
-
-        ImageExportTypes = WorkingDirectory & "Types"
-        RendersImageFolder = WorkingDirectory & "Renders"
-        EVEIPHImageFolder = WorkingDirectory & "EVEIPH Images"
-        MissingImagesFilePath = WorkingDirectory & "Missing Images.txt"
+        EVEIPHImageFolder = SDEWorkingDirectory & BaseImageFolder
+        MissingImagesFilePath = SDEWorkingDirectory & "Missing Images.txt"
 
     End Sub
 
@@ -337,14 +319,14 @@ Public Class frmMain
     End Sub
 
     Private Sub btnSelectDBImagesPath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectWorkingPath.Click
-        If WorkingDirectory <> "" Then
-            FolderBrowserDialog.SelectedPath = WorkingDirectory
+        If SDEWorkingDirectory <> "" Then
+            FolderBrowserDialog.SelectedPath = SDEWorkingDirectory
         End If
 
         If FolderBrowserDialog.ShowDialog() = DialogResult.OK Then
             Try
                 lblWorkingFolderPath.Text = FolderBrowserDialog.SelectedPath
-                WorkingDirectory = FolderBrowserDialog.SelectedPath
+                SDEWorkingDirectory = FolderBrowserDialog.SelectedPath
                 Call SetFilePaths()
             Catch ex As Exception
                 MsgBox(Err.Description, vbExclamation, Application.ProductName)
@@ -363,11 +345,6 @@ Public Class frmMain
             MsgBox("Invalid database name", vbExclamation, Application.ProductName)
             txtDBName.Focus()
             Exit Sub
-        End If
-
-        If Trim(txtSqlInstanceName.Text) = "" Then
-            MsgBox("Invalid SQL Server Instance Name", vbExclamation, Application.ProductName)
-            txtSqlInstanceName.Focus()
         End If
 
         If Trim(lblFilesPath.Text) = "" Then
@@ -400,20 +377,12 @@ Public Class frmMain
             Exit Sub
         End If
 
-        If Trim(txtImageVersion.Text) = "" Then
-            MsgBox("Invalid Images Version number", vbExclamation, Application.ProductName)
-            txtImageVersion.Focus()
-            Exit Sub
-        End If
-
         DatabaseName = txtDBName.Text
-        ImagesVersion = txtImageVersion.Text
         lblDBNameDisplay.Text = DatabaseName
         VersionNumber = txtVersionNumber.Text
-        SQLInstance = txtSqlInstanceName.Text
 
-        RootDirectory = lblRootDebugFolderPath.Text
-        WorkingDirectory = lblWorkingFolderPath.Text
+        EVEIPHRootDirectory = lblRootDebugFolderPath.Text
+        SDEWorkingDirectory = lblWorkingFolderPath.Text
         UploadFileDirectory = lblFilesPath.Text
         UploadFileTestDirectory = lblTestPath.Text
 
@@ -426,13 +395,11 @@ Public Class frmMain
         ' Save the file path as a text file and the database name
         MyStream = File.CreateText(SettingsFileName)
         MyStream.Write(txtDBName.Text & Environment.NewLine)
-        MyStream.Write(txtImageVersion.Text & Environment.NewLine)
         MyStream.Write(txtVersionNumber.Text & Environment.NewLine)
         MyStream.Write(lblRootDebugFolderPath.Text & Environment.NewLine)
         MyStream.Write(lblWorkingFolderPath.Text & Environment.NewLine)
         MyStream.Write(lblFilesPath.Text & Environment.NewLine)
         MyStream.Write(lblTestPath.Text & Environment.NewLine)
-        MyStream.Write(txtSqlInstanceName.Text & Environment.NewLine)
 
         MyStream.Flush()
         MyStream.Close()
@@ -455,15 +422,15 @@ Public Class frmMain
     End Sub
 
     Private Sub SelectRootDebugPath()
-        If RootDirectory <> "" Then
-            FolderBrowserDialog.SelectedPath = RootDirectory
+        If EVEIPHRootDirectory <> "" Then
+            FolderBrowserDialog.SelectedPath = EVEIPHRootDirectory
         End If
 
         If FolderBrowserDialog.ShowDialog() = DialogResult.OK Then
             Try
                 lblRootDebugFolderPath.Text = FolderBrowserDialog.SelectedPath
                 lblRootDebugFolderPath.Text = FolderBrowserDialog.SelectedPath
-                RootDirectory = FolderBrowserDialog.SelectedPath
+                EVEIPHRootDirectory = FolderBrowserDialog.SelectedPath
                 Call SetFilePaths()
             Catch ex As Exception
                 MsgBox(Err.Description, vbExclamation, Application.ProductName)
@@ -479,6 +446,77 @@ Public Class frmMain
     Private Sub txtDBName_KeyUp(sender As Object, e As System.Windows.Forms.KeyEventArgs)
         DatabaseName = txtDBName.Text
         Call SetFilePaths()
+    End Sub
+
+    ' Builds the binary zip file
+    Private Sub btnBuildBinary_Click(sender As System.Object, e As System.EventArgs) Handles btnBuildBinary.Click
+        ' Build this in the working directory
+        Dim FinalBinaryFolderPath As String = SDEWorkingDirectory & FinalBinaryFolder
+        Dim FinalBinaryZipPath As String = SDEWorkingDirectory & FinalBinaryZip
+
+        ' Temp working Image folder to zip later
+        Dim ImageFolder As String = "EVEIPH Images" ' IN DD Working
+
+        btnBuildBinary.Enabled = False
+        Application.UseWaitCursor = True
+        Application.DoEvents()
+        Call EnableButtons(False)
+
+        ' Make folder to put files in and zip
+        If Directory.Exists(FinalBinaryFolderPath) Then
+            Directory.Delete(FinalBinaryFolderPath, True)
+        End If
+
+        If chkCreateTest.Checked Then
+            ' Copy the test.txt to the binary
+            File.Copy(EVEIPHRootDirectory & "Test.txt", FinalBinaryFolderPath & "Test.txt")
+        End If
+
+        Directory.CreateDirectory(FinalBinaryFolderPath)
+
+        ' Copy all these files from the latest file directory (should be most up to date) to the working directory to make the zip
+        File.Copy(UploadFileDirectory & JSONDLL, FinalBinaryFolderPath & JSONDLL)
+        File.Copy(UploadFileDirectory & SQLiteDLL, FinalBinaryFolderPath & SQLiteDLL)
+        File.Copy(UploadFileDirectory & SQLInteropDLL, FinalBinaryFolderPath & SQLInteropDLL)
+        File.Copy(UploadFileDirectory & EVEIPHEXE, FinalBinaryFolderPath & EVEIPHEXE)
+        File.Copy(UploadFileDirectory & EVEIPHUpdater, FinalBinaryFolderPath & EVEIPHUpdater)
+        File.Copy(UploadFileDirectory & UpdaterManifest, FinalBinaryFolderPath & UpdaterManifest)
+        File.Copy(UploadFileDirectory & EXEManifest, FinalBinaryFolderPath & EXEManifest)
+        File.Copy(UploadFileDirectory & LatestVersionXML, FinalBinaryFolderPath & LatestVersionXML)
+        File.Copy(UploadFileDirectory & MoreLinqDLL, FinalBinaryFolderPath & MoreLinqDLL)
+        File.Copy(UploadFileDirectory & GADLL, FinalBinaryFolderPath & GADLL)
+
+        ' DB
+        File.Copy(SDEWorkingDirectory & EVEIPHDB, FinalBinaryFolderPath & EVEIPHDB)
+
+        ' IPH images
+        My.Computer.FileSystem.CopyDirectory(SDEWorkingDirectory & ImageFolder, FinalBinaryFolderPath & ImageFolder, True)
+
+        ' Delete the file if it already exists
+        File.Delete(FinalBinaryZipPath)
+        ' Compress the whole file for download
+        Call ZipFile.CreateFromDirectory(FinalBinaryFolderPath, FinalBinaryZipPath, CompressionLevel.Optimal, False)
+
+        File.Delete(UploadFileDirectory & FinalBinaryZip)
+
+        ' Copy binary zip file to the media file directory
+        File.Copy(FinalBinaryZipPath, UploadFileDirectory & FinalBinaryZip)
+
+        Application.UseWaitCursor = False
+        Application.DoEvents()
+
+        ' Clean up working folder
+        If Directory.Exists(FinalBinaryFolderPath) Then
+            Directory.Delete(FinalBinaryFolderPath, True)
+        End If
+
+        ' Refresh this file in the list
+        Call LoadFileGrid()
+        Call EnableButtons(True)
+        Application.DoEvents()
+
+        MsgBox("Binary Built", vbInformation, "Complete")
+
     End Sub
 
     ' Loads up the grid with files in the github directory and shows the date they were last updated
@@ -527,6 +565,8 @@ Public Class frmMain
 
     End Sub
 
+#Region "Images"
+
     ' Copies just the bp images that I use for EVE IPH from the latest dump into a new folder and zips them up for deployment
     Private Sub btnImageCopy_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnImageCopy.Click
         Dim ReaderCount As Long
@@ -543,7 +583,7 @@ Public Class frmMain
         End If
 
         ' Make sure we have a DB first
-        If RootDirectory = "" Then
+        If EVEIPHRootDirectory = "" Then
             MsgBox("Root Directory Path not set", vbExclamation, Application.ProductName)
             Call btnSelectRootDebugPath.Focus()
             Exit Sub
@@ -567,12 +607,12 @@ Public Class frmMain
             Directory.Delete(EVEIPHImageFolder, True) ' Delete everything for zip in working
         End If
 
-        If Directory.Exists(WorkingImageFolder) Then
-            Directory.Delete(WorkingImageFolder, True) ' Delete everything in my working folder
+        If Directory.Exists(DebugImageFolder) Then
+            Directory.Delete(DebugImageFolder, True) ' Delete everything in my working folder
         End If
 
+        ' Create the one directory for all images to work on
         Directory.CreateDirectory(EVEIPHImageFolder)
-        Directory.CreateDirectory(WorkingImageFolder)
 
         ' For missing BP ID's
         File.Delete(MissingImagesFilePath)
@@ -581,6 +621,7 @@ Public Class frmMain
         OutputFile.WriteLine("Blueprint ID - Blueprint Name")
         MissingImages = False
 
+        '*** Blueprints ***
         ' Get the count first
         SQL = "SELECT COUNT(*) FROM ALL_BLUEPRINTS"
         DBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBRef)
@@ -600,24 +641,14 @@ Public Class frmMain
 
         Application.DoEvents()
 
-        ' Loop through and copy all the images to the new folder - use absolute value for stuff I use negative typeIDs for (outpost stuff)
+        ' Get Blueprint Images first
         While rsReader.Read
             Application.DoEvents()
             Try
-                ' For zip use
-                File.Copy(ImageExportTypes & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png", EVEIPHImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png")
-                ' To root Working Directory
-                File.Copy(ImageExportTypes & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png", WorkingImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png")
+                Call DownloadImageFromServer(CLng(rsReader.GetValue(0)), ImageType.BP, 64, EVEIPHImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png")
             Catch
                 ' Build a file with the BP ID's and Names that do not have a image
                 OutputFile.WriteLine(rsReader(0).ToString & " - " & rsReader(1).ToString)
-                ' Try to download
-                If DownloadImageFromServer(CLng(rsReader.GetValue(0)), ImageType.BP, 64, ImageExportTypes & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png") <> "" Then
-                    ' For zip use
-                    File.Copy(ImageExportTypes & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png", EVEIPHImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png")
-                    ' To root Working Directory
-                    File.Copy(ImageExportTypes & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png", WorkingImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png")
-                End If
                 MissingImages = True
             End Try
 
@@ -627,77 +658,86 @@ Public Class frmMain
 
         End While
 
-        ' Ship images for mining tab
-        File.Copy(ImageExportTypes & "\17476_64.png", EVEIPHImageFolder & "\17476_64.png")    ' Covetor
-        File.Copy(ImageExportTypes & "\17476_64.png", WorkingImageFolder & "\17476_64.png")   ' Covetor
-        File.Copy(ImageExportTypes & "\17478_64.png", EVEIPHImageFolder & "\17478_64.png")    ' Retrieverr
-        File.Copy(ImageExportTypes & "\17478_64.png", WorkingImageFolder & "\17478_64.png")   ' Retriever
-        File.Copy(ImageExportTypes & "\17480_64.png", EVEIPHImageFolder & "\17480_64.png")    ' Procurer
-        File.Copy(ImageExportTypes & "\17480_64.png", WorkingImageFolder & "\17480_64.png")   ' Procurer
-        File.Copy(ImageExportTypes & "\22544_64.png", EVEIPHImageFolder & "\22544_64.png")    ' Hulk
-        File.Copy(ImageExportTypes & "\22544_64.png", WorkingImageFolder & "\22544_64.png")   ' Hulk
-        File.Copy(ImageExportTypes & "\22546_64.png", EVEIPHImageFolder & "\22546_64.png")    ' Skiff
-        File.Copy(ImageExportTypes & "\22546_64.png", WorkingImageFolder & "\22546_64.png")   ' Skiff
-        File.Copy(ImageExportTypes & "\22548_64.png", EVEIPHImageFolder & "\22548_64.png")    ' Mackinaw
-        File.Copy(ImageExportTypes & "\22548_64.png", WorkingImageFolder & "\22548_64.png")   ' Mackinaw
-        File.Copy(ImageExportTypes & "\24688_64.png", EVEIPHImageFolder & "\24688_64.png")    ' Rokh
-        File.Copy(ImageExportTypes & "\24688_64.png", WorkingImageFolder & "\24688_64.png")   ' Rokh
-        File.Copy(ImageExportTypes & "\24698_64.png", EVEIPHImageFolder & "\24698_64.png")    ' Drake
-        File.Copy(ImageExportTypes & "\24698_64.png", WorkingImageFolder & "\24698_64.png")   ' Drake
-        File.Copy(ImageExportTypes & "\28352_64.png", EVEIPHImageFolder & "\28352_64.png")    ' Rorqual
-        File.Copy(ImageExportTypes & "\28352_64.png", WorkingImageFolder & "\28352_64.png")   ' Rorqual
-        File.Copy(ImageExportTypes & "\28606_64.png", EVEIPHImageFolder & "\28606_64.png")    ' Orca
-        File.Copy(ImageExportTypes & "\28606_64.png", WorkingImageFolder & "\28606_64.png")   ' Orca
-        File.Copy(ImageExportTypes & "\32880_64.png", EVEIPHImageFolder & "\32880_64.png")    ' Ore Mining Frig
-        File.Copy(ImageExportTypes & "\32880_64.png", WorkingImageFolder & "\32880_64.png")   ' Ore Mining Frig
-        File.Copy(ImageExportTypes & "\33697_64.png", EVEIPHImageFolder & "\33697_64.png")    ' Prospect
-        File.Copy(ImageExportTypes & "\33697_64.png", WorkingImageFolder & "\33697_64.png")   ' Prospect
-        File.Copy(ImageExportTypes & "\37135_64.png", EVEIPHImageFolder & "\37135_64.png")    ' Endurance
-        File.Copy(ImageExportTypes & "\37135_64.png", WorkingImageFolder & "\37135_64.png")   ' Endurance
-        File.Copy(ImageExportTypes & "\42244_64.png", EVEIPHImageFolder & "\42244_64.png")    ' Porpoise
-        File.Copy(ImageExportTypes & "\42244_64.png", WorkingImageFolder & "\42244_64.png")   ' Porpoise
+        '*** Mining Ships ***
+        ' Get the count first
+        SQL = "SELECT COUNT(*) FROM INVENTORY_TYPES WHERE typeName IN "
+        SQL &= "('Covetor','Retriever','Procurer','Hulk','Skiff','Mackinaw','Rokh','Drake','Rorqual','Orca','Porpoise','Endurance','Prospect','Venture')"
+        DBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBRef)
+        rsReader = DBCommand.ExecuteReader
+        rsReader.Read()
+        ReaderCount = rsReader.GetValue(0)
+        rsReader.Close()
 
-        File.Copy(ImageExportTypes & "\22557_32.png", EVEIPHImageFolder & "\42528_32.png")    ' T1 Mining Ganglink image
-        File.Copy(ImageExportTypes & "\22557_32.png", WorkingImageFolder & "\42528_32.png")   ' T1 Mining Ganglink image
-        File.Copy(ImageExportTypes & "\4276_32.png", EVEIPHImageFolder & "\43551_32.png")     ' T2 Mining Ganglink image
-        File.Copy(ImageExportTypes & "\4276_32.png", WorkingImageFolder & "\43551_32.png")    ' T2 Mining Ganglink image
+        ' Get all the BP ID numbers we use in the program and copy those files to the directory
+        SQL = "SELECT typeID, typeName FROM INVENTORY_TYPES WHERE typeName IN "
+        SQL &= "('Covetor','Retriever','Procurer','Hulk','Skiff','Mackinaw','Rokh','Drake','Rorqual','Orca','Porpoise','Endurance','Prospect','Venture')"
+        DBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBRef)
+        rsReader = DBCommand.ExecuteReader
 
-        ' Fuel block images
-        File.Copy(ImageExportTypes & "\16272_32.png", EVEIPHImageFolder & "\16272_32.png") ' Heavy Water
-        File.Copy(ImageExportTypes & "\16272_32.png", WorkingImageFolder & "\16272_32.png") ' Heavy Water
-        File.Copy(ImageExportTypes & "\16273_32.png", EVEIPHImageFolder & "\16273_32.png") ' Liquid Ozone
-        File.Copy(ImageExportTypes & "\16273_32.png", WorkingImageFolder & "\16273_32.png") ' Liquid Ozone
-        File.Copy(ImageExportTypes & "\16274_32.png", EVEIPHImageFolder & "\16274_32.png") ' Helium Isotopes
-        File.Copy(ImageExportTypes & "\16274_32.png", WorkingImageFolder & "\16274_32.png") ' Helium Isotopes
-        File.Copy(ImageExportTypes & "\16275_32.png", EVEIPHImageFolder & "\16275_32.png") ' Strontium Clathrates
-        File.Copy(ImageExportTypes & "\16275_32.png", WorkingImageFolder & "\16275_32.png") ' Strontium Clathrates
-        File.Copy(ImageExportTypes & "\17887_32.png", EVEIPHImageFolder & "\17887_32.png") ' Oxygen Isotopes
-        File.Copy(ImageExportTypes & "\17887_32.png", WorkingImageFolder & "\17887_32.png") ' Oxygen Isotopes
-        File.Copy(ImageExportTypes & "\17888_32.png", EVEIPHImageFolder & "\17888_32.png") ' Nitrogen Isotopes
-        File.Copy(ImageExportTypes & "\17888_32.png", WorkingImageFolder & "\17888_32.png") ' Nitrogen Isotopes
-        File.Copy(ImageExportTypes & "\17889_32.png", EVEIPHImageFolder & "\17889_32.png") ' Hydrogen Isotopes
-        File.Copy(ImageExportTypes & "\17889_32.png", WorkingImageFolder & "\17889_32.png") ' Hydrogen Isotopes
-        File.Copy(ImageExportTypes & "\24593_32.png", EVEIPHImageFolder & "\24593_32.png") ' Caldari State Starbase Charter
-        File.Copy(ImageExportTypes & "\24593_32.png", WorkingImageFolder & "\24593_32.png") ' Caldari State Starbase Charter
-        File.Copy(ImageExportTypes & "\3683_32.png", EVEIPHImageFolder & "\3683_32.png")   ' Oxygen
-        File.Copy(ImageExportTypes & "\3683_32.png", WorkingImageFolder & "\3683_32.png")   ' Oxygen
-        File.Copy(ImageExportTypes & "\3689_32.png", EVEIPHImageFolder & "\3689_32.png")   ' Mechanical Parts
-        File.Copy(ImageExportTypes & "\3689_32.png", WorkingImageFolder & "\3689_32.png")   ' Mechanical Parts
-        File.Copy(ImageExportTypes & "\4051_32.png", EVEIPHImageFolder & "\4051_32.png")   ' Nitrogen Fuel Block
-        File.Copy(ImageExportTypes & "\4051_32.png", WorkingImageFolder & "\4051_32.png")   ' Nitrogen Fuel Block
-        File.Copy(ImageExportTypes & "\4246_32.png", EVEIPHImageFolder & "\4246_32.png")   ' Hydrogen Fuel Block
-        File.Copy(ImageExportTypes & "\4246_32.png", WorkingImageFolder & "\4246_32.png")   ' Hydrogen Fuel Block
-        File.Copy(ImageExportTypes & "\4247_32.png", EVEIPHImageFolder & "\4247_32.png")   ' Helium Fuel Block
-        File.Copy(ImageExportTypes & "\4247_32.png", WorkingImageFolder & "\4247_32.png")   ' Helium Fuel Block
-        File.Copy(ImageExportTypes & "\4312_32.png", EVEIPHImageFolder & "\4312_32.png")   ' Oxygen Fuel Block
-        File.Copy(ImageExportTypes & "\4312_32.png", WorkingImageFolder & "\4312_32.png")   ' Oxygen Fuel Block
-        File.Copy(ImageExportTypes & "\44_32.png", EVEIPHImageFolder & "\44_32.png")   ' Enriched Uranium
-        File.Copy(ImageExportTypes & "\44_32.png", WorkingImageFolder & "\44_32.png")   ' Enriched Uranium
-        File.Copy(ImageExportTypes & "\9832_32.png", EVEIPHImageFolder & "\9832_32.png")   ' Coolant
-        File.Copy(ImageExportTypes & "\9832_32.png", WorkingImageFolder & "\9832_32.png")   ' Coolant
-        File.Copy(ImageExportTypes & "\9848_32.png", EVEIPHImageFolder & "\9848_32.png")   ' Robotics
-        File.Copy(ImageExportTypes & "\9848_32.png", WorkingImageFolder & "\9848_32.png")   ' Robotics
+        pgMain.Value = 0
+        pgMain.Maximum = ReaderCount
+        pgMain.Visible = True
 
+        Application.DoEvents()
+
+        ' Get Blueprint Images first
+        While rsReader.Read
+            Application.DoEvents()
+            Try
+                Call DownloadImageFromServer(CLng(rsReader.GetValue(0)), ImageType.Icon, 64, EVEIPHImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png")
+            Catch
+                ' Build a file with the BP ID's and Names that do not have a image
+                OutputFile.WriteLine(rsReader(0).ToString & " - " & rsReader(1).ToString)
+                MissingImages = True
+            End Try
+
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
+
+        End While
+
+        '*** Other Icons ***
+        ' Get the count first
+        SQL = "SELECT COUNT(*) FROM INVENTORY_TYPES WHERE typeName IN "
+        SQL &= "('Heavy Water','Liquid Ozone','Helium Isotopes','Strontium Clathrates','Oxygen Isotopes','Nitrogen Isotopes','Hydrogen Isotopes','Caldari State Starbase Charter','Oxygen','Mechanical Parts','Nitrogen Fuel Block','Hydrogen Fuel Block','Helium Fuel Block','Oxygen Fuel Block','Enriched Uranium','Coolant','Robotics','Mining Foreman Burst I','Mining Foreman Burst II')"
+        DBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBRef)
+        rsReader = DBCommand.ExecuteReader
+        rsReader.Read()
+        ReaderCount = rsReader.GetValue(0)
+        rsReader.Close()
+
+        ' Get all the BP ID numbers we use in the program and copy those files to the directory
+        SQL = "SELECT typeID, typeName FROM INVENTORY_TYPES WHERE typeName IN "
+        SQL &= "('Heavy Water','Liquid Ozone','Helium Isotopes','Strontium Clathrates','Oxygen Isotopes','Nitrogen Isotopes','Hydrogen Isotopes','Caldari State Starbase Charter','Oxygen','Mechanical Parts','Nitrogen Fuel Block','Hydrogen Fuel Block','Helium Fuel Block','Oxygen Fuel Block','Enriched Uranium','Coolant','Robotics','Mining Foreman Burst I','Mining Foreman Burst II')"
+        DBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBRef)
+        rsReader = DBCommand.ExecuteReader
+
+        pgMain.Value = 0
+        pgMain.Maximum = ReaderCount
+        pgMain.Visible = True
+
+        Application.DoEvents()
+
+        ' Get Blueprint Images first
+        While rsReader.Read
+            Application.DoEvents()
+            Try
+                Call DownloadImageFromServer(CLng(rsReader.GetValue(0)), ImageType.Icon, 32, EVEIPHImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png")
+            Catch
+                ' Build a file with the BP ID's and Names that do not have a image
+                OutputFile.WriteLine(rsReader(0).ToString & " - " & rsReader(1).ToString)
+                MissingImages = True
+            End Try
+
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
+
+        End While
+
+        '*** Structure Module/Rig Blueprints ***
+        ' Get the count first
         SQL = "SELECT COUNT(typeID) FROM INVENTORY_TYPES, INVENTORY_GROUPS WHERE INVENTORY_TYPES.groupID = INVENTORY_GROUPS.groupID "
         SQL &= "AND ABS(categoryID) = 66 AND INVENTORY_TYPES.published <> 0"
         DBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBRef)
@@ -718,23 +758,13 @@ Public Class frmMain
 
         Application.DoEvents()
 
-        ' Loop through and copy all the images to the new folder for upwell structures 
+        ' Loop through and copy all the structure module icon images to the new folder
         While rsReader.Read
             Try
-                ' For zip use
-                File.Copy(ImageExportTypes & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png", EVEIPHImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png")
-                ' To root Working Directory
-                File.Copy(ImageExportTypes & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png", WorkingImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png")
+                Call DownloadImageFromServer(CLng(rsReader.GetValue(0)), ImageType.Icon, 64, EVEIPHImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png")
             Catch
                 ' Build a file with the BP ID's and Names that do not have a image
                 OutputFile.WriteLine(rsReader(0).ToString & " - " & rsReader(1).ToString)
-                ' Try to download
-                If DownloadImageFromServer(CLng(rsReader.GetValue(0)), ImageType.BP, 64, ImageExportTypes & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png") <> "" Then
-                    ' For zip use
-                    File.Copy(ImageExportTypes & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png", EVEIPHImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png")
-                    ' To root Working Directory
-                    File.Copy(ImageExportTypes & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png", WorkingImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png")
-                End If
                 MissingImages = True
             End Try
 
@@ -744,6 +774,7 @@ Public Class frmMain
 
         End While
 
+        '*** Structure Renders ***
         ' Finally, get all the upwell structures renders by typeID in the Renders folder - Look up by groupID - if these change or more are added, then need to update
         SQL = "SELECT DISTINCT COUNT(typeID) FROM INVENTORY_TYPES, INVENTORY_GROUPS WHERE INVENTORY_GROUPS.categoryID = 65 
                 AND INVENTORY_TYPES.groupID = INVENTORY_GROUPS.groupid AND INVENTORY_TYPES.published = 1"
@@ -764,23 +795,13 @@ Public Class frmMain
 
         Application.DoEvents()
 
-        ' Loop through and copy all the images to the new folder for upwell structures items
+        ' Loop through and copy all the render images to the new folder for upwell structures items
         While rsReader.Read
             Try
-                ' For zip use
-                File.Copy(RendersImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & ".png", EVEIPHImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & ".png")
-                ' To root Working Directory
-                File.Copy(RendersImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & ".png", WorkingImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & ".png")
+                Call DownloadImageFromServer(CLng(rsReader.GetValue(0)), ImageType.Render, 512, EVEIPHImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & ".png")
             Catch
                 ' Build a file with the BP ID's and Names that do not have a image
                 OutputFile.WriteLine(rsReader(0).ToString & " - " & rsReader(1).ToString)
-                ' Try to download
-                If DownloadImageFromServer(CLng(rsReader.GetValue(0)), ImageType.Render, 0, ImageExportTypes & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png") <> "" Then
-                    ' For zip use
-                    File.Copy(RendersImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & ".png", EVEIPHImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & ".png")
-                    ' To root Working Directory
-                    File.Copy(RendersImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & ".png", WorkingImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & ".png")
-                End If
                 MissingImages = True
             End Try
 
@@ -796,10 +817,13 @@ Public Class frmMain
         Application.DoEvents()
 
         ' Delete the file if it already exists
-        File.Delete(WorkingDirectory & "EVEIPH Images.zip")
+        File.Delete(SDEWorkingDirectory & "EVEIPH Images.zip")
 
         ' Compress the images
-        Call ZipFile.CreateFromDirectory(EVEIPHImageFolder, WorkingDirectory & "EVEIPH Images.zip", CompressionLevel.Optimal, False)
+        Call ZipFile.CreateFromDirectory(EVEIPHImageFolder, SDEWorkingDirectory & "EVEIPH Images.zip", CompressionLevel.Optimal, False)
+
+        ' Unzip the folder into the EVE IPH Root Debug directory
+        Call ZipFile.ExtractToDirectory(Path.Combine(SDEWorkingDirectory, "EVEIPH Images.zip"), Path.Combine(EVEIPHRootDirectory, BaseImageFolder))
 
         ' If we didn't output any missing images, delete the output fille
         If Not MissingImages Then
@@ -850,7 +874,7 @@ Public Class frmMain
 
         Dim URL As String = "https://images.evetech.net/types/" & CStr(ImageID) & "/" & TypeCode
 
-        If Size <> 0 Then
+        If Size <> 0 And IT <> ImageType.Render Then
             URL &= "?size=" & CStr(Size)
         End If
 
@@ -895,76 +919,7 @@ Public Class frmMain
 
     End Function
 
-    ' Builds the binary zip file
-    Private Sub btnBuildBinary_Click(sender As System.Object, e As System.EventArgs) Handles btnBuildBinary.Click
-        ' Build this in the working directory
-        Dim FinalBinaryFolderPath As String = WorkingDirectory & FinalBinaryFolder
-        Dim FinalBinaryZipPath As String = WorkingDirectory & FinalBinaryZip
-
-        ' Temp working Image folder to zip later
-        Dim ImageFolder As String = "EVEIPH Images" ' IN DD Working
-
-        btnBuildBinary.Enabled = False
-        Application.UseWaitCursor = True
-        Application.DoEvents()
-        Call EnableButtons(False)
-
-        ' Make folder to put files in and zip
-        If Directory.Exists(FinalBinaryFolderPath) Then
-            Directory.Delete(FinalBinaryFolderPath, True)
-        End If
-
-        If chkCreateTest.Checked Then
-            ' Copy the test.txt to the binary
-            File.Copy(RootDirectory & "Test.txt", FinalBinaryFolderPath & "Test.txt")
-        End If
-
-        Directory.CreateDirectory(FinalBinaryFolderPath)
-
-        ' Copy all these files from the latest file directory (should be most up to date) to the working directory to make the zip
-        File.Copy(UploadFileDirectory & JSONDLL, FinalBinaryFolderPath & JSONDLL)
-        File.Copy(UploadFileDirectory & SQLiteDLL, FinalBinaryFolderPath & SQLiteDLL)
-        File.Copy(UploadFileDirectory & SQLInteropDLL, FinalBinaryFolderPath & SQLInteropDLL)
-        File.Copy(UploadFileDirectory & EVEIPHEXE, FinalBinaryFolderPath & EVEIPHEXE)
-        File.Copy(UploadFileDirectory & EVEIPHUpdater, FinalBinaryFolderPath & EVEIPHUpdater)
-        File.Copy(UploadFileDirectory & UpdaterManifest, FinalBinaryFolderPath & UpdaterManifest)
-        File.Copy(UploadFileDirectory & EXEManifest, FinalBinaryFolderPath & EXEManifest)
-        File.Copy(UploadFileDirectory & LatestVersionXML, FinalBinaryFolderPath & LatestVersionXML)
-        File.Copy(UploadFileDirectory & MoreLinqDLL, FinalBinaryFolderPath & MoreLinqDLL)
-        File.Copy(UploadFileDirectory & GADLL, FinalBinaryFolderPath & GADLL)
-
-        ' DB
-        File.Copy(WorkingDirectory & EVEIPHDB, FinalBinaryFolderPath & EVEIPHDB)
-
-        ' IPH images
-        My.Computer.FileSystem.CopyDirectory(WorkingDirectory & ImageFolder, FinalBinaryFolderPath & ImageFolder, True)
-
-        ' Delete the file if it already exists
-        File.Delete(FinalBinaryZipPath)
-        ' Compress the whole file for download
-        Call ZipFile.CreateFromDirectory(FinalBinaryFolderPath, FinalBinaryZipPath, CompressionLevel.Optimal, False)
-
-        File.Delete(UploadFileDirectory & FinalBinaryZip)
-
-        ' Copy binary zip file to the media file directory
-        File.Copy(FinalBinaryZipPath, UploadFileDirectory & FinalBinaryZip)
-
-        Application.UseWaitCursor = False
-        Application.DoEvents()
-
-        ' Clean up working folder
-        If Directory.Exists(FinalBinaryFolderPath) Then
-            Directory.Delete(FinalBinaryFolderPath, True)
-        End If
-
-        ' Refresh this file in the list
-        Call LoadFileGrid()
-        Call EnableButtons(True)
-        Application.DoEvents()
-
-        MsgBox("Binary Built", vbInformation, "Complete")
-
-    End Sub
+#End Region
 
 #Region "Supporting Functions"
 
@@ -1273,13 +1228,6 @@ Public Class frmMain
         Me.Cursor = Cursors.WaitCursor
         Dim SQLInstanceName = ""
 
-        If (txtSqlInstanceName.Text = "") Then
-            Call MsgBox("SQL Server Instance Name not supplied", "Error", vbExclamation)
-            Return False
-        End If
-
-        SQLInstanceName = txtSqlInstanceName.Text
-
         Try
 
             ' SQLite DB for saving data
@@ -1290,8 +1238,8 @@ Public Class frmMain
             End If
 
             ' SQLite DB for the SDE
-            If File.Exists(WorkingDirectory & DatabaseName & DBExtention) Then
-                SDEDB = New SQLiteDBConnection(WorkingDirectory & DatabaseName & DBExtention)
+            If File.Exists(SDEWorkingDirectory & DatabaseName & DBExtention) Then
+                SDEDB = New SQLiteDBConnection(SDEWorkingDirectory & DatabaseName & DBExtention)
                 ' Set pragma to make this faster
                 Call Execute_SQLiteSQL("PRAGMA synchronous = OFF", SDEDB.DBRef)
             Else
@@ -1400,7 +1348,7 @@ Public Class frmMain
         Call Build_STRUCTURE_MARKET_ORDERS()
 
         lblTableName.Text = "Building: INVENTORY_FLAGS"
-        Call Build_Inventory_Flags()
+        Call Build_INVENTORY_FLAGS()
 
         lblTableName.Text = "Building: INDUSTRY_SYSTEMS_COST_INDICIES"
         Call Build_INDUSTRY_SYSTEMS_COST_INDICIES()
@@ -1417,17 +1365,17 @@ Public Class frmMain
         lblTableName.Text = "Building: RAM_ACTIVITIES"
         Call Build_RAM_ACTIVITIES()
 
-        lblTableName.Text = "Building: RAM_ASSEMBLY_LINE_STATIONS"
-        Call Build_RAM_ASSEMBLY_LINE_STATIONS()
+        'lblTableName.Text = "Building: RAM_ASSEMBLY_LINE_STATIONS"
+        'Call Build_RAM_ASSEMBLY_LINE_STATIONS()
 
-        lblTableName.Text = "Building: RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_CATEGORY"
-        Call Build_RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_CATEGORY()
+        'lblTableName.Text = "Building: RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_CATEGORY"
+        'Call Build_RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_CATEGORY()
 
-        lblTableName.Text = "Building: RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_GROUP"
-        Call Build_RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_GROUP()
+        'lblTableName.Text = "Building: RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_GROUP"
+        'Call Build_RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_GROUP()
 
-        lblTableName.Text = "Building: RAM_ASSEMBLY_LINE_TYPES"
-        Call Build_RAM_ASSEMBLY_LINE_TYPES()
+        'lblTableName.Text = "Building: RAM_ASSEMBLY_LINE_TYPES"
+        'Call Build_RAM_ASSEMBLY_LINE_TYPES()
 
         lblTableName.Text = "Building: RAM_INSTALLATION_TYPE_CONTENTS"
         Call Build_RAM_INSTALLATION_TYPE_CONTENTS()
@@ -2861,7 +2809,7 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/industry/jobs/','esi-industry.read_character_jobs','to load all character industry jobs')"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/skills/','esi-skills.read_skill', 'to import character skills')"
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/skills/','esi-skills.read_skills', 'to import character skills')"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/corporations/{corporation_id}/assets/','esi-assets.read_corporation_assets','to import corporation assets')"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -3573,19 +3521,18 @@ Public Class frmMain
 
         SQL = "CREATE TABLE FACTIONS ("
         SQL &= "factionID INTEGER PRIMARY KEY,"
-        SQL &= "factionName VARCHAR(" & GetLenSQLExpField("factionName", "chrFactions") & ") NOT NULL,"
-        SQL &= "raceID INTEGER"
+        SQL &= "factionName VARCHAR(" & GetLenSQLExpField("factionName", "factions") & ") NOT NULL"
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         ' Now select the count of the final query of data
-        Call SetProgressBarValues("chrFactions")
+        Call SetProgressBarValues("factions")
 
         Application.DoEvents()
 
         ' Pull new data and insert
-        mainSQL = "SELECT factionID, factionName, raceIDs FROM chrFactions"
+        mainSQL = "SELECT factionID, factionName FROM factions"
         SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
         SQLReader1 = SQLCommand.ExecuteReader()
 
@@ -3595,8 +3542,7 @@ Public Class frmMain
             Application.DoEvents()
             SQL = "INSERT INTO FACTIONS VALUES ("
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ")"
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ")"
 
             Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
@@ -6608,7 +6554,6 @@ Public Class frmMain
         SQL &= "AGENT_ID INTEGER,"
         SQL &= "AGENT_NAME VARCHAR(100) NOT NULL,"
         SQL &= "LEVEL INTEGER,"
-        SQL &= "QUALITY INTEGER,"
         SQL &= "RESEARCH_TYPE_ID INTEGER,"
         SQL &= "RESEARCH_TYPE VARCHAR(100) NOT NULL,"
         SQL &= "REGION_ID INTEGER,"
@@ -6622,12 +6567,11 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         ' Pull new data and insert
-        mainSQL = "SELECT chrFactions.factionName, agtAgents.corporationID, "
-        mainSQL = mainSQL & "invNames_1.itemName, "
+        mainSQL = "SELECT factions.factionName, agents.corporationID, "
+        mainSQL = mainSQL & "npccorporations.corporationName, "
         mainSQL = mainSQL & "invNames.itemID, "
         mainSQL = mainSQL & "invNames.itemName, "
-        mainSQL = mainSQL & "agtAgents.level, "
-        mainSQL = mainSQL & "agtAgents.quality, "
+        mainSQL = mainSQL & "agents.level, "
         mainSQL = mainSQL & "invTypes.typeID, "
         mainSQL = mainSQL & "invTypes.typeName, "
         mainSQL = mainSQL & "mapRegions.regionID, "
@@ -6636,17 +6580,16 @@ Public Class frmMain
         mainSQL = mainSQL & "mapSolarSystems.solarSystemName, "
         mainSQL = mainSQL & "mapSolarSystems.security, "
         mainSQL = mainSQL & "mapDenormalize.itemName AS Station "
-        msSQL2 = "FROM (((((((((agtAgents INNER JOIN agtResearchAgents ON agtAgents.agentID = agtResearchAgents.agentID) "
-        msSQL2 = msSQL2 & "INNER JOIN invTypes ON agtResearchAgents.typeID = invTypes.typeID) "
-        msSQL2 = msSQL2 & "INNER JOIN crpNPCCorporations ON agtAgents.corporationID = crpNPCCorporations.corporationID) "
-        msSQL2 = msSQL2 & "INNER JOIN invNames ON agtResearchAgents.agentID = invNames.itemID) "
-        msSQL2 = msSQL2 & "INNER JOIN mapDenormalize ON agtAgents.locationID = mapDenormalize.itemID) "
-        msSQL2 = msSQL2 & "INNER JOIN mapSolarSystems ON mapDenormalize.solarSystemID = mapSolarSystems.solarSystemID) "
-        msSQL2 = msSQL2 & "INNER JOIN mapConstellations ON mapDenormalize.constellationID = mapConstellations.constellationID) "
-        msSQL2 = msSQL2 & "INNER JOIN mapRegions ON mapDenormalize.regionID = mapRegions.regionID) "
-        msSQL2 = msSQL2 & "INNER JOIN invNames AS invNames_1 ON crpNPCCorporations.corporationID = invNames_1.itemID) "
-        msSQL2 = msSQL2 & "INNER JOIN chrFactions ON crpNPCCorporations.factionID = chrFactions.factionID "
-        msSQL2 = msSQL2 & "WHERE agtAgents.agentTypeID= 4"
+        msSQL2 = "FROM agents INNER JOIN researchAgents ON agents.agentID = researchAgents.agentID "
+        msSQL2 = msSQL2 & "INNER JOIN invTypes ON researchAgents.typeID = invTypes.typeID "
+        msSQL2 = msSQL2 & "INNER JOIN npcCorporations ON agents.corporationID = npcCorporations.corporationID "
+        msSQL2 = msSQL2 & "INNER JOIN invNames ON researchAgents.agentID = invNames.itemID "
+        msSQL2 = msSQL2 & "INNER JOIN mapDenormalize ON agents.locationID = mapDenormalize.itemID "
+        msSQL2 = msSQL2 & "INNER JOIN mapSolarSystems ON mapDenormalize.solarSystemID = mapSolarSystems.solarSystemID "
+        msSQL2 = msSQL2 & "INNER JOIN mapConstellations ON mapDenormalize.constellationID = mapConstellations.constellationID "
+        msSQL2 = msSQL2 & "INNER JOIN mapRegions ON mapDenormalize.regionID = mapRegions.regionID "
+        msSQL2 = msSQL2 & "INNER JOIN factions ON npcCorporations.factionID = factions.factionID "
+        msSQL2 = msSQL2 & "WHERE agents.agentTypeID= 4"
 
         ' Get the count
         SQLCommand = New SQLiteCommand("SELECT COUNT(*) " & msSQL2, SDEDB.DBRef)
@@ -6681,8 +6624,7 @@ Public Class frmMain
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(10)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(11)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(12)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(13)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(14)) & ")"
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(13)) & ")"
 
             Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
@@ -6802,7 +6744,7 @@ Public Class frmMain
 
         SQL = "CREATE TABLE REGIONS ("
         SQL &= "regionID INTEGER PRIMARY KEY,"
-        SQL &= "regionName VARCHAR(20) NOT NULL,"
+        SQL &= "regionName VARCHAR(20),"
         SQL &= "factionID INTEGER"
         SQL &= ")"
 
@@ -6863,7 +6805,7 @@ Public Class frmMain
         SQL = "CREATE TABLE CONSTELLATIONS ("
         SQL &= "regionID INTEGER NOT NULL,"
         SQL &= "constellationID INTEGER PRIMARY KEY,"
-        SQL &= "constellationName VARCHAR(20) NOT NULL"
+        SQL &= "constellationName VARCHAR(20)"
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -7182,7 +7124,7 @@ Public Class frmMain
 
         Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
-        SQL = "CREATE INDEX IDX_IC_CATEGORY_ID ON INVENTORY_GROUPS (categoryID)"
+        SQL = "CREATE INDEX IDX_IC_CATEGORY_ID ON INVENTORY_CATEGORIES (categoryID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         SQLReader1.Close()
@@ -7336,7 +7278,7 @@ Public Class frmMain
         mainSQL = mainSQL & "UNION "
         ' Get specific materials for later use or other areas in IPH (ie asteroids) - include items for LP Store
         mainSQL = mainSQL & "SELECT DISTINCT typeID AS MATERIAL_ID, typeName AS MATERIAL, 0 AS TECH_LEVEL, 0 AS PRICE, "
-        mainSQL = MAINSQL & "invCategories.categoryID As MAT_CATEGORY_ID, categoryName As MATERIAL_CATEGORY, "
+        mainSQL = mainSQL & "invCategories.categoryID As MAT_CATEGORY_ID, categoryName As MATERIAL_CATEGORY, "
         mainSQL = mainSQL & "invGroups.groupID As MAT_GROUP_ID, groupName As MATERIAL_GROUP, 0 As MANUFACTURE, 0 As ITEM_TYPE, 'None' AS PRICE_TYPE "
         mainSQL = mainSQL & "FROM invTypes, invGroups, invCategories "
         mainSQL = mainSQL & "WHERE invTypes.groupID = invGroups.groupID "
@@ -8312,7 +8254,7 @@ Public Class frmMain
         Call UpdateramAssemblyLineTypeDetailPerCategory()
 
         ' Add the LP Store tables from script - TODO convert to CREST Look ups
-        'Call Execute_SQLiteSQL(File.OpenText(WorkingDirectory & "\lpDatabase_v0.11\lpDatabase_v0.11.sql").ReadToEnd(), SDEDB.DBRef)
+        'Call Execute_SQLiteSQL(File.OpenText(SDEWorkingDirectory & "\lpDatabase_v0.11\lpDatabase_v0.11.sql").ReadToEnd(), SDEDB.DBRef)
 
         pgMain.Visible = False
         lblTableName.Text = ""
@@ -8336,7 +8278,7 @@ Public Class frmMain
         Dim PublicData As String
         Dim ESIPublicURL As String = "https://esi.evetech.net/latest/"
         Dim TranquilityDataSource As String = "?datasource=tranquility"
-        Dim ESIData As new List(Of ESINameData)
+        Dim ESIData As New List(Of ESINameData)
 
         SQLCommand = New SQLiteCommand("SELECT typeID FROM invTypes WHERE typeName IS NULL", SDEDB.DBRef)
         rsIDs = SQLCommand.ExecuteReader()
@@ -8492,58 +8434,58 @@ Public Class frmMain
         Application.DoEvents()
         Call EnableButtons(False)
 
-        If MD5CalcFile(RootDirectory & JSONDLL) <> MD5CalcFile(FileDirectory & JSONDLL) Then
-            File.Copy(RootDirectory & JSONDLL, FileDirectory & JSONDLL, True)
+        If MD5CalcFile(EVEIPHRootDirectory & JSONDLL) <> MD5CalcFile(FileDirectory & JSONDLL) Then
+            File.Copy(EVEIPHRootDirectory & JSONDLL, FileDirectory & JSONDLL, True)
             NewFilesAdded = True
         End If
 
-        If MD5CalcFile(RootDirectory & SQLiteDLL) <> MD5CalcFile(FileDirectory & SQLiteDLL) Then
-            File.Copy(RootDirectory & SQLiteDLL, FileDirectory & SQLiteDLL, True)
+        If MD5CalcFile(EVEIPHRootDirectory & SQLiteDLL) <> MD5CalcFile(FileDirectory & SQLiteDLL) Then
+            File.Copy(EVEIPHRootDirectory & SQLiteDLL, FileDirectory & SQLiteDLL, True)
             NewFilesAdded = True
         End If
 
-        If MD5CalcFile(RootDirectory & SQLInteropDLL) <> MD5CalcFile(FileDirectory & SQLInteropDLL) Then
-            File.Copy(RootDirectory & SQLInteropDLL, FileDirectory & SQLInteropDLL, True)
+        If MD5CalcFile(EVEIPHRootDirectory & SQLInteropDLL) <> MD5CalcFile(FileDirectory & SQLInteropDLL) Then
+            File.Copy(EVEIPHRootDirectory & SQLInteropDLL, FileDirectory & SQLInteropDLL, True)
             NewFilesAdded = True
         End If
 
-        If MD5CalcFile(RootDirectory & EVEIPHEXE) <> MD5CalcFile(FileDirectory & EVEIPHEXE) Then
-            File.Copy(RootDirectory & EVEIPHEXE, FileDirectory & EVEIPHEXE, True)
+        If MD5CalcFile(EVEIPHRootDirectory & EVEIPHEXE) <> MD5CalcFile(FileDirectory & EVEIPHEXE) Then
+            File.Copy(EVEIPHRootDirectory & EVEIPHEXE, FileDirectory & EVEIPHEXE, True)
             NewFilesAdded = True
         End If
 
-        If MD5CalcFile(RootDirectory & EVEIPHUpdater) <> MD5CalcFile(FileDirectory & EVEIPHUpdater) Then
-            File.Copy(RootDirectory & EVEIPHUpdater, FileDirectory & EVEIPHUpdater, True)
+        If MD5CalcFile(EVEIPHRootDirectory & EVEIPHUpdater) <> MD5CalcFile(FileDirectory & EVEIPHUpdater) Then
+            File.Copy(EVEIPHRootDirectory & EVEIPHUpdater, FileDirectory & EVEIPHUpdater, True)
             NewFilesAdded = True
         End If
 
-        If MD5CalcFile(WorkingDirectory & EVEIPHDB) <> MD5CalcFile(FileDirectory & EVEIPHDB) Then
-            File.Copy(WorkingDirectory & EVEIPHDB, FileDirectory & EVEIPHDB, True)
+        If MD5CalcFile(SDEWorkingDirectory & EVEIPHDB) <> MD5CalcFile(FileDirectory & EVEIPHDB) Then
+            File.Copy(SDEWorkingDirectory & EVEIPHDB, FileDirectory & EVEIPHDB, True)
             NewFilesAdded = True
         End If
 
-        If MD5CalcFile(WorkingDirectory & ImageZipFile) <> MD5CalcFile(FileDirectory & ImageZipFile) Then
-            File.Copy(WorkingDirectory & ImageZipFile, FileDirectory & ImageZipFile, True)
+        If MD5CalcFile(SDEWorkingDirectory & ImageZipFile) <> MD5CalcFile(FileDirectory & ImageZipFile) Then
+            File.Copy(SDEWorkingDirectory & ImageZipFile, FileDirectory & ImageZipFile, True)
             NewFilesAdded = True
         End If
 
-        If MD5CalcFile(RootDirectory & UpdaterManifest) <> MD5CalcFile(FileDirectory & UpdaterManifest) Then
-            File.Copy(RootDirectory & UpdaterManifest, FileDirectory & UpdaterManifest, True)
+        If MD5CalcFile(EVEIPHRootDirectory & UpdaterManifest) <> MD5CalcFile(FileDirectory & UpdaterManifest) Then
+            File.Copy(EVEIPHRootDirectory & UpdaterManifest, FileDirectory & UpdaterManifest, True)
             NewFilesAdded = True
         End If
 
-        If MD5CalcFile(RootDirectory & EXEManifest) <> MD5CalcFile(FileDirectory & EXEManifest) Then
-            File.Copy(RootDirectory & EXEManifest, FileDirectory & EXEManifest, True)
+        If MD5CalcFile(EVEIPHRootDirectory & EXEManifest) <> MD5CalcFile(FileDirectory & EXEManifest) Then
+            File.Copy(EVEIPHRootDirectory & EXEManifest, FileDirectory & EXEManifest, True)
             NewFilesAdded = True
         End If
 
-        If MD5CalcFile(RootDirectory & MoreLinqDLL) <> MD5CalcFile(FileDirectory & MoreLinqDLL) Then
-            File.Copy(RootDirectory & MoreLinqDLL, FileDirectory & MoreLinqDLL, True)
+        If MD5CalcFile(EVEIPHRootDirectory & MoreLinqDLL) <> MD5CalcFile(FileDirectory & MoreLinqDLL) Then
+            File.Copy(EVEIPHRootDirectory & MoreLinqDLL, FileDirectory & MoreLinqDLL, True)
             NewFilesAdded = True
         End If
 
-        If MD5CalcFile(RootDirectory & GADLL) <> MD5CalcFile(FileDirectory & GADLL) Then
-            File.Copy(RootDirectory & GADLL, FileDirectory & GADLL, True)
+        If MD5CalcFile(EVEIPHRootDirectory & GADLL) <> MD5CalcFile(FileDirectory & GADLL) Then
+            File.Copy(EVEIPHRootDirectory & GADLL, FileDirectory & GADLL, True)
             NewFilesAdded = True
         End If
 
@@ -8586,7 +8528,7 @@ Public Class frmMain
 
             ' Loop through the settings sent and output each name and value
             ' Copy the new XML file into the root directory - so I don't get updates and then manually upload this to media fire so people don't get crazy updates
-            Using writer As XmlWriter = XmlWriter.Create(RootDirectory & VersionXMLFileName, XMLSettings)
+            Using writer As XmlWriter = XmlWriter.Create(EVEIPHRootDirectory & VersionXMLFileName, XMLSettings)
                 writer.WriteStartDocument()
                 writer.WriteStartElement("EVEIPH") ' Root.
                 writer.WriteAttributeString("Version", VersionNumber)
@@ -8624,7 +8566,7 @@ Public Class frmMain
 
                 writer.WriteStartElement("row")
                 writer.WriteAttributeString("Name", ImageZipFile)
-                writer.WriteAttributeString("Version", ImagesVersion)
+                writer.WriteAttributeString("Version", "1.0")
                 writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & ImageZipFile))
                 writer.WriteAttributeString("URL", TestImageZipFileURL)
                 writer.WriteEndElement()
@@ -8688,7 +8630,7 @@ Public Class frmMain
 
             ' Loop through the settings sent and output each name and value
             ' Copy the new XML file into the root directory - so I don't get updates and then manually upload this to media fire so people don't get crazy updates
-            Using writer As XmlWriter = XmlWriter.Create(RootDirectory & VersionXMLFileName, XMLSettings)
+            Using writer As XmlWriter = XmlWriter.Create(EVEIPHRootDirectory & VersionXMLFileName, XMLSettings)
                 writer.WriteStartDocument()
                 writer.WriteStartElement("EVEIPH") ' Root.
                 writer.WriteAttributeString("Version", VersionNumber)
@@ -8726,7 +8668,7 @@ Public Class frmMain
 
                 writer.WriteStartElement("row")
                 writer.WriteAttributeString("Name", ImageZipFile)
-                writer.WriteAttributeString("Version", ImagesVersion)
+                writer.WriteAttributeString("Version", "1.0")
                 writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & ImageZipFile))
                 writer.WriteAttributeString("URL", ImageZipFileURL)
                 writer.WriteEndElement()
@@ -8786,11 +8728,11 @@ Public Class frmMain
         End If
 
         ' Finally, replace all the update file's crlf with lf so that when it's uploaded to git, it works properly on download
-        Dim FileText As String = File.ReadAllText(RootDirectory & VersionXMLFileName)
+        Dim FileText As String = File.ReadAllText(EVEIPHRootDirectory & VersionXMLFileName)
         FileText = FileText.Replace(vbCrLf, Chr(10))
 
         ' Write the file back out with new formatting
-        File.WriteAllText(RootDirectory & VersionXMLFileName, FileText)
+        File.WriteAllText(EVEIPHRootDirectory & VersionXMLFileName, FileText)
         File.WriteAllText(FileDirectory & VersionXMLFileName, FileText)
 
     End Sub

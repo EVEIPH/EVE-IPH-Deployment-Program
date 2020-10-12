@@ -27,15 +27,11 @@ Partial Class frmMain
         Me.FolderBrowserDialog = New System.Windows.Forms.FolderBrowserDialog()
         Me.ToolTip = New System.Windows.Forms.ToolTip(Me.components)
         Me.TabPage2 = New System.Windows.Forms.TabPage()
-        Me.txtSqlInstanceName = New System.Windows.Forms.TextBox()
-        Me.txtImageVersion = New System.Windows.Forms.TextBox()
         Me.txtVersionNumber = New System.Windows.Forms.TextBox()
         Me.txtDBName = New System.Windows.Forms.TextBox()
-        Me.lblSqlInstanceName = New System.Windows.Forms.Label()
         Me.lblTestPath = New System.Windows.Forms.Label()
         Me.btnSelectTestFilePath = New System.Windows.Forms.Button()
         Me.lblTest = New System.Windows.Forms.Label()
-        Me.lblImageVersion = New System.Windows.Forms.Label()
         Me.lblVersionNumber = New System.Windows.Forms.Label()
         Me.lblDBName = New System.Windows.Forms.Label()
         Me.btnSaveFilePath = New System.Windows.Forms.Button()
@@ -69,15 +65,11 @@ Partial Class frmMain
         '
         'TabPage2
         '
-        Me.TabPage2.Controls.Add(Me.txtSqlInstanceName)
-        Me.TabPage2.Controls.Add(Me.txtImageVersion)
         Me.TabPage2.Controls.Add(Me.txtVersionNumber)
         Me.TabPage2.Controls.Add(Me.txtDBName)
-        Me.TabPage2.Controls.Add(Me.lblSqlInstanceName)
         Me.TabPage2.Controls.Add(Me.lblTestPath)
         Me.TabPage2.Controls.Add(Me.btnSelectTestFilePath)
         Me.TabPage2.Controls.Add(Me.lblTest)
-        Me.TabPage2.Controls.Add(Me.lblImageVersion)
         Me.TabPage2.Controls.Add(Me.lblVersionNumber)
         Me.TabPage2.Controls.Add(Me.lblDBName)
         Me.TabPage2.Controls.Add(Me.btnSaveFilePath)
@@ -93,28 +85,14 @@ Partial Class frmMain
         Me.TabPage2.Location = New System.Drawing.Point(4, 22)
         Me.TabPage2.Name = "TabPage2"
         Me.TabPage2.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPage2.Size = New System.Drawing.Size(366, 464)
+        Me.TabPage2.Size = New System.Drawing.Size(366, 486)
         Me.TabPage2.TabIndex = 1
         Me.TabPage2.Text = "File Path Settings"
         Me.TabPage2.UseVisualStyleBackColor = True
         '
-        'txtSqlInstanceName
-        '
-        Me.txtSqlInstanceName.Location = New System.Drawing.Point(127, 46)
-        Me.txtSqlInstanceName.Name = "txtSqlInstanceName"
-        Me.txtSqlInstanceName.Size = New System.Drawing.Size(96, 20)
-        Me.txtSqlInstanceName.TabIndex = 20
-        '
-        'txtImageVersion
-        '
-        Me.txtImageVersion.Location = New System.Drawing.Point(229, 23)
-        Me.txtImageVersion.Name = "txtImageVersion"
-        Me.txtImageVersion.Size = New System.Drawing.Size(122, 20)
-        Me.txtImageVersion.TabIndex = 3
-        '
         'txtVersionNumber
         '
-        Me.txtVersionNumber.Location = New System.Drawing.Point(313, 46)
+        Me.txtVersionNumber.Location = New System.Drawing.Point(313, 23)
         Me.txtVersionNumber.Name = "txtVersionNumber"
         Me.txtVersionNumber.Size = New System.Drawing.Size(38, 20)
         Me.txtVersionNumber.TabIndex = 5
@@ -125,15 +103,6 @@ Partial Class frmMain
         Me.txtDBName.Name = "txtDBName"
         Me.txtDBName.Size = New System.Drawing.Size(205, 20)
         Me.txtDBName.TabIndex = 1
-        '
-        'lblSqlInstanceName
-        '
-        Me.lblSqlInstanceName.AutoSize = True
-        Me.lblSqlInstanceName.Location = New System.Drawing.Point(15, 49)
-        Me.lblSqlInstanceName.Name = "lblSqlInstanceName"
-        Me.lblSqlInstanceName.Size = New System.Drawing.Size(106, 13)
-        Me.lblSqlInstanceName.TabIndex = 19
-        Me.lblSqlInstanceName.Text = "SQL Instance Name:"
         '
         'lblTestPath
         '
@@ -162,19 +131,10 @@ Partial Class frmMain
         Me.lblTest.TabIndex = 16
         Me.lblTest.Text = "Test Deployment Folder:"
         '
-        'lblImageVersion
-        '
-        Me.lblImageVersion.AutoSize = True
-        Me.lblImageVersion.Location = New System.Drawing.Point(226, 7)
-        Me.lblImageVersion.Name = "lblImageVersion"
-        Me.lblImageVersion.Size = New System.Drawing.Size(77, 13)
-        Me.lblImageVersion.TabIndex = 2
-        Me.lblImageVersion.Text = "Image Version:"
-        '
         'lblVersionNumber
         '
         Me.lblVersionNumber.AutoSize = True
-        Me.lblVersionNumber.Location = New System.Drawing.Point(229, 49)
+        Me.lblVersionNumber.Location = New System.Drawing.Point(229, 26)
         Me.lblVersionNumber.Name = "lblVersionNumber"
         Me.lblVersionNumber.Size = New System.Drawing.Size(85, 13)
         Me.lblVersionNumber.TabIndex = 4
@@ -248,9 +208,9 @@ Partial Class frmMain
         Me.lblRootDebugFolder.AutoSize = True
         Me.lblRootDebugFolder.Location = New System.Drawing.Point(15, 269)
         Me.lblRootDebugFolder.Name = "lblRootDebugFolder"
-        Me.lblRootDebugFolder.Size = New System.Drawing.Size(100, 13)
+        Me.lblRootDebugFolder.Size = New System.Drawing.Size(142, 13)
         Me.lblRootDebugFolder.TabIndex = 12
-        Me.lblRootDebugFolder.Text = "Root Debug Folder:"
+        Me.lblRootDebugFolder.Text = "EVEIPH Root Debug Folder:"
         '
         'lblWorkingFolderPath
         '
@@ -275,9 +235,9 @@ Partial Class frmMain
         Me.lblWorkingFolder.AutoSize = True
         Me.lblWorkingFolder.Location = New System.Drawing.Point(15, 204)
         Me.lblWorkingFolder.Name = "lblWorkingFolder"
-        Me.lblWorkingFolder.Size = New System.Drawing.Size(82, 13)
+        Me.lblWorkingFolder.Size = New System.Drawing.Size(107, 13)
         Me.lblWorkingFolder.TabIndex = 9
-        Me.lblWorkingFolder.Text = "Working Folder:"
+        Me.lblWorkingFolder.Text = "SDE Working Folder:"
         '
         'TabPage1
         '
@@ -442,15 +402,11 @@ Partial Class frmMain
     Friend WithEvents FolderBrowserDialog As System.Windows.Forms.FolderBrowserDialog
     Friend WithEvents ToolTip As System.Windows.Forms.ToolTip
     Friend WithEvents TabPage2 As TabPage
-    Friend WithEvents txtSqlInstanceName As TextBox
-    Friend WithEvents txtImageVersion As TextBox
     Friend WithEvents txtVersionNumber As TextBox
     Friend WithEvents txtDBName As TextBox
-    Friend WithEvents lblSqlInstanceName As Label
     Friend WithEvents lblTestPath As Label
     Friend WithEvents btnSelectTestFilePath As Button
     Friend WithEvents lblTest As Label
-    Friend WithEvents lblImageVersion As Label
     Friend WithEvents lblVersionNumber As Label
     Friend WithEvents lblDBName As Label
     Friend WithEvents btnSaveFilePath As Button
