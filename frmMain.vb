@@ -122,6 +122,208 @@ Public Class frmMain
 
     End Class
 
+    Public Enum MiningMat
+        Plagioclase = 18
+        Spodumain = 19
+        Kernite = 20
+        Hedbergite = 21
+        Arkonor = 22
+        Bistot = 1223
+        Pyroxeres = 1224
+        Crokite = 1225
+        Jaspet = 1226
+        Omber = 1227
+        Scordite = 1228
+        Gneiss = 1229
+        Veldspar = 1230
+        Hemorphite = 1231
+        DarkOchre = 1232
+        Mercoxit = 11396
+        ClearIcicle = 16262
+        GlacialMass = 16263
+        BlueIce = 16264
+        WhiteGlaze = 16265
+        GlareCrust = 16266
+        DarkGlitter = 16267
+        Gelidus = 16268
+        Krystallos = 16269
+        CrimsonArkonor = 17425
+        PrimeArkonor = 17426
+        TriclinicBistot = 17428
+        MonoclinicBistot = 17429
+        SharpCrokite = 17432
+        CrystallineCrokite = 17433
+        OnyxOchre = 17436
+        ObsidianOchre = 17437
+        VitricHedbergite = 17440
+        GlazedHedbergite = 17441
+        VividHemorphite = 17444
+        RadiantHemorphite = 17445
+        PureJaspet = 17448
+        PristineJaspet = 17449
+        LuminousKernite = 17452
+        FieryKernite = 17453
+        AzurePlagioclase = 17455
+        RichPlagioclase = 17456
+        SolidPyroxeres = 17459
+        ViscousPyroxeres = 17460
+        CondensedScordite = 17463
+        MassiveScordite = 17464
+        BrightSpodumain = 17466
+        GleamingSpodumain = 17467
+        ConcentratedVeldspar = 17470
+        DenseVeldspar = 17471
+        IridescentGneiss = 17865
+        PrismaticGneiss = 17866
+        SilveryOmber = 17867
+        GoldenOmber = 17868
+        MagmaMercoxit = 17869
+        VitreousMercoxit = 17870
+        ThickBlueIce = 17975
+        PristineWhiteGlaze = 17976
+        SmoothGlacialMass = 17977
+        EnrichedClearIcicle = 17978
+        AmberCytoserocin = 25268
+        GoldenCytoserocin = 25273
+        ViridianCytoserocin = 25274
+        CeladonCytoserocin = 25275
+        MalachiteCytoserocin = 25276
+        LimeCytoserocin = 25277
+        VermillionCytoserocin = 25278
+        AzureCytoserocin = 25279
+        FlawedGneiss = 26713
+        FoolsCrokite = 26851
+        FlawedArkonor = 26852
+        FlawedJaspet = 26868
+        Chondrite = 27028
+        Banidine = 28617
+        Augumene = 28618
+        Mercium = 28619
+        Lyavite = 28620
+        Pithix = 28621
+        GreenArisite = 28622
+        Oeryl = 28623
+        Geodite = 28624
+        Polygypsum = 28625
+        Zuthrine = 28626
+        AzureIce = 28627
+        CrystallineIcicle = 28628
+        GambogeCytoserocin = 28629
+        ChartreuseCytoserocin = 28630
+        AmberMykoserocin = 28694
+        AzureMykoserocin = 28695
+        CeladonMykoserocin = 28696
+        GoldenMykoserocin = 28697
+        LimeMykoserocin = 28698
+        MalachiteMykoserocin = 28699
+        VermillionMykoserocin = 28700
+        ViridianMykoserocin = 28701
+        FulleriteC50 = 30370
+        FulleriteC60 = 30371
+        FulleriteC70 = 30372
+        FulleriteC72 = 30373
+        FulleriteC84 = 30374
+        FulleriteC28 = 30375
+        FulleriteC32 = 30376
+        FulleriteC320 = 30377
+        FulleriteC540 = 30378
+        Zeolites = 45490
+        Sylvite = 45491
+        Bitumens = 45492
+        Coesite = 45493
+        Cobaltite = 45494
+        Euxenite = 45495
+        Titanite = 45496
+        Scheelite = 45497
+        Otavite = 45498
+        Sperrylite = 45499
+        Vanadinite = 45500
+        Chromite = 45501
+        Carnotite = 45502
+        Zircon = 45503
+        Pollucite = 45504
+        Cinnabar = 45506
+        Xenotime = 45510
+        Monazite = 45511
+        Loparite = 45512
+        Ytterbite = 45513
+        BrimfulZeolites = 46280
+        GlisteningZeolites = 46281
+        BrimfulSylvite = 46282
+        GlisteningSylvite = 46283
+        BrimfulBitumens = 46284
+        GlisteningBitumens = 46285
+        BrimfulCoesite = 46286
+        GlisteningCoesite = 46287
+        CopiousCobaltite = 46288
+        TwinklingCobaltite = 46289
+        CopiousEuxenite = 46290
+        TwinklingEuxenite = 46291
+        CopiousTitanite = 46292
+        TwinklingTitanite = 46293
+        CopiousScheelite = 46294
+        TwinklingScheelite = 46295
+        LavishOtavite = 46296
+        ShimmeringOtavite = 46297
+        LavishSperrylite = 46298
+        ShimmeringSperrylite = 46299
+        LavishVanadinite = 46300
+        ShimmeringVanadinite = 46301
+        LavishChromite = 46302
+        ShimmeringChromite = 46303
+        RepleteCarnotite = 46304
+        GlowingCarnotite = 46305
+        RepleteZircon = 46306
+        GlowingZircon = 46307
+        RepletePollucite = 46308
+        GlowingPollucite = 46309
+        RepleteCinnabar = 46310
+        GlowingCinnabar = 46311
+        BountifulXenotime = 46312
+        ShiningXenotime = 46313
+        BountifulMonazite = 46314
+        ShiningMonazite = 46315
+        BountifulLoparite = 46316
+        ShiningLoparite = 46317
+        BountifulYtterbite = 46318
+        ShiningYtterbite = 46319
+        JetOchre = 46675
+        CubicBistot = 46676
+        PellucidCrokite = 46677
+        FlawlessArkonor = 46678
+        BrilliantGneiss = 46679
+        LustrousHedbergite = 46680
+        ScintillatingHemorphite = 46681
+        ImmaculateJaspet = 46682
+        ResplendantKernite = 46683
+        PlatinoidOmber = 46684
+        SparklingPlagioclase = 46685
+        OpulentPyroxeres = 46686
+        GlossyScordite = 46687
+        DazzlingSpodumain = 46688
+        StableVeldspar = 46689
+        CthonicAttar = 48916
+        HeavyCthonicAttar = 48917
+        AsteroidCUNUSED = 48918
+        AsteroidDUNUSED = 48919
+        HiemalTricarboxylVapor = 49787
+        HiemalTricarboxylCondensate = 49789
+        AmethysticCrystallite = 50015
+        BlockoutCone = 50175
+        BlockoutCube = 52193
+        BlockoutCylinder = 52194
+        BlockoutSphere = 52204
+        Talassonite = 52306
+        Rakovene = 52315
+        Bezdnacine = 52316
+        AbyssalTalassonite = 56625
+        HadalTalassonite = 56626
+        AbyssalBezdnacine = 56627
+        HadalBezdnacine = 56628
+        AbyssalRakovene = 56629
+        HadalRakovene = 56630
+    End Enum
+
     Public Sub New()
         MyBase.New()
 
@@ -4142,9 +4344,57 @@ Public Class frmMain
 
     End Sub
 
+    Private Function GetOreRegion(RegionIndex As Integer) As String
+        Select Case RegionIndex
+            Case 0
+                Return "Amarr"
+            Case 1
+                Return "Caldari"
+            Case 2
+                Return "Gallente"
+            Case 3
+                Return "Minmatar"
+        End Select
+        Return ""
+    End Function
+
+    Private Function GetSecurityType(SecurityIndex As Integer) As String
+        Select Case SecurityIndex
+            Case 0
+                Return "High Sec"
+            Case 1
+                Return "Low Sec"
+            Case 2
+                Return "Null Sec"
+        End Select
+        Return ""
+    End Function
+
+    Private Function GetWHClass(ClassIndex As Integer) As String
+        Select Case ClassIndex
+            Case 0
+                Return "C1"
+            Case 1
+                Return "C2"
+            Case 2
+                Return "C3"
+            Case 3
+                Return "C4"
+            Case 4
+                Return "C5"
+            Case 5
+                Return "C6"
+        End Select
+        Return ""
+    End Function
+
     ' ORE_LOCATIONS
     Private Sub Build_ORE_LOCATIONS()
         Dim SQL As String
+        Dim CurrentOre As MiningMat
+        Dim CurrentRegionType As String = ""
+        Dim CurrentSecurityType As String = ""
+        Dim i, j, k As Integer
 
         Application.DoEvents()
 
@@ -4152,1695 +4402,446 @@ Public Class frmMain
         Dim SQLCommand As New SQLiteCommand
 
         SQL = "CREATE TABLE ORE_LOCATIONS ("
-        SQL &= "ORE_ID INTEGER NOT NULL,"
+        SQL &= "ORE_ID INTEGER Not NULL,"
         SQL &= "SYSTEM_SECURITY VARCHAR(10),"
-        SQL &= "SPACE VARCHAR(20),"
-        SQL &= "HIGH_YIELD_ORE INTEGER NOT NULL"
+        SQL &= "SPACE VARCHAR(" & MiningMat.Kernite & "),"
+        SQL &= "HIGH_YIELD_ORE INTEGER Not NULL"
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         ' Now open the saved table and insert all the values into this new table
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (18,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (19,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (20,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (21,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (22,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1223,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1224,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1225,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1226,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1227,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1228,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1229,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1230,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1231,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C1','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C2','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (1232,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'C5','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'C6','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'C3','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (11396,'C4','WH',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16262,'High Sec','Amarr',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16262,'Low Sec','Amarr',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16262,'Null Sec','Amarr',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16262,'Null Sec','Amarr',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16263,'High Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16263,'Low Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16263,'Null Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16263,'Low Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16263,'Null Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16264,'High Sec','Gallente',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16264,'Low Sec','Gallente',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16264,'High Sec','Gallente',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16264,'Null Sec','Gallente',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16265,'High Sec','Caldari',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16265,'Low Sec','Caldari',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16265,'Null Sec','Caldari',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16265,'Low Sec','Caldari',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16265,'Null Sec','Caldari',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Low Sec','Amarr',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Null Sec','Amarr',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Null Sec','Amarr',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Low Sec','Caldari',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Null Sec','Caldari',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Null Sec','Caldari',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Low Sec','Gallente',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Null Sec','Gallente',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Null Sec','Gallente',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Low Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Null Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16266,'Null Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Low Sec','Amarr',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Null Sec','Amarr',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Null Sec','Amarr',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Low Sec','Caldari',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Null Sec','Caldari',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Null Sec','Caldari',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Low Sec','Gallente',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Null Sec','Gallente',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Null Sec','Gallente',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Low Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Null Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16267,'Null Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16268,'Null Sec','Amarr',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16268,'Null Sec','Caldari',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16268,'Null Sec','Gallente',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16268,'Null Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16269,'Null Sec','Caldari',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16269,'Null Sec','Gallente',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (16269,'Null Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17425,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17425,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17425,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17425,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17426,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17426,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17426,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17426,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17428,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17428,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17428,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17428,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17429,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17429,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17429,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17429,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17432,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17432,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17432,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17432,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17433,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17433,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17433,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17433,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17436,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17436,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17436,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17436,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17437,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17437,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17437,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17437,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17440,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17440,'Low Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17440,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17440,'Low Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17440,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17440,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17441,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17441,'Low Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17441,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17441,'Low Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17441,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17441,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17444,'Low Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17444,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17444,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17444,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17444,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17444,'Low Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17444,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17445,'Low Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17445,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17445,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17445,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17445,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17445,'Low Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17445,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17448,'Low Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17448,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17448,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17448,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17448,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17448,'Low Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17448,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17449,'Low Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17449,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17449,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17449,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17449,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17449,'Low Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17449,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'High Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'Low Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'Low Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'Low Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17452,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'High Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'Low Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'Low Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'Low Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17453,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'High Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'Low Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'High Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'Low Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'High Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'Low Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17455,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'High Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'Low Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'High Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'Low Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'High Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'Low Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17456,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'High Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'Low Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'High Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'Low Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17459,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'High Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'Low Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'High Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'Low Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17460,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'High Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Low Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'High Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Low Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'High Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Low Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'High Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Low Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17463,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'High Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Low Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'High Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Low Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'High Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Low Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'High Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Low Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17464,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17466,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17466,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17466,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17466,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17467,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17467,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17467,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17467,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'High Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Low Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'High Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Low Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'High Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Low Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'High Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Low Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17470,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'High Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Low Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'High Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Low Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'High Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Low Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'High Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Low Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17471,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17865,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17865,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17865,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17865,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17866,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17866,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17866,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17866,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17867,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17867,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17867,'High Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17867,'Low Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17867,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17867,'High Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17867,'Low Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17867,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17868,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17868,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17868,'High Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17868,'Low Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17868,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17868,'High Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17868,'Low Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17868,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17869,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17869,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17869,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17869,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17870,'Null Sec','Amarr',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17870,'Null Sec','Caldari',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17870,'Null Sec','Minmatar',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17870,'Null Sec','Gallente',1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17975,'Null Sec','Gallente',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17976,'Null Sec','Caldari',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17977,'Null Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (17978,'Null Sec','Amarr',-1)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25268,'Low Sec','Caldari',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25268,'Null Sec','Caldari',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25268,'Null Sec','Caldari',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25273,'Low Sec','Caldari',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25273,'Null Sec','Caldari',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25273,'Null Sec','Caldari',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25273,'Null Sec','Caldari',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25273,'Null Sec','Caldari',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25274,'Null Sec','Gallente',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25274,'Low Sec','Gallente',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25275,'Null Sec','Gallente',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25275,'Null Sec','Gallente',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25275,'Null Sec','Gallente',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25275,'Null Sec','Gallente',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25275,'Low Sec','Gallente',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25276,'Low Sec','Amarr',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25276,'Null Sec','Amarr',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25277,'Null Sec','Amarr',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25277,'Low Sec','Amarr',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25278,'Null Sec','Minmatar',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25278,'Null Sec','Minmatar',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25278,'Low Sec','Minmatar',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (25279,'Low Sec','Minmatar',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28694,'Low Sec','Caldari',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28694,'Low Sec','Caldari',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28695,'Low Sec','Minmatar',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28695,'Low Sec','Minmatar',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28696,'High Sec','Gallente',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28696,'High Sec','Gallente',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28697,'Low Sec','Caldari',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28697,'High Sec','Caldari',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28698,'Low Sec','Amarr',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28699,'High Sec','Amarr',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28700,'High Sec','Minmatar',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28700,'High Sec','Minmatar',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28701,'Low Sec','Gallente',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (28701,'Low Sec','Gallente',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30370,'C1','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30370,'C2','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30370,'C3','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30370,'C4','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30370,'C5','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30370,'C6','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30371,'C1','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30371,'C2','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30371,'C3','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30371,'C4','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30371,'C5','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30371,'C6','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30372,'C1','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30372,'C2','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30372,'C3','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30372,'C4','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30372,'C5','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30372,'C6','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30373,'C1','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30373,'C2','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30373,'C3','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30373,'C4','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30373,'C5','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30373,'C6','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30374,'C1','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30374,'C2','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30374,'C3','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30374,'C4','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30374,'C5','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30374,'C6','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30375,'C3','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30375,'C4','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30375,'C5','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30375,'C6','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30376,'C3','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30376,'C4','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30376,'C5','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30376,'C6','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30377,'C5','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30377,'C6','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30378,'C5','WH',-2)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (30378,'C6','WH',-2)", EVEIPHSQLiteDB.DBRef)
+
+        ' High Sec
+        For i = 0 To 3
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Veldspar & ",'High Sec','" & GetOreRegion(i) & "',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.ConcentratedVeldspar & ",'High Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.DenseVeldspar & ",'High Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Scordite & ",'High Sec','" & GetOreRegion(i) & "',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CondensedScordite & ",'High Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.MassiveScordite & ",'High Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+
+            If i <> 0 Then
+                ' No plag in Amarr
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Plagioclase & ",'High Sec','" & GetOreRegion(i) & "',0)", EVEIPHSQLiteDB.DBRef)
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.AzurePlagioclase & ",'High Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.RichPlagioclase & ",'High Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+            End If
+
+            If i <> 2 And i <> 3 Then
+                ' No pyrox in Gallente or Minmatar
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Pyroxeres & ",'High Sec','" & GetOreRegion(i) & "',0)", EVEIPHSQLiteDB.DBRef)
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.SolidPyroxeres & ",'High Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.ViscousPyroxeres & ",'High Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+            End If
+
+        Next
+
+        ' Low Sec
+        For i = 0 To 3
+            ' Crokite, Gneiss, and Dark Ochre will spawn in Anomalies
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Crokite & ",'Low Sec','" & GetOreRegion(i) & "',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.SharpCrokite & ",'Low Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CrystallineCrokite & ",'Low Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Gneiss & ",'Low Sec','" & GetOreRegion(i) & "',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.IridescentGneiss & ",'Low Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.PrismaticGneiss & ",'Low Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.DarkOchre & ",'Low Sec','" & GetOreRegion(i) & "',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.OnyxOchre & ",'Low Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.ObsidianOchre & ",'Low Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+
+            If i <> 2 Then
+                ' No Kernite in Gallente
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Kernite & ",'Low Sec','" & GetOreRegion(i) & "',0)", EVEIPHSQLiteDB.DBRef)
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.LuminousKernite & ",'Low Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.FieryKernite & ",'Low Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+            End If
+
+            If i <> 2 And i <> 3 Then
+                ' No Pyroxeres in Gallente or Minmatar
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Pyroxeres & ",'Low Sec','" & GetOreRegion(i) & "',0)", EVEIPHSQLiteDB.DBRef)
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.SolidPyroxeres & ",'Low Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.ViscousPyroxeres & ",'Low Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+            End If
+
+            If i = 2 Or i = 3 Then
+                ' Omber in Gallente and Minmatar
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Omber & ",'Low Sec','" & GetOreRegion(i) & "',0)", EVEIPHSQLiteDB.DBRef)
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.SilveryOmber & ",'Low Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GoldenOmber & ",'Low Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+            End If
+
+            If i = 0 Or i = 2 Then
+                ' Jaspet in Amarr and Gallente
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Jaspet & ",'Low Sec','" & GetOreRegion(i) & "',0)", EVEIPHSQLiteDB.DBRef)
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.PristineJaspet & ",'Low Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.PureJaspet & ",'Low Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+                ' Hemorphite in Amarr and Gallente
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Hemorphite & ",'Low Sec','" & GetOreRegion(i) & "',0)", EVEIPHSQLiteDB.DBRef)
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.RadiantHemorphite & ",'Low Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.VividHemorphite & ",'Low Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+            End If
+
+            If i <> 0 And i <> 2 Then
+                ' No Hedbergite in Amarr or Gallente
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Hedbergite & ",'Low Sec','" & GetOreRegion(i) & "',0)", EVEIPHSQLiteDB.DBRef)
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GlazedHedbergite & ",'Low Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.VitricHedbergite & ",'Low Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+            End If
+        Next
+
+        ' Null Sec
+        For i = 0 To 3
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Veldspar & ",'Null Sec','" & GetOreRegion(i) & "',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.ConcentratedVeldspar & ",'Null Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.DenseVeldspar & ",'Null Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Spodumain & ",'Null Sec','" & GetOreRegion(i) & "',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.BrightSpodumain & ",'Null Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GleamingSpodumain & ",'Null Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Kernite & ",'Null Sec','" & GetOreRegion(i) & "',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.LuminousKernite & ",'Null Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.FieryKernite & ",'Null Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Arkonor & ",'Null Sec','" & GetOreRegion(i) & "',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CrimsonArkonor & ",'Null Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.PrimeArkonor & ",'Null Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Bistot & ",'Null Sec','" & GetOreRegion(i) & "',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.MonoclinicBistot & ",'Null Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.TriclinicBistot & ",'Null Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Pyroxeres & ",'Null Sec','" & GetOreRegion(i) & "',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.SolidPyroxeres & ",'Null Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.ViscousPyroxeres & ",'Null Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Crokite & ",'Null Sec','" & GetOreRegion(i) & "',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.SharpCrokite & ",'Null Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CrystallineCrokite & ",'Null Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Omber & ",'Null Sec','" & GetOreRegion(i) & "',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.SilveryOmber & ",'Null Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GoldenOmber & ",'Null Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Mercoxit & ",'Null Sec','" & GetOreRegion(i) & "',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.VitreousMercoxit & ",'Null Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.MagmaMercoxit & ",'Null Sec','" & GetOreRegion(i) & "',1)", EVEIPHSQLiteDB.DBRef)
+        Next
+
+        ' Wormholes
+        For i = 0 To 5
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Kernite & ",'" & GetWHClass(i) & "','WH',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.LuminousKernite & ",'" & GetWHClass(i) & "','WH',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.FieryKernite & ",'" & GetWHClass(i) & "','WH',0)", EVEIPHSQLiteDB.DBRef)
+
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Arkonor & ",'" & GetWHClass(i) & "','WH',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CrimsonArkonor & ",'" & GetWHClass(i) & "','WH',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.PrimeArkonor & ",'" & GetWHClass(i) & "','WH',0)", EVEIPHSQLiteDB.DBRef)
+
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Bistot & ",'" & GetWHClass(i) & "','WH',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.MonoclinicBistot & ",'" & GetWHClass(i) & "','WH',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.TriclinicBistot & ",'" & GetWHClass(i) & "','WH',0)", EVEIPHSQLiteDB.DBRef)
+
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Pyroxeres & ",'" & GetWHClass(i) & "','WH',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.SolidPyroxeres & ",'" & GetWHClass(i) & "','WH',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.ViscousPyroxeres & ",'" & GetWHClass(i) & "','WH',0)", EVEIPHSQLiteDB.DBRef)
+
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Omber & ",'" & GetWHClass(i) & "','WH',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.SilveryOmber & ",'" & GetWHClass(i) & "','WH',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GoldenOmber & ",'" & GetWHClass(i) & "','WH',0)", EVEIPHSQLiteDB.DBRef)
+
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Gneiss & ",'" & GetWHClass(i) & "','WH',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.IridescentGneiss & ",'" & GetWHClass(i) & "','WH',0)", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.PrismaticGneiss & ",'" & GetWHClass(i) & "','WH',0)", EVEIPHSQLiteDB.DBRef)
+        Next
+
+        ' Gas
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.AmberCytoserocin & ",'Low Sec','Caldari',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.AmberCytoserocin & ",'Null Sec','Caldari',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.AmberCytoserocin & ",'Null Sec','Caldari',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GoldenCytoserocin & ",'Low Sec','Caldari',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GoldenCytoserocin & ",'Null Sec','Caldari',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GoldenCytoserocin & ",'Null Sec','Caldari',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GoldenCytoserocin & ",'Null Sec','Caldari',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GoldenCytoserocin & ",'Null Sec','Caldari',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.ViridianCytoserocin & ",'Null Sec','Gallente',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.ViridianCytoserocin & ",'Low Sec','Gallente',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CeladonCytoserocin & ",'Null Sec','Gallente',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CeladonCytoserocin & ",'Null Sec','Gallente',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CeladonCytoserocin & ",'Null Sec','Gallente',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CeladonCytoserocin & ",'Null Sec','Gallente',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CeladonCytoserocin & ",'Low Sec','Gallente',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.MalachiteCytoserocin & ",'Low Sec','Amarr',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.MalachiteCytoserocin & ",'Null Sec','Amarr',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.LimeCytoserocin & ",'Null Sec','Amarr',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.LimeCytoserocin & ",'Low Sec','Amarr',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.VermillionCytoserocin & ",'Null Sec','Minmatar',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.VermillionCytoserocin & ",'Null Sec','Minmatar',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.VermillionCytoserocin & ",'Low Sec','Minmatar',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.AzureCytoserocin & ",'Low Sec','Minmatar',-2)", EVEIPHSQLiteDB.DBRef)
+
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.AmberMykoserocin & ",'Low Sec','Caldari',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.AmberMykoserocin & ",'Low Sec','Caldari',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.AzureMykoserocin & ",'Low Sec','Minmatar',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.AzureMykoserocin & ",'Low Sec','Minmatar',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CeladonMykoserocin & ",'High Sec','Gallente',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CeladonMykoserocin & ",'High Sec','Gallente',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GoldenMykoserocin & ",'Low Sec','Caldari',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GoldenMykoserocin & ",'High Sec','Caldari',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.LimeMykoserocin & ",'Low Sec','Amarr',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.MalachiteMykoserocin & ",'High Sec','Amarr',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.VermillionMykoserocin & ",'High Sec','Minmatar',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.VermillionMykoserocin & ",'High Sec','Minmatar',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.ViridianMykoserocin & ",'Low Sec','Gallente',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.ViridianMykoserocin & ",'Low Sec','Gallente',-2)", EVEIPHSQLiteDB.DBRef)
+
+        ' T3 Gas
+        For i = 0 To 6
+            Select Case i
+                Case 0
+                    CurrentOre = MiningMat.FulleriteC50
+                Case 1
+                    CurrentOre = MiningMat.FulleriteC60
+                Case 2
+                    CurrentOre = MiningMat.FulleriteC70
+                Case 3
+                    CurrentOre = MiningMat.FulleriteC72
+                Case 4
+                    CurrentOre = MiningMat.FulleriteC84
+                Case 5
+                    CurrentOre = MiningMat.FulleriteC28
+                Case 6
+                    CurrentOre = MiningMat.FulleriteC32
+            End Select
+
+            For j = 0 To 5 ' Security type
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & CurrentOre & ",'" & GetWHClass(j) & "','WH',-2)", EVEIPHSQLiteDB.DBRef)
+            Next
+        Next
+
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.FulleriteC320 & ",'C5','WH',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.FulleriteC320 & ",'C6','WH',-2)", EVEIPHSQLiteDB.DBRef)
+
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.FulleriteC540 & ",'C5','WH',-2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.FulleriteC540 & ",'C6','WH',-2)", EVEIPHSQLiteDB.DBRef)
 
         ' Moon ores - all systems, all space
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45490,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45491,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45492,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45493,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45494,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45495,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45496,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45497,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45498,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45499,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45500,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45501,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45502,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45503,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45504,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45506,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45510,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45511,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45512,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45513,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46280,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46281,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46282,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46283,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46284,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46285,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46286,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46287,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46288,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46289,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46290,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46291,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46292,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46293,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46294,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46295,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46296,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46297,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46298,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46299,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46300,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46301,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46302,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46303,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46304,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46305,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46306,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46307,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46308,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46309,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46310,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46311,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46312,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46313,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46314,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46315,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46316,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46317,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46318,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46319,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46675,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46676,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46677,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46678,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46679,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46680,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46681,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46682,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46683,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46684,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46685,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46686,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46687,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45490,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45491,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45492,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45493,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45494,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45495,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45496,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45497,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45498,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45499,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45500,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45501,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45502,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45503,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45504,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45506,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45510,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45511,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45512,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45513,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46280,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46281,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46282,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46283,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46284,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46285,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46286,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46287,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46288,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46289,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46290,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46291,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46292,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46293,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46294,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46295,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46296,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46297,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46298,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46299,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46300,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46301,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46302,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46303,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46304,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46305,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46306,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46307,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46308,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46309,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46310,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46311,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46312,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46313,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46314,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46315,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46316,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46317,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46318,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46319,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46675,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46676,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46677,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46678,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46679,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46680,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46681,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46682,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46683,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46684,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46685,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46686,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46687,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45490,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45491,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45492,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45493,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45494,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46676,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46677,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46678,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46679,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46680,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46681,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46682,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46683,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46684,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46685,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46686,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46687,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45490,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45491,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45492,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45493,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45494,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45495,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45496,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45497,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45498,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45499,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45500,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45501,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45502,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45503,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45504,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45506,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45510,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45511,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45512,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45513,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46280,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46281,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46282,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46283,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46284,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46285,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46286,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46287,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46288,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46289,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46290,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46291,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46292,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46293,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46294,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46295,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46296,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46297,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46298,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46299,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46300,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46301,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46302,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46303,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46304,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46305,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46306,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46307,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46308,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46309,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46310,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46311,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46312,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46313,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46314,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46315,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46316,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46317,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46318,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46319,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46675,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46676,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46677,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46678,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46679,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46680,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46681,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46682,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46683,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46684,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46685,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46686,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46687,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45490,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45491,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45492,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45493,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45494,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45495,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45496,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45497,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45498,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45499,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45500,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45501,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45502,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45503,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45504,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45506,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45510,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45511,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45512,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45513,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46280,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46281,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46282,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46283,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46284,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46285,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46286,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46287,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46288,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46289,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46290,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46291,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46292,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46293,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46294,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46295,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46296,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46297,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46298,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46299,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46300,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46301,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46302,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46303,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46304,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46305,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46306,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46307,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46308,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46309,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46310,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46311,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46312,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46313,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46314,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46315,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46316,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46317,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46318,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46319,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46675,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46676,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46677,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46678,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46679,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46680,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46681,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46682,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46683,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46684,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46685,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46686,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46687,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45490,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45491,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45492,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45493,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45494,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46676,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46677,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46678,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46679,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46680,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46681,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46682,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46683,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46684,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46685,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46686,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46687,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45490,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45491,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45492,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45493,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45494,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45495,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45496,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45497,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45498,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45499,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45500,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45501,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45502,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45503,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45504,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45506,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45510,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45511,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45512,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45513,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46280,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46281,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46282,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46283,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46284,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46285,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46286,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46287,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46288,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46289,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46290,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46291,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46292,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46293,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46294,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46295,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46296,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46297,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46298,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46299,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46300,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46301,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46302,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46303,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46304,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46305,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46306,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46307,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46308,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46309,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46310,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46311,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46312,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46313,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46314,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46315,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46316,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46317,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46318,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46319,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46675,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46676,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46677,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46678,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46679,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46680,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46681,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46682,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46683,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46684,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46685,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46686,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46687,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45490,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45491,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45492,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45493,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45494,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45495,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45496,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45497,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45498,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45499,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45500,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45501,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45502,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45503,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45504,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45506,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45510,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45511,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45512,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45513,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46280,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46281,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46282,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46283,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46284,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46285,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46286,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46287,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46288,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46289,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46290,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46291,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46292,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46293,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46294,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46295,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46296,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46297,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46298,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46299,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46300,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46301,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46302,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46303,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46304,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46305,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46306,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46307,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46308,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46309,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46310,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46311,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46312,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46313,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46314,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46315,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46316,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46317,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46318,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46319,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46675,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46676,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46677,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46678,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46679,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46680,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46681,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46682,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46683,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46684,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46685,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46686,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46687,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45490,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45491,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45492,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45493,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46676,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46677,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46678,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46679,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46680,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46681,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46682,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46683,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46684,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46685,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46686,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46687,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45490,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45491,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45492,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45493,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45494,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45495,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45496,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45497,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45498,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45499,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45500,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45501,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45502,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45503,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45504,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45506,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45510,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45511,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45512,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45513,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46280,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46281,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46282,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46283,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46284,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46285,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46286,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46287,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46288,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46289,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46290,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46291,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46292,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46293,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46294,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46295,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46296,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46297,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46298,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46299,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46300,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46301,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46302,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46303,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46304,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46305,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46306,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46307,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46308,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46309,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46310,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46311,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46312,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46313,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46314,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46315,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46316,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46317,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46318,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46319,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46675,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46676,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46677,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46678,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46679,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46680,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46681,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46682,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46683,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46684,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46685,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46686,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46687,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45490,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45491,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45492,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45493,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45494,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45495,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45496,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45497,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45498,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45499,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45500,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45501,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45502,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45503,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45504,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45506,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45510,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45511,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45512,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45513,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46280,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46281,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46282,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46283,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46284,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46285,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46286,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46287,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46288,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46289,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46290,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46291,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46292,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46293,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46294,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46295,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46296,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46297,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46298,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46299,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46300,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46301,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46302,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46303,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46304,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46305,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46306,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46307,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46308,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46309,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46310,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46311,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46312,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46313,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46314,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46315,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46316,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46317,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46318,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46319,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46675,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46676,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46677,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46678,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46679,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46680,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46681,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46682,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46683,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46684,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46685,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46686,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46687,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45490,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45491,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45492,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (45493,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46676,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46677,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46678,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46679,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46680,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46681,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46682,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46683,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46684,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46685,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46686,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46687,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46688,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (46689,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        For i = 0 To 11 ' Moon ores
+            Select Case i
+                ' Ubiquitous Moon Asteroids
+                Case 0
+                    CurrentOre = MiningMat.Zeolites
+                Case 1
+                    CurrentOre = MiningMat.BrimfulZeolites
+                Case 2
+                    CurrentOre = MiningMat.GlisteningZeolites
+                Case 3
+                    CurrentOre = MiningMat.Coesite
+                Case 4
+                    CurrentOre = MiningMat.BrimfulCoesite
+                Case 5
+                    CurrentOre = MiningMat.GlisteningCoesite
+                Case 6
+                    CurrentOre = MiningMat.Sylvite
+                Case 7
+                    CurrentOre = MiningMat.BrimfulSylvite
+                Case 8
+                    CurrentOre = MiningMat.GlisteningSylvite
+                Case 9
+                    CurrentOre = MiningMat.Bitumens
+                Case 10
+                    CurrentOre = MiningMat.BrimfulBitumens
+                Case 11
+                    CurrentOre = MiningMat.GlisteningBitumens
+                ' Common Moon Asteroids
+                Case 12
+                    CurrentOre = MiningMat.Cobaltite
+                Case 13
+                    CurrentOre = MiningMat.CopiousCobaltite
+                Case 14
+                    CurrentOre = MiningMat.TwinklingCobaltite
+                Case 15
+                    CurrentOre = MiningMat.Euxenite
+                Case 16
+                    CurrentOre = MiningMat.CopiousEuxenite
+                Case 17
+                    CurrentOre = MiningMat.TwinklingEuxenite
+                Case 18
+                    CurrentOre = MiningMat.Titanite
+                Case 19
+                    CurrentOre = MiningMat.CopiousTitanite
+                Case 20
+                    CurrentOre = MiningMat.TwinklingTitanite
+                Case 21
+                    CurrentOre = MiningMat.Scheelite
+                Case 22
+                    CurrentOre = MiningMat.CopiousScheelite
+                Case 23
+                    CurrentOre = MiningMat.TwinklingScheelite
+                ' Uncommon Moon Asteroids
+                Case 24
+                    CurrentOre = MiningMat.Otavite
+                Case 25
+                    CurrentOre = MiningMat.LavishOtavite
+                Case 26
+                    CurrentOre = MiningMat.ShimmeringOtavite
+                Case 27
+                    CurrentOre = MiningMat.Sperrylite
+                Case 28
+                    CurrentOre = MiningMat.LavishSperrylite
+                Case 29
+                    CurrentOre = MiningMat.ShimmeringSperrylite
+                Case 30
+                    CurrentOre = MiningMat.Vanadinite
+                Case 31
+                    CurrentOre = MiningMat.LavishVanadinite
+                Case 32
+                    CurrentOre = MiningMat.ShimmeringVanadinite
+                Case 33
+                    CurrentOre = MiningMat.Chromite
+                Case 34
+                    CurrentOre = MiningMat.LavishChromite
+                Case 35
+                    CurrentOre = MiningMat.ShimmeringChromite
+                ' Rare Moon Asteroids
+                Case 36
+                    CurrentOre = MiningMat.Carnotite
+                Case 37
+                    CurrentOre = MiningMat.GlowingCarnotite
+                Case 38
+                    CurrentOre = MiningMat.RepleteCarnotite
+                Case 39
+                    CurrentOre = MiningMat.Zircon
+                Case 40
+                    CurrentOre = MiningMat.GlowingZircon
+                Case 41
+                    CurrentOre = MiningMat.RepleteZircon
+                Case 42
+                    CurrentOre = MiningMat.Pollucite
+                Case 43
+                    CurrentOre = MiningMat.GlowingPollucite
+                Case 44
+                    CurrentOre = MiningMat.RepletePollucite
+                Case 45
+                    CurrentOre = MiningMat.Cinnabar
+                Case 46
+                    CurrentOre = MiningMat.GlowingCinnabar
+                Case 47
+                    CurrentOre = MiningMat.RepleteCinnabar
+                ' Exceptional Moon Asteroids
+                Case 48
+                    CurrentOre = MiningMat.Xenotime
+                Case 49
+                    CurrentOre = MiningMat.BountifulXenotime
+                Case 50
+                    CurrentOre = MiningMat.ShiningXenotime
+                Case 51
+                    CurrentOre = MiningMat.Monazite
+                Case 52
+                    CurrentOre = MiningMat.BountifulMonazite
+                Case 53
+                    CurrentOre = MiningMat.ShiningMonazite
+                Case 54
+                    CurrentOre = MiningMat.Loparite
+                Case 55
+                    CurrentOre = MiningMat.BountifulLoparite
+                Case 56
+                    CurrentOre = MiningMat.ShiningLoparite
+                Case 57
+                    CurrentOre = MiningMat.Ytterbite
+                Case 58
+                    CurrentOre = MiningMat.BountifulYtterbite
+                Case 59
+                    CurrentOre = MiningMat.ShiningYtterbite
+            End Select
 
-        ' Talassonite
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52306,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52306,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52306,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52306,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52306,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52306,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52306,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52306,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52306,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52306,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52306,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52306,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+            For j = 0 To 3 ' region type
+                For k = 0 To 2 ' Security type
+                    Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & CurrentOre & ",'" & GetSecurityType(k) & "','" & GetOreRegion(j) & "',0)", EVEIPHSQLiteDB.DBRef)
+                Next
+            Next
+        Next
 
-        ' Rakovene
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52315,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52315,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52315,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52315,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52315,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52315,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52315,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52315,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52315,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52315,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52315,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52315,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+        ' Abyssal Mining - need to check on all of these to make sure you can get them from anywhere
+        For i = 0 To 9
+            Select Case i
+                Case 0
+                    CurrentOre = MiningMat.Talassonite
+                Case 1
+                    CurrentOre = MiningMat.AbyssalTalassonite
+                Case 2
+                    CurrentOre = MiningMat.HadalTalassonite
+                Case 3
+                    CurrentOre = MiningMat.Rakovene
+                Case 4
+                    CurrentOre = MiningMat.AbyssalRakovene
+                Case 5
+                    CurrentOre = MiningMat.HadalRakovene
+                Case 6
+                    CurrentOre = MiningMat.Bezdnacine
+                Case 7
+                    CurrentOre = MiningMat.AbyssalBezdnacine
+                Case 8
+                    CurrentOre = MiningMat.HadalBezdnacine
+            End Select
 
-        ' Bezdnacine
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52316,'High Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52316,'High Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52316,'High Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52316,'High Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52316,'Low Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52316,'Low Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52316,'Low Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52316,'Low Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52316,'Null Sec','Amarr',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52316,'Null Sec','Caldari',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52316,'Null Sec','Gallente',0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (52316,'Null Sec','Minmatar',0)", EVEIPHSQLiteDB.DBRef)
+            For j = 0 To 3 ' region type
+                For k = 0 To 2 ' Security type
+                    Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & CurrentOre & ",'" & GetSecurityType(k) & "','" & GetOreRegion(j) & "',0)", EVEIPHSQLiteDB.DBRef)
+                Next
+            Next
+        Next
+
+        'Ice Belts
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.ClearIcicle & ",'High Sec','Amarr',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.ClearIcicle & ",'Low Sec','Amarr',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.ClearIcicle & ",'Null Sec','Amarr',-1)", EVEIPHSQLiteDB.DBRef)
+
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GlacialMass & ",'High Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GlacialMass & ",'Low Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GlacialMass & ",'Null Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBRef)
+
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.BlueIce & ",'High Sec','Gallente',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.BlueIce & ",'Low Sec','Gallente',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.BlueIce & ",'Null Sec','Gallente',-1)", EVEIPHSQLiteDB.DBRef)
+
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.WhiteGlaze & ",'High Sec','Caldari',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.WhiteGlaze & ",'Low Sec','Caldari',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.WhiteGlaze & ",'Null Sec','Caldari',-1)", EVEIPHSQLiteDB.DBRef)
+
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GlareCrust & ",'Low Sec','Amarr',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GlareCrust & ",'Null Sec','Amarr',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GlareCrust & ",'Low Sec','Caldari',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GlareCrust & ",'Null Sec','Caldari',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GlareCrust & ",'Low Sec','Gallente',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GlareCrust & ",'Null Sec','Gallente',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GlareCrust & ",'Low Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GlareCrust & ",'Null Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBRef)
+
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.DarkGlitter & ",'Low Sec','Amarr',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.DarkGlitter & ",'Null Sec','Amarr',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.DarkGlitter & ",'Low Sec','Caldari',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.DarkGlitter & ",'Null Sec','Caldari',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.DarkGlitter & ",'Low Sec','Gallente',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.DarkGlitter & ",'Null Sec','Gallente',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.DarkGlitter & ",'Low Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.DarkGlitter & ",'Null Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBRef)
+
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Gelidus & ",'Null Sec','Amarr',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Gelidus & ",'Null Sec','Caldari',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Gelidus & ",'Null Sec','Gallente',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Gelidus & ",'Null Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Krystallos & ",'Null Sec','Amarr',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Krystallos & ",'Null Sec','Caldari',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Krystallos & ",'Null Sec','Gallente',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Krystallos & ",'Null Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.ThickBlueIce & ",'Null Sec','Gallente',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.PristineWhiteGlaze & ",'Null Sec','Caldari',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.SmoothGlacialMass & ",'Null Sec','Minmatar',-1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.EnrichedClearIcicle & ",'Null Sec','Amarr',-1)", EVEIPHSQLiteDB.DBRef)
 
         SQL = "CREATE INDEX IDX_ORE_LOCS_ORE_ID ON ORE_LOCATIONS (ORE_ID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -6579,8 +5580,8 @@ Public Class frmMain
         mainSQL = mainSQL & "mapSolarSystems.solarSystemID, "
         mainSQL = mainSQL & "mapSolarSystems.solarSystemName, "
         mainSQL = mainSQL & "mapSolarSystems.security, "
-        mainSQL = mainSQL & "mapDenormalize.itemName AS Station "
-        msSQL2 = "FROM agents INNER JOIN researchAgents ON agents.agentID = researchAgents.agentID "
+        mainSQL = mainSQL & "invNames_1.itemName AS Station "
+        msSQL2 = "FROM agents, invNames as invNames_1 INNER JOIN researchAgents ON agents.agentID = researchAgents.agentID "
         msSQL2 = msSQL2 & "INNER JOIN invTypes ON researchAgents.typeID = invTypes.typeID "
         msSQL2 = msSQL2 & "INNER JOIN npcCorporations ON agents.corporationID = npcCorporations.corporationID "
         msSQL2 = msSQL2 & "INNER JOIN invNames ON researchAgents.agentID = invNames.itemID "
@@ -6589,7 +5590,7 @@ Public Class frmMain
         msSQL2 = msSQL2 & "INNER JOIN mapConstellations ON mapDenormalize.constellationID = mapConstellations.constellationID "
         msSQL2 = msSQL2 & "INNER JOIN mapRegions ON mapDenormalize.regionID = mapRegions.regionID "
         msSQL2 = msSQL2 & "INNER JOIN factions ON npcCorporations.factionID = factions.factionID "
-        msSQL2 = msSQL2 & "WHERE agents.agentTypeID= 4"
+        msSQL2 = msSQL2 & "WHERE agents.agentTypeID= 4 AND mapDenormalize.itemID = invNames_1.itemID"
 
         ' Get the count
         SQLCommand = New SQLiteCommand("SELECT COUNT(*) " & msSQL2, SDEDB.DBRef)
@@ -6744,7 +5745,7 @@ Public Class frmMain
 
         SQL = "CREATE TABLE REGIONS ("
         SQL &= "regionID INTEGER PRIMARY KEY,"
-        SQL &= "regionName VARCHAR(20),"
+        SQL &= "regionName VARCHAR(20) NOT NULL,"
         SQL &= "factionID INTEGER"
         SQL &= ")"
 
@@ -6805,7 +5806,7 @@ Public Class frmMain
         SQL = "CREATE TABLE CONSTELLATIONS ("
         SQL &= "regionID INTEGER NOT NULL,"
         SQL &= "constellationID INTEGER PRIMARY KEY,"
-        SQL &= "constellationName VARCHAR(20)"
+        SQL &= "constellationName VARCHAR(20) NOT NULL"
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
