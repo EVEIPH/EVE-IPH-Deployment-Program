@@ -2003,7 +2003,7 @@ Public Class frmMain
         SQL &= "OR (ITEM_CATEGORY = 'Subsystem') "
         SQL &= "OR (ITEM_CATEGORY = 'Module' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE marketGroupID IN (562,565,568,572,575,578,1673,1674))) "
         SQL &= "OR (ITEM_CATEGORY IN ('Charge','Module') AND ITEM_NAME Like '%Heavy%' AND ITEM_NAME Not Like '%Jolt%')  "
-        SQL &= "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE groupID IN (1201,1202,419,540,26,380,543,833,358,894,28,832,463,963)))) "
+        SQL &= "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE groupID IN (906,106,1201,1202,419,540,26,380,543,833,358,894,28,832,463,963)))) "
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
         ' Drones are Heavy, missiles are cruise/torp, towers are regular towers (Caldari Control Tower)
@@ -2035,6 +2035,7 @@ Public Class frmMain
         SQL &= "OR ITEM_GROUP IN ('Station Components', 'Remote ECM Burst', 'Super Weapon', 'Siege Module')"
         SQL &= "OR ITEM_NAME IN ('Cap Booster 400','Cap Booster 800') "
         SQL &= "OR (ITEM_CATEGORY = 'Fighter') "
+        SQL &= "OR (ITEM_CATEGORY IN ('Starbase','Structure Module')) "
         SQL &= "OR (ITEM_CATEGORY = 'Module' AND (ITEM_ID IN (SELECT typeID FROM invTypes WHERE marketGroupID IN (771,772,773,774,775,776,1642,1941)))) "
         SQL &= "OR (ITEM_GROUP IN ('Jump Drive Economizer','Drone Control Unit') OR ITEM_NAME LIKE 'Jump Portal%') "
         SQL &= "OR (ITEM_CATEGORY IN ('Charge','Module') AND ITEM_NAME Like '%Citadel%') "
@@ -2043,11 +2044,11 @@ Public Class frmMain
         SQL &= "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE groupID IN (30,485,513,547,659,883,902,941,1538))))"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
-        ' Anything left update to small (may need to revisit later)
-        SQL = "UPDATE ALL_BLUEPRINTS SET SIZE_GROUP = 'S' WHERE SIZE_GROUP = 'XX'"
+        SQL = "UPDATE ALL_BLUEPRINTS SET SIZE_GROUP = 'XL' WHERE ITEM_NAME = 'Orca'"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
-        SQL = "UPDATE ALL_BLUEPRINTS SET SIZE_GROUP = 'XL' WHERE ITEM_NAME = 'Orca'"
+        ' Anything left update to small (may need to revisit later)
+        SQL = "UPDATE ALL_BLUEPRINTS SET SIZE_GROUP = 'S' WHERE SIZE_GROUP = 'XX'"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
         ' Now build the tables
@@ -2275,7 +2276,7 @@ Public Class frmMain
         ' Finally, create the view
         SQL = "CREATE VIEW ALL_BLUEPRINT_MATERIALS AS SELECT "
         SQL &= "BLUEPRINT_ID, INVENTORY_TYPES.typeName AS BLUEPRINT_NAME, PRODUCT_ID, MATERIAL_ID, MATERIAL, "
-        SQL &= "INVENTORY_GROUPS.groupName AS MATERIAL_GROUP, INVENTORY_CATEGORIES.categoryName AS MATERIAL_CATEGORY, "
+        SQL &= "MATERIAL_GROUP_ID, INVENTORY_GROUPS.groupName AS MATERIAL_GROUP, MATERIAL_CATEGORY_ID, INVENTORY_CATEGORIES.categoryName AS MATERIAL_CATEGORY, "
         SQL &= "MATERIAL_VOLUME, QUANTITY, ACTIVITY, CONSUME "
         SQL &= "FROM ALL_BLUEPRINT_MATERIALS_FACT, INVENTORY_TYPES, INVENTORY_GROUPS, INVENTORY_CATEGORIES "
         SQL &= "WHERE BLUEPRINT_ID = INVENTORY_TYPES.typeID AND MATERIAL_CATEGORY_ID = INVENTORY_CATEGORIES.categoryID "
@@ -4628,8 +4629,8 @@ Public Class frmMain
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.FulleriteC540 & ",'C5','WH',-2)", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.FulleriteC540 & ",'C6','WH',-2)", EVEIPHSQLiteDB.DBRef)
 
-        ' Moon ores - all systems, all space
-        For i = 0 To 11 ' Moon ores
+        ' Moon ores 
+        For i = 0 To 59 ' Moon ores
             Select Case i
                 ' Ubiquitous Moon Asteroids
                 Case 0
@@ -4758,11 +4759,34 @@ Public Class frmMain
                     CurrentOre = MiningMat.ShiningYtterbite
             End Select
 
-            For j = 0 To 3 ' region type
-                For k = 0 To 2 ' Security type
-                    Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & CurrentOre & ",'" & GetSecurityType(k) & "','" & GetOreRegion(j) & "',0)", EVEIPHSQLiteDB.DBRef)
+            ' There are 5 classes Of moon ore, as shown in the table below. 
+            ' All classes are available in low And null-sec systems, but High sec 
+            ' And Wormhole systems may only have R4 (Ubiquitous) ores.
+            '
+            '            Ubiquitous  Common 	Uncommon 	Rare 	Exceptional
+            '               R4         R8 	       R16 	    R32 	   R64
+            'High Sec 	    ✔ 				
+            'Low Sec 	    ✔ 	        ✔ 	        ✔ 	    ✔ 	        ✔
+            'Null Sec 	    ✔ 	        ✔       	✔   	✔ 	        ✔
+            'Wormhole 	    ✔ 				
+
+            ' R4 moons
+            If i <= 11 Then ' Ubiquitous gets all security types
+                For j = 0 To 3 ' region type
+                    For k = 0 To 2 ' Security type
+                        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & CurrentOre & ",'" & GetSecurityType(k) & "','Moon',0)", EVEIPHSQLiteDB.DBRef)
+                    Next
                 Next
-            Next
+            End If
+
+            ' R8, R16, R32, R64 moons
+            If i > 11 Then
+                For j = 0 To 3 ' All regions but only low and null
+                    Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & CurrentOre & ",'Low Sec','Moon',0)", EVEIPHSQLiteDB.DBRef)
+                    Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & CurrentOre & ",'Null Sec','Moon',0)", EVEIPHSQLiteDB.DBRef)
+                Next
+            End If
+
         Next
 
         ' Abyssal Mining - need to check on all of these to make sure you can get them from anywhere
@@ -4790,7 +4814,7 @@ Public Class frmMain
 
             For j = 0 To 3 ' region type
                 For k = 0 To 2 ' Security type
-                    Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & CurrentOre & ",'" & GetSecurityType(k) & "','" & GetOreRegion(j) & "',0)", EVEIPHSQLiteDB.DBRef)
+                    Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & CurrentOre & ",'" & GetSecurityType(k) & "','Triglavian',0)", EVEIPHSQLiteDB.DBRef)
                 Next
             Next
         Next
@@ -5952,7 +5976,9 @@ Public Class frmMain
         Call SetProgressBarValues("invTypes")
 
         ' Pull new data and insert
-        mainSQL = "SELECT * FROM invTypes "
+        mainSQL = "SELECT typeID, groupID, typeName, description, mass, volume, packagedVolume, capacity, portionSize, "
+        mainSQL &= "factionID, raceID, basePrice, published, marketGroupID, graphicID, radius, iconID, soundID, sofFactionName, "
+        mainSQL &= "sofMaterialSetID, metaGroupID, variationparentTypeID FROM invTypes "
         SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
         SQLReader1 = SQLCommand.ExecuteReader()
 
@@ -6037,7 +6063,7 @@ Public Class frmMain
         Call SetProgressBarValues("invGroups")
 
         ' Pull new data and insert
-        mainSQL = "SELECT * FROM invGroups"
+        mainSQL = "SELECT groupID, categoryID, groupName, iconID, useBasePrice, anchored, anchorable, fittableNonSingleton, published FROM invGroups"
         SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
         SQLReader1 = SQLCommand.ExecuteReader()
 
