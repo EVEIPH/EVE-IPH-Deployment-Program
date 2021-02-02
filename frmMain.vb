@@ -925,7 +925,7 @@ Public Class frmMain
         While rsReader.Read
             Application.DoEvents()
             Try
-                Call DownloadImageFromServer(CLng(rsReader.GetValue(0)), ImageType.Icon, 32, EVEIPHImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_64.png")
+                Call DownloadImageFromServer(CLng(rsReader.GetValue(0)), ImageType.Icon, 32, EVEIPHImageFolder & "\" & CStr(Math.Abs(rsReader.GetValue(0))) & "_32.png")
             Catch
                 ' Build a file with the BP ID's and Names that do not have a image
                 OutputFile.WriteLine(rsReader(0).ToString & " - " & rsReader(1).ToString)
@@ -1579,8 +1579,8 @@ Public Class frmMain
         'lblTableName.Text = "Building: RAM_ASSEMBLY_LINE_TYPES"
         'Call Build_RAM_ASSEMBLY_LINE_TYPES()
 
-        lblTableName.Text = "Building: RAM_INSTALLATION_TYPE_CONTENTS"
-        Call Build_RAM_INSTALLATION_TYPE_CONTENTS()
+        'lblTableName.Text = "Building: RAM_INSTALLATION_TYPE_CONTENTS"
+        'Call Build_RAM_INSTALLATION_TYPE_CONTENTS()
 
         lblTableName.Text = "Building: INDUSTRY_ACTIVITY_PRODUCTS"
         Call Build_INDUSTRY_ACTIVITY_PRODUCTS()
@@ -1668,6 +1668,9 @@ Public Class frmMain
 
         lblTableName.Text = "Building: INDUSTRY_UPGRADE_BELTS"
         Call Build_INDUSTRY_UPGRADE_BELTS()
+
+        lblTableName.Text = "Building: ICE_BELTS"
+        Call Build_ICE_BELTS()
 
         lblTableName.Text = "Building: PLANET_SCHEMATICS"
         Call Build_PLANET_SCHEMATICS()
@@ -1828,6 +1831,20 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         SQL = "DELETE FROM ALL_BLUEPRINTS_FACT WHERE ITEM_GROUP_ID = 716"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        ' For some reason faction mining drones are marked as navy (16) and not pirate (15) item types
+        SQL = "UPDATE ALL_BLUEPRINTS_FACT SET ITEM_TYPE = 15 WHERE ITEM_TYPE = 16 AND ITEM_GROUP_ID IN (101, 1159)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        ' Create some helpful views for debugging
+        SQL = "CREATE VIEW [ATTRIB_LOOKUP] AS SELECT [type_attributes].[typeID] AS [typeID], [typename], [type_attributes].[attributeID] AS [attributeID], 
+               [value], [attributeName], [displayNameID] FROM [type_attributes], [attribute_types], [inventory_types] 
+               WHERE  [type_attributes].[attributeid] = [attribute_types].[attributeID] AND [inventory_types].[typeid] = [type_attributes].[typeid] ORDER  BY [attributename]"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "CREATE VIEW [ITEM_LOOKUP] AS SELECT [typeID], [typeName], [IT].[groupID] AS [groupID], [groupName], [IC].[categoryID] AS [categoryID], [categoryName]
+               FROM [INVENTORY_TYPES] AS [IT], [INVENTORY_GROUPS] AS [IG], [INVENTORY_CATEGORIES] AS [IC] WHERE  [IT].[groupID] = [IG].[groupID] AND [IG].[categoryID] = [IC].[categoryID]"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         lblTableName.Text = "Finalizing..."
@@ -2743,6 +2760,86 @@ Public Class frmMain
 
     End Sub
 
+    ' ICE_BELTS
+    Private Sub Build_ICE_BELTS()
+        Dim SQL As String
+
+        ' Build the table
+        SQL = "CREATE TABLE ICE_BELTS ("
+        SQL &= "ICE_ID INTEGER NOT NULL,"
+        SQL &= "AMOUNT INTEGER NOT NULL,"
+        SQL &= "RACE_ID INTEGER NOT NULL,"
+        SQL &= "LOCATION_ID INTEGER NOT NULL" ' 0 - HIGHSEC, 1 - LOWSEC, 2 - NULLWEAK, 3 - NULLSTRONG
+        SQL &= ")"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
+
+        ' Since this is all data I created, just do inserts here 
+        ' Data from: https://forums-archive.eveonline.com/topic/233835/
+        ' Highsec
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16265,2500,1,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16263,2500,2,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16262,2500,4,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16264,2500,8,0)", EVEIPHSQLiteDB.DBRef)
+        ' Lowsec
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16265,3000,1,1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16263,3000,2,1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16262,3000,4,1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16264,3000,8,1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16266,400,1,1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16266,400,2,1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16266,400,4,1)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16266,400,8,1)", EVEIPHSQLiteDB.DBRef)
+        ' Nullsec weak truesec (0.0 to -0.5)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (17976,3000,1,2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (17977,3000,2,2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (17978,3000,4,2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (17975,3000,8,2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16266,400,1,2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16266,400,2,2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16266,400,4,2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16266,400,8,2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16267,500,1,2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16267,500,2,2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16267,500,4,2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16267,500,8,2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16268,200,1,2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16268,200,2,2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16268,200,4,2)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16268,200,8,2)", EVEIPHSQLiteDB.DBRef)
+        ' Nullsec strong truesec (-0.5 to -1.0)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (17976,3500,1,3)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (17977,3500,2,3)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (17978,3500,4,3)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (17975,3500,8,3)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16266,400,1,3)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16266,400,2,3)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16266,400,4,3)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16266,400,8,3)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16267,1000,1,3)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16267,1000,2,3)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16267,1000,4,3)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16267,1000,8,3)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16268,300,1,3)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16268,300,2,3)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16268,300,4,3)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16269,300,8,3)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16269,250,1,3)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16269,250,2,3)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16269,250,4,3)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ICE_BELTS VALUES (16269,250,8,3)", EVEIPHSQLiteDB.DBRef)
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
+
+        SQL = "CREATE INDEX IDX_BP_ID_ICE_BELT_NAME ON INDUSTRY_UPGRADE_BELTS (BELT_NAME)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        pgMain.Visible = False
+        Application.DoEvents()
+
+    End Sub
+
     ' INDUSTRY_UPGRADE_BELTS
     Private Sub Build_INDUSTRY_UPGRADE_BELTS()
         Dim SQL As String
@@ -2760,118 +2857,76 @@ Public Class frmMain
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
 
-        ' Since this is all data I created, just do inserts here 
-        ' Data from: https://forums.eveonline.com/default.aspx?g=posts&t=418719
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60800,'Colossal','Arkonor',4,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60800,'Colossal','Crimson Arkonor',4,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60800,'Colossal','Prime Arkonor',4,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (114300,'Colossal','Bistot',7,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (114300,'Colossal','Triclinic Bistot',7,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (114300,'Colossal','Monoclinic Bistot',7,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (225200,'Colossal','Crokite',9,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (225200,'Colossal','Sharp Crokite',9,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (225200,'Colossal','Crystalline Crokite',9,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (115000,'Colossal','Dark Ochre',6,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (115000,'Colossal','Onyx Ochre',6,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (115000,'Colossal','Obsidian Ochre',6,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (630000,'Colossal','Gneiss',13,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (630000,'Colossal','Iridescent Gneiss',13,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (630000,'Colossal','Prismatic Gneiss',13,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (736200,'Colossal','Spodumain',14,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (736200,'Colossal','Bright Spodumain',14,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (736200,'Colossal','Gleaming Spodumain',14,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (7000,'Colossal','Mercoxit',5,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (7000,'Colossal','Magma Mercoxit',5,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (7000,'Colossal','Vitreous Mercoxit',5,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (1,'Testing','Vitreous Mercoxit',5,10)", EVEIPHSQLiteDB.DBRef)
+        ' Since this is all data I created, just do inserts here - number asteroids is likely wrong
+        ' Data from: https://www.eveonline.com/article/qh7pp7/resource-distribution-update
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (50000,'Colossal','Arkonor',4,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (50000,'Colossal','Crimson Arkonor',4,5)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (50000,'Colossal','Prime Arkonor',4,10)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (50000,'Colossal','Bistot',7,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (50000,'Colossal','Triclinic Bistot',7,5)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (50000,'Colossal','Monoclinic Bistot',7,10)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (5000,'Colossal','Crokite',9,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (5000,'Colossal','Sharp Crokite',9,5)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (5000,'Colossal','Crystalline Crokite',9,10)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (3000,'Colossal','Mercoxit',5,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (3000,'Colossal','Magma Mercoxit',5,5)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (3000,'Colossal','Vitreous Mercoxit',5,10)", EVEIPHSQLiteDB.DBRef)
 
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (58000,'Enormous','Arkonor',4,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (58000,'Enormous','Crimson Arkonor',4,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (58000,'Enormous','Prime Arkonor',4,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (86000,'Enormous','Bistot',5,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (86000,'Enormous','Monoclinic Bistot',5,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (86000,'Enormous','Triclinic Bistot',5,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (169000,'Enormous','Crokite',7,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (169000,'Enormous','Sharp Crokite',7,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (169000,'Enormous','Crystalline Crokite',7,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (500000,'Enormous','Dark Ochre',10,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (500000,'Enormous','Obsidian Ochre',10,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (500000,'Enormous','Onyx Ochre',10,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (540000,'Enormous','Gneiss',10,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (540000,'Enormous','Prismatic Gneiss',10,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (540000,'Enormous','Iridescent Gneiss',10,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (578000,'Enormous','Spodumain',10,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (578000,'Enormous','Gleaming Spodumain',10,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (578000,'Enormous','Bright Spodumain',10,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (5200,'Enormous','Mercoxit',4,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (5200,'Enormous','Magma Mercoxit',4,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (5200,'Enormous','Vitreous Mercoxit',4,10)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (50000,'Enormous','Arkonor',4,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (50000,'Enormous','Crimson Arkonor',4,5)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (50000,'Enormous','Prime Arkonor',4,10)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (135000,'Enormous','Bistot',5,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (135000,'Enormous','Monoclinic Bistot',5,10)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (135000,'Enormous','Triclinic Bistot',5,5)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (2500,'Enormous','Crokite',7,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (2500,'Enormous','Sharp Crokite',7,5)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (2500,'Enormous','Crystalline Crokite',7,10)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (20000,'Enormous','Kernite',5,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (20000,'Enormous','Luminous Kernite',5,5)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (20000,'Enormous','Fiery Kernite',5,10)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (2500,'Enormous','Mercoxit',4,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (2500,'Enormous','Magma Mercoxit',4,5)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (2500,'Enormous','Vitreous Mercoxit',4,10)", EVEIPHSQLiteDB.DBRef)
 
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (29900,'Large','Arkonor',3,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (29900,'Large','Crimson Arkonor',3,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (29900,'Large','Prime Arkonor',3,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (57000,'Large','Bistot',5,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (57000,'Large','Monoclinic Bistot',5,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (57000,'Large','Triclinic Bistot',5,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (124000,'Large','Crokite',6,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (124000,'Large','Sharp Crokite',6,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (124000,'Large','Crystalline Crokite',6,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60000,'Large','Dark Ochre',4,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60000,'Large','Obsidian Ochre',4,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60000,'Large','Onyx Ochre',4,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (313500,'Large','Gneiss',9,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (313500,'Large','Prismatic Gneiss',9,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (313500,'Large','Iridescent Gneiss',9,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (368100,'Large','Spodumain',9,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (368100,'Large','Gleaming Spodumain',9,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (368100,'Large','Bright Spodumain',9,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (3500,'Large','Mercoxit',3,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (3500,'Large','Magma Mercoxit',3,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (3500,'Large','Vitreous Mercoxit',3,10)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (50000,'Large','Arkonor',3,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (50000,'Large','Crimson Arkonor',3,5)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (50000,'Large','Prime Arkonor',3,10)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60000,'Large','Bistot',5,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60000,'Large','Monoclinic Bistot',5,10)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (60000,'Large','Triclinic Bistot',5,5)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (20000,'Large','Omber',3,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (20000,'Large','Silvery Omber',3,10)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (20000,'Large','Golden Omber',3,5)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (2000,'Large','Mercoxit',3,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (2000,'Large','Magma Mercoxit',3,5)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (2000,'Large','Vitreous Mercoxit',3,10)", EVEIPHSQLiteDB.DBRef)
 
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (28000,'Medium','Arkonor',3,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (28000,'Medium','Crimson Arkonor',3,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (28000,'Medium','Prime Arkonor',3,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (38700,'Medium','Bistot',4,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (38700,'Medium','Monoclinic Bistot',4,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (38700,'Medium','Triclinic Bistot',4,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (84700,'Medium','Crokite',5,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (84700,'Medium','Sharp Crokite',5,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (84700,'Medium','Crystalline Crokite',5,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (31000,'Medium','Dark Ochre',3,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (31000,'Medium','Obsidian Ochre',3,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (31000,'Medium','Onyx Ochre',3,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (340000,'Medium','Gneiss',8,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (340000,'Medium','Prismatic Gneiss',8,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (340000,'Medium','Iridescent Gneiss',8,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (270000,'Medium','Spodumain',8,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (270000,'Medium','Gleaming Spodumain',8,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (270000,'Medium','Bright Spodumain',8,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (2600,'Medium','Mercoxit',2,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (2600,'Medium','Magma Mercoxit',2,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (2600,'Medium','Vitreous Mercoxit',2,10)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (25000,'Medium','Arkonor',3,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (25000,'Medium','Crimson Arkonor',3,5)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (25000,'Medium','Prime Arkonor',3,10)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (40000,'Medium','Bistot',4,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (40000,'Medium','Monoclinic Bistot',4,10)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (40000,'Medium','Triclinic Bistot',4,5)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (200000,'Medium','Pyroxeres',5,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (200000,'Medium','Solid Pyroxeres',5,5)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (200000,'Medium','Viscous Pyroxeres',5,10)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (10000,'Medium','Omber',3,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (10000,'Medium','Silvery Omber',3,10)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (10000,'Medium','Golden Omber',3,5)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (1500,'Medium','Mercoxit',2,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (1500,'Medium','Magma Mercoxit',2,5)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (1500,'Medium','Vitreous Mercoxit',2,10)", EVEIPHSQLiteDB.DBRef)
 
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (9700,'Small','Arkonor',3,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (9700,'Small','Crimson Arkonor',3,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (9700,'Small','Prime Arkonor',3,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (12800,'Small','Bistot',3,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (12800,'Small','Monoclinic Bistot',3,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (12800,'Small','Triclinic Bistot',3,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (30000,'Small','Crokite',5,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (30000,'Small','Sharp Crokite',5,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (30000,'Small','Crystalline Crokite',5,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (16000,'Small','Dark Ochre',4,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (16000,'Small','Obsidian Ochre',4,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (16000,'Small','Onyx Ochre',4,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (170000,'Small','Gneiss',6,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (170000,'Small','Prismatic Gneiss',6,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (170000,'Small','Iridescent Gneiss',6,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (300000,'Small','Spodumain',7,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (300000,'Small','Gleaming Spodumain',7,10)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (300000,'Small','Bright Spodumain',7,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (0,'Small','Mercoxit',0,0)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (0,'Small','Magma Mercoxit',0,5)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (0,'Small','Vitreous Mercoxit',0,10)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (5000,'Small','Arkonor',3,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (5000,'Small','Crimson Arkonor',3,5)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (5000,'Small','Prime Arkonor',3,10)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (5000,'Small','Bistot',3,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (5000,'Small','Monoclinic Bistot',3,10)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (5000,'Small','Triclinic Bistot',3,5)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (600000,'Small','Pyroxeres',5,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (600000,'Small','Solid Pyroxeres',5,5)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO INDUSTRY_UPGRADE_BELTS VALUES (600000,'Small','Viscous Pyroxeres',5,10)", EVEIPHSQLiteDB.DBRef)
+
 
         Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
