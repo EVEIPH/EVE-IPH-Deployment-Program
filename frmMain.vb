@@ -923,7 +923,7 @@ Public Class frmMain
         '*** Mining Ships ***
         ' Get the count first
         SQL = "SELECT COUNT(*) FROM INVENTORY_TYPES WHERE typeName IN "
-        SQL &= "('Covetor','Retriever','Procurer','Hulk','Skiff','Mackinaw','Rokh','Drake','Rorqual','Orca','Porpoise','Endurance','Prospect','Venture')"
+        SQL &= "('Covetor','Retriever','Procurer','Hulk','Skiff','Mackinaw','Rokh','Drake','Gnosis','Rorqual','Orca','Porpoise','Endurance','Prospect','Venture')"
         DBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBRef)
         rsReader = DBCommand.ExecuteReader
         rsReader.Read()
@@ -932,7 +932,7 @@ Public Class frmMain
 
         ' Get all the BP ID numbers we use in the program and copy those files to the directory
         SQL = "SELECT typeID, typeName FROM INVENTORY_TYPES WHERE typeName IN "
-        SQL &= "('Covetor','Retriever','Procurer','Hulk','Skiff','Mackinaw','Rokh','Drake','Rorqual','Orca','Porpoise','Endurance','Prospect','Venture')"
+        SQL &= "('Covetor','Retriever','Procurer','Hulk','Skiff','Mackinaw','Rokh','Drake','Gnosis','Rorqual','Orca','Porpoise','Endurance','Prospect','Venture')"
         DBCommand = New SQLiteCommand(SQL, EVEIPHSQLiteDB.DBRef)
         rsReader = DBCommand.ExecuteReader
 
