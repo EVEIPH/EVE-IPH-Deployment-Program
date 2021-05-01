@@ -6359,7 +6359,7 @@ Public Class frmMain
         mainSQL = mainSQL & "WHERE MATERIAL_ID NOT IN (SELECT ITEM_ID FROM ALL_BLUEPRINTS) "
         mainSQL = mainSQL & "AND MATERIAL_CATEGORY <> 'Skill' "
         mainSQL = mainSQL & "UNION "
-        ' Get specific materials for later use or other areas in IPH (ie asteroids) - include items for LP Store
+        ' Get specific materials for later use or other areas in IPH (ie asteroids) 
         mainSQL = mainSQL & "SELECT DISTINCT typeID AS MATERIAL_ID, typeName AS MATERIAL, 0 AS TECH_LEVEL, 0 AS PRICE, "
         mainSQL = mainSQL & "invCategories.categoryID As MAT_CATEGORY_ID, categoryName As MATERIAL_CATEGORY, "
         mainSQL = mainSQL & "invGroups.groupID As MAT_GROUP_ID, groupName As MATERIAL_GROUP, 0 As MANUFACTURE, 0 As ITEM_TYPE, 'None' AS PRICE_TYPE "
