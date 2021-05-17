@@ -47,6 +47,9 @@ Public Class frmMain
 
     ' Special Processing
     Private Const StructureRigCategory As Integer = -66
+    Private Const AdvancedProtectiveTechnologyGroupID As Integer = -1
+    Private Const MolecularForgingToolsGroupID As Integer = -2
+    Private Const ProtectiveComponents As Integer = -3
 
     Private JSONDLL As String = "Newtonsoft.Json.dll"
     Private SQLiteDLL As String = "System.Data.SQLite.dll"
@@ -1981,6 +1984,9 @@ Public Class frmMain
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
         SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 3 WHERE ITEM_CATEGORY = 'Subsystem' OR ITEM_GROUP = 'Strategic Cruiser' OR ITEM_GROUP = 'Tactical Destroyer'"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
+        ' Structure rigs
+        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 2, ITEM_TYPE = 2 WHERE ITEM_CATEGORY_ID = " & StructureRigCategory & " AND META_GROUP = 53"
+        Execute_SQLiteSQL(SQL, SDEDB.DBRef)
         ' for abyssal - it uses meta value where attributeid = 1692 for some reason
         SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = META_GROUP, ITEM_TYPE = META_GROUP WHERE META_GROUP IN (1,2) AND (ITEM_TYPE IS NULL OR ITEM_TYPE = 0) AND META_GROUP IS NOT NULL"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
@@ -2225,6 +2231,7 @@ Public Class frmMain
         Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
+        Dim SQL2 As String
 
         Application.DoEvents()
 
@@ -2258,16 +2265,12 @@ Public Class frmMain
         SQL &= "AND matGroups.categoryID = matCategories.categoryID "
         SQL &= "AND invTypes.groupID = invGroups.groupID "
         SQL &= "AND invGroups.categoryID = invCategories.categoryID "
-        SQL &= "AND (invTypes.published <> 0 AND invGroups.published <> 0 AND invCategories.published <> 0 "
-        SQL &= "OR industryBlueprints.blueprintTypeID < 0) " ' For all outpost "blueprints"
+        SQL &= "AND (invTypes.published <> 0 AND invGroups.published <> 0 AND invCategories.published <> 0) "
         SQL &= "ORDER BY BLUEPRINT_ID, PRODUCT_ID "
 
         Call Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
-        ' Update all the materials that are blueprints - add copy to the name to reduce confusion, only materials required are BPCs
-        Call Execute_SQLiteSQL("UPDATE ALL_BLUEPRINT_MATERIALS SET MATERIAL = MATERIAL + ' Copy' WHERE MATERIAL_CATEGORY = 'Blueprint'", SDEDB.DBRef)
-
-        ' Also, find any bp that has the product the same as a material id, this will cause an infinite loop
+        ' Find any bp that has the product the same as a material id, this will cause an infinite loop
         SQL = "SELECT BLUEPRINT_ID FROM ALL_BLUEPRINT_MATERIALS where PRODUCT_ID = MATERIAL_ID"
         SQLCommand = New SQLiteCommand(SQL, SDEDB.DBRef)
         SQLReader1 = SQLCommand.ExecuteReader()
@@ -2279,20 +2282,30 @@ Public Class frmMain
             Call Execute_SQLiteSQL("DELETE FROM ALL_BLUEPRINTS WHERE BLUEPRINT_ID = " & CStr(SQLReader1.GetInt32(0)), SDEDB.DBRef)
         End While
 
+        ' Add BPC's for all invention items for pricing
+        SQL = "SELECT blueprintTypeID, productTypeID FROM industryActivityProducts WHERE activityID = 8"
+        SQLCommand = New SQLiteCommand(SQL, SDEDB.DBRef)
+        SQLReader1 = SQLCommand.ExecuteReader()
+        While SQLReader1.Read
+            SQL2 = "INSERT INTO ALL_BLUEPRINT_MATERIALS SELECT typeID, typeName, " & SQLReader1.GetInt32(1) & ", typeID, typeName || ' Copy', IG.groupID, IG.groupName, categoryID, 'Blueprint',"
+            SQL2 &= "volume,1,8,1 FROM invTypes As IT, invGroups As IG WHERE IT.groupID = IG.groupID And typeID = " & CStr(SQLReader1.GetInt32(0))
+            Call Execute_SQLiteSQL(SQL2, SDEDB.DBRef)
+        End While
+
         SQLReader1.Close()
 
         ' Create SQLite table
         SQL = "CREATE TABLE ALL_BLUEPRINT_MATERIALS_FACT ("
-        SQL &= "BLUEPRINT_ID INTEGER,"
-        SQL &= "PRODUCT_ID INTEGER NOT NULL,"
-        SQL &= "MATERIAL_ID INTEGER NOT NULL,"
+        SQL &= "BLUEPRINT_ID Integer,"
+        SQL &= "PRODUCT_ID Integer Not NULL,"
+        SQL &= "MATERIAL_ID Integer Not NULL,"
         SQL &= "MATERIAL_GROUP_ID,"
         SQL &= "MATERIAL_CATEGORY_ID,"
-        SQL &= "MATERIAL VARCHAR(100) NOT NULL," ' Keep this since we might have updated with blueprint copy info
+        SQL &= "MATERIAL VARCHAR(100) Not NULL," ' Keep this since we might have updated with blueprint copy info
         SQL &= "MATERIAL_VOLUME REAL,"
-        SQL &= "QUANTITY INTEGER NOT NULL,"
-        SQL &= "ACTIVITY INTEGER NOT NULL,"
-        SQL &= "CONSUME INTEGER NOT NULL"
+        SQL &= "QUANTITY Integer Not NULL,"
+        SQL &= "ACTIVITY Integer Not NULL,"
+        SQL &= "CONSUME Integer Not NULL"
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -2301,7 +2314,7 @@ Public Class frmMain
         Call SetProgressBarValues("ALL_BLUEPRINT_MATERIALS")
 
         ' Now select the final query of data from the temp table
-        mainSQL = "SELECT BLUEPRINT_ID, PRODUCT_ID, MATERIAL_ID, MAT_GROUP_ID, MAT_CATEGORY_ID, MATERIAL, MATERIAL_VOLUME, QUANTITY, ACTIVITY, CONSUME FROM ALL_BLUEPRINT_MATERIALS"
+        mainSQL = "Select BLUEPRINT_ID, PRODUCT_ID, MATERIAL_ID, MAT_GROUP_ID, MAT_CATEGORY_ID, MATERIAL, MATERIAL_VOLUME, QUANTITY, ACTIVITY, CONSUME FROM ALL_BLUEPRINT_MATERIALS"
         SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
         SQLReader1 = SQLCommand.ExecuteReader()
 
@@ -2330,13 +2343,13 @@ Public Class frmMain
         End While
 
         ' Finally, create the view
-        SQL = "CREATE VIEW ALL_BLUEPRINT_MATERIALS AS SELECT "
-        SQL &= "BLUEPRINT_ID, INVENTORY_TYPES.typeName AS BLUEPRINT_NAME, PRODUCT_ID, MATERIAL_ID, MATERIAL, "
-        SQL &= "MATERIAL_GROUP_ID, INVENTORY_GROUPS.groupName AS MATERIAL_GROUP, MATERIAL_CATEGORY_ID, INVENTORY_CATEGORIES.categoryName AS MATERIAL_CATEGORY, "
+        SQL = "CREATE VIEW ALL_BLUEPRINT_MATERIALS As Select "
+        SQL &= "BLUEPRINT_ID, INVENTORY_TYPES.typeName As BLUEPRINT_NAME, PRODUCT_ID, MATERIAL_ID, MATERIAL, "
+        SQL &= "MATERIAL_GROUP_ID, INVENTORY_GROUPS.groupName As MATERIAL_GROUP, MATERIAL_CATEGORY_ID, INVENTORY_CATEGORIES.categoryName As MATERIAL_CATEGORY, "
         SQL &= "MATERIAL_VOLUME, QUANTITY, ACTIVITY, CONSUME "
         SQL &= "FROM ALL_BLUEPRINT_MATERIALS_FACT, INVENTORY_TYPES, INVENTORY_GROUPS, INVENTORY_CATEGORIES "
-        SQL &= "WHERE BLUEPRINT_ID = INVENTORY_TYPES.typeID AND MATERIAL_CATEGORY_ID = INVENTORY_CATEGORIES.categoryID "
-        SQL &= "AND MATERIAL_GROUP_ID = INVENTORY_GROUPS.groupID "
+        SQL &= "WHERE BLUEPRINT_ID = INVENTORY_TYPES.typeID And MATERIAL_CATEGORY_ID = INVENTORY_CATEGORIES.categoryID "
+        SQL &= "And MATERIAL_GROUP_ID = INVENTORY_GROUPS.groupID "
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
@@ -2344,13 +2357,13 @@ Public Class frmMain
         SQLReader1.Close()
 
         ' Build SQL Lite indexes
-        SQL = "CREATE INDEX IDX_ABM_BP_ID_ACTIVITY ON ALL_BLUEPRINT_MATERIALS_FACT (BLUEPRINT_ID,ACTIVITY)"
+        SQL = "CREATE INDEX IDX_ABM_BP_ID_ACTIVITY On ALL_BLUEPRINT_MATERIALS_FACT (BLUEPRINT_ID,ACTIVITY)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
-        SQL = "CREATE INDEX IDX_ABM_PRODUCT_ID_ACTIVITY ON ALL_BLUEPRINT_MATERIALS_FACT (PRODUCT_ID, ACTIVITY)"
+        SQL = "CREATE INDEX IDX_ABM_PRODUCT_ID_ACTIVITY On ALL_BLUEPRINT_MATERIALS_FACT (PRODUCT_ID, ACTIVITY)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
-        SQL = "CREATE INDEX IDX_ABM_REQCOMP_ID_PRODUCT ON ALL_BLUEPRINT_MATERIALS_FACT (MATERIAL_ID, PRODUCT_ID)"
+        SQL = "CREATE INDEX IDX_ABM_REQCOMP_ID_PRODUCT On ALL_BLUEPRINT_MATERIALS_FACT (MATERIAL_ID, PRODUCT_ID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         pgMain.Visible = False
@@ -2369,14 +2382,14 @@ Public Class frmMain
     '    'Dim mainSQL As String
 
     '    SQL = "CREATE TABLE ASSEMBLY_ARRAYS ("
-    '    SQL &= "ARRAY_TYPE_ID INTEGER NOT NULL,"
-    '    SQL &= "ARRAY_NAME VARCHAR(" & GetLenSQLExpField("typeName", "invTypes") & ") NOT NULL, "
-    '    SQL &= "ACTIVITY_ID INTEGER NOT NULL,"
-    '    SQL &= "MATERIAL_MULTIPLIER REAL NOT NULL,"
-    '    SQL &= "TIME_MULTIPLIER REAL NOT NULL,"
-    '    SQL &= "COST_MULTIPLIER REAL NOT NULL,"
-    '    SQL &= "GROUP_ID INTEGER NOT NULL,"
-    '    SQL &= "CATEGORY_ID INTEGER NOT NULL"
+    '    SQL &= "ARRAY_TYPE_ID Integer Not NULL,"
+    '    SQL &= "ARRAY_NAME VARCHAR(" & GetLenSQLExpField("typeName", "invTypes") & ") Not NULL, "
+    '    SQL &= "ACTIVITY_ID Integer Not NULL,"
+    '    SQL &= "MATERIAL_MULTIPLIER REAL Not NULL,"
+    '    SQL &= "TIME_MULTIPLIER REAL Not NULL,"
+    '    SQL &= "COST_MULTIPLIER REAL Not NULL,"
+    '    SQL &= "GROUP_ID Integer Not NULL,"
+    '    SQL &= "CATEGORY_ID Integer Not NULL"
     '    SQL &= ")"
 
     '    Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -3395,57 +3408,60 @@ Public Class frmMain
         Dim SQL As String
 
         SQL = "CREATE TABLE PRICE_PROFILES ("
-        SQL &= "ID Integer Not NULL,"
-        SQL &= "GROUP_NAME VARCHAR(50) Not NULL,"
-        SQL &= "PRICE_TYPE VARCHAR(25) Not NULL,"
-        SQL &= "REGION_NAME VARCHAR(50) Not NULL,"
-        SQL &= "SOLAR_SYSTEM_NAME VARCHAR(50) Not NULL,"
-        SQL &= "PRICE_MODIFIER FLOAT Not NULL,"
-        SQL &= "RAW_MATERIAL Integer Not NULL"
+        SQL &= "ID INTEGER NOT NULL,"
+        SQL &= "GROUP_NAME VARCHAR(50) NOT NULL,"
+        SQL &= "PRICE_TYPE VARCHAR(25) NOT NULL,"
+        SQL &= "REGION_NAME VARCHAR(50) NOT NULL,"
+        SQL &= "SOLAR_SYSTEM_NAME VARCHAR(50) NOT NULL,"
+        SQL &= "PRICE_MODIFIER FLOAT NOT NULL,"
+        SQL &= "RAW_MATERIAL INTEGER NOT NULL"
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         ' Insert the base data, this will be default until they change it and it's copied in the updater - start with raw, in Jita
-        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Minerals','Min Sell', 'The Forge','Jita',0,1)"
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Advanced Protective Technology','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Faction Materials','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Harvestable Cloud','Min Sell', 'The Forge','Jita',0,1)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Ice Products','Min Sell', 'The Forge','Jita',0,1)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Gas','Min Sell', 'The Forge','Jita',0,1)"
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Minerals','Min Sell', 'The Forge','Jita',0,1)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Abyssal Materials','Min Sell', 'The Forge','Jita',0,1)"
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Molecular-Forging Tools','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Planetary Materials','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Raw Materials','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Salvage','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Ancient Relics','Min Sell', 'The Forge','Jita',0,1)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Datacores','Min Sell', 'The Forge','Jita',0,1)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Decryptors','Min Sell', 'The Forge','Jita',0,1)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Planetary','Min Sell', 'The Forge','Jita',0,1)"
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'R.Db.','Min Sell', 'The Forge','Jita',0,1)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Asteroids','Min Sell', 'The Forge','Jita',0,1)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Salvage','Min Sell', 'The Forge','Jita',0,1)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Ancient Salvage','Min Sell', 'The Forge','Jita',0,1)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Ancient Relics','Min Sell', 'The Forge','Jita',0,1)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Hybrid Polymers','Min Sell', 'The Forge','Jita',0,1)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Misc.','Min Sell', 'The Forge','Jita',0,1)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Raw Moon Materials','Min Sell', 'The Forge','Jita',0,1)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Processed Moon Materials','Min Sell', 'The Forge','Jita',0,1)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Advanced Moon Materials','Min Sell', 'The Forge','Jita',0,1)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Materials & Compounds','Min Sell', 'The Forge','Jita',0,1)"
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Molecular-Forged Materials','Min Sell', 'The Forge','Jita',0,1)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Rogue Drone Components','Min Sell', 'The Forge','Jita',0,1)"
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Hybrid Polymers','Min Sell', 'The Forge','Jita',0,1)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Booster Materials','Min Sell', 'The Forge','Jita',0,1)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Materials','Min Sell', 'The Forge','Jita',0,1)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         ' Manufactured Items
@@ -3459,37 +3475,38 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Rigs','Min Sell', 'The Forge','Jita',0,0)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Deployables','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Subsystems','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Deployables','Min Sell', 'The Forge','Jita',0,0)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Boosters','Min Sell', 'The Forge','Jita',0,0)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Structures','Min Sell', 'The Forge','Jita',0,0)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Structure Modules','Min Sell', 'The Forge','Jita',0,0)"
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Structure Rigs','Min Sell', 'The Forge','Jita',0,0)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Celestials','Min Sell', 'The Forge','Jita',0,0)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Station Parts','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Adv. Capital Construction Components','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Capital Construction Components','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Construction Components','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Hybrid Tech Components','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Tools','Min Sell', 'The Forge','Jita',0,0)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Fuel Blocks','Min Sell', 'The Forge','Jita',0,0)"
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Structure Modules','Min Sell', 'The Forge','Jita',0,0)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Implants','Min Sell', 'The Forge','Jita',0,0)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Structure Rigs','Min Sell', 'The Forge','Jita',0,0)"
+
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Adv. Capital Components','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Advanced Components','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Fuel Blocks','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Protective Components','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'R.A.M.s','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Std. Capital Ship Components','Min Sell', 'The Forge','Jita',0,0)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Structure Components','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Subsystem Components','Min Sell', 'The Forge','Jita',0,0)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         SQL = "CREATE INDEX IDX_PP_ID ON PRICE_PROFILES (ID)"
@@ -6743,7 +6760,8 @@ Public Class frmMain
         mainSQL = mainSQL & "WHERE MATERIAL_ID NOT IN (SELECT ITEM_ID FROM ALL_BLUEPRINTS) "
         mainSQL = mainSQL & "AND MATERIAL_CATEGORY <> 'Skill' "
         mainSQL = mainSQL & "UNION "
-        ' Get specific materials for later use or other areas in IPH (ie asteroids) - include items for LP Store
+
+        ' Get specific materials for later use or other areas in IPH (ie asteroids)
         mainSQL = mainSQL & "SELECT DISTINCT typeID AS MATERIAL_ID, typeName AS MATERIAL, 0 AS TECH_LEVEL, 0 AS PRICE, "
         mainSQL = mainSQL & "invCategories.categoryID As MAT_CATEGORY_ID, categoryName As MATERIAL_CATEGORY, "
         mainSQL = mainSQL & "invGroups.groupID As MAT_GROUP_ID, groupName As MATERIAL_GROUP, 0 As MANUFACTURE, 0 As ITEM_TYPE, 'None' AS PRICE_TYPE "
@@ -6753,9 +6771,7 @@ Public Class frmMain
         mainSQL = mainSQL & "AND invTypes.published <> 0 AND invGroups.published <> 0 AND invCategories.published <> 0 "
         mainSQL = mainSQL & "AND invTypes.marketGroupID IS NOT NULL "
         mainSQL = mainSQL & "AND (categoryName IN ('Asteroid','Decryptors','Planetary Commodities','Planetary Resources') "
-        mainSQL = mainSQL & "OR groupName in ('Moon Materials','Ice Product','Harvestable Cloud','Intermediate Materials') "
-        ' The last IDs are random items that come out of booster production or needed in station building (Quafe), or for the LP Store
-        mainSQL = mainSQL & "OR typeID in (41, 3699, 3773, 9850, 33195))) AS X " ' Garbage, Quafe, Hydrochloric Acid, Spirits, Spatial Attunment
+        mainSQL = mainSQL & "OR groupName in ('Moon Materials','Ice Product','Harvestable Cloud','Intermediate Materials'))) "
         mainSQL = mainSQL & "WHERE MATERIAL_ID NOT IN (SELECT ITEM_ID FROM PRICES_BUILD)"
         Execute_SQLiteSQL(mainSQL, SDEDB.DBRef)
 
@@ -6824,8 +6840,9 @@ Public Class frmMain
         End While
 
         ' Create view
-        SQL = "CREATE VIEW ITEM_PRICES AS SELECT "
-        SQL &= "ITEM_ID, INVENTORY_TYPES.typeName AS ITEM_NAME, TECH_LEVEL, PRICE, INVENTORY_CATEGORIES.categoryName AS ITEM_CATEGORY, "
+        SQL = "CREATE VIEW ITEM_PRICES AS SELECT ITEM_ID, "
+        SQL &= "CASE WHEN ITEM_CATEGORY_ID = 9 THEN typeName || ' Copy' ELSE typeName END AS ITEM_NAME, "
+        SQL &= "TECH_LEVEL, PRICE, INVENTORY_CATEGORIES.categoryName AS ITEM_CATEGORY, "
         SQL &= "INVENTORY_GROUPS.groupName AS ITEM_GROUP, MANUFACTURE, ITEM_TYPE, PRICE_TYPE, ADJUSTED_PRICE, AVERAGE_PRICE "
         SQL &= "FROM ITEM_PRICES_FACT, INVENTORY_TYPES, INVENTORY_GROUPS, INVENTORY_CATEGORIES "
         SQL &= "WHERE ITEM_ID = INVENTORY_TYPES.typeID AND ITEM_CATEGORY_ID = INVENTORY_CATEGORIES.categoryID AND ITEM_GROUP_ID = INVENTORY_GROUPS.groupID "
@@ -7739,14 +7756,61 @@ Public Class frmMain
         ' Special processing - Update all Structure Rigs to use the new code
         Call Execute_SQLiteSQL(String.Format("UPDATE invGroups SET categoryID = {0} WHERE categoryID = 66 AND groupName LIKE '%Rig%'", CStr(StructureRigCategory)), SDEDB.DBRef)
 
-        ' When rebuilding the DB, update the ramAssemblyLineTypeDetailPerCategory table
-        ' so it is complete and not missing categories of blueprints for assembly lines in 
-        ' the ramAssemblyLineTypes table - this will (should!) speed up updates for CREST facilities
-        lblTableName.Text = "Updating ramAssemblyLineTypeDetailPerCategory"
-        'Call UpdateramAssemblyLineTypeDetailPerCategory()
+        ' Special Processing April 27, 2021 - Indy update - Name these new commodities to the categories in the market and use my own group and set category to mateiral (4)
+        '57442   Counter-Subversion Sensor Array
+        '57450   Electro-Neural Signaller
+        '57451   Enhanced Electro-Neural Signaller
+        '57449   Nano Regulation Gate
+        '57444   Nanoscale Filter Plate
+        SQLCommand = New SQLiteCommand("SELECT 'X' FROM invGroups WHERE groupID = " & CStr(AdvancedProtectiveTechnologyGroupID), SDEDB.DBRef)
+        rsCheck = SQLCommand.ExecuteReader()
+        rsCheck.Read()
 
-        ' Add the LP Store tables from script - TODO convert to CREST Look ups
-        'Call Execute_SQLiteSQL(File.OpenText(SDEWorkingDirectory & "\lpDatabase_v0.11\lpDatabase_v0.11.sql").ReadToEnd(), SDEDB.DBRef)
+        If Not rsCheck.HasRows Then
+            Call Execute_SQLiteSQL("INSERT INTO invGroups VALUES (" & AdvancedProtectiveTechnologyGroupID & ",4,'Advanced Protective Technology',NULL,0,0,0,0,1)", SDEDB.DBRef)
+        End If
+        rsCheck.Close()
+
+        Call Execute_SQLiteSQL("UPDATE invTypes SET groupID = " & AdvancedProtectiveTechnologyGroupID & " WHERE typeID IN (57442,57444,57449,57450,57451)", SDEDB.DBRef)
+
+        '57446   AG-Composite Molecular Condenser
+        '57448   AV-Composite Molecular Condenser
+        '57447   CV-Composite Molecular Condenser
+        '57452   Isotropic Deposition Guide
+        '57445   LM-Composite Molecular Condenser
+        '57443   Meta-Molecular Combiner
+
+        SQLCommand = New SQLiteCommand("SELECT 'X' FROM invGroups WHERE groupID = " & CStr(MolecularForgingToolsGroupID), SDEDB.DBRef)
+        rsCheck = SQLCommand.ExecuteReader()
+        rsCheck.Read()
+
+        If Not rsCheck.HasRows Then
+            Call Execute_SQLiteSQL("INSERT INTO invGroups VALUES (" & MolecularForgingToolsGroupID & ",4,'Molecular-Forging Tools',NULL,0,0,0,0,1)", SDEDB.DBRef)
+        End If
+        rsCheck.Close()
+
+        Call Execute_SQLiteSQL("UPDATE invTypes SET groupID = " & MolecularForgingToolsGroupID & " WHERE typeID IN (57443,57445,57446,57447,57448,57452)", SDEDB.DBRef)
+
+        '57478   Auto-Integrity Preservation Seal
+        '57479   Core Temperature Regulator
+        '57480   Programmable Purification Membrane
+        '57481   Genetic Lock Preserver
+        '57482   Genetic Safeguard Filter
+        '57483   Neurolink Enhancer Reservoir
+        '57484   Genetic Structure Repairer
+        '57485   Genetic Mutation Inhibiter
+        '57486   Life Support Backup Unit
+
+        SQLCommand = New SQLiteCommand("SELECT 'X' FROM invGroups WHERE groupID = " & CStr(ProtectiveComponents), SDEDB.DBRef)
+        rsCheck = SQLCommand.ExecuteReader()
+        rsCheck.Read()
+
+        If Not rsCheck.HasRows Then
+            Call Execute_SQLiteSQL("INSERT INTO invGroups VALUES (" & ProtectiveComponents & ",4,'Protective Components',NULL,0,0,0,0,1)", SDEDB.DBRef)
+        End If
+        rsCheck.Close()
+
+        Call Execute_SQLiteSQL("UPDATE invTypes SET groupID = " & ProtectiveComponents & " WHERE typeID IN (57478,57479,57480,57481,57482,57483,57484,57485,57486)", SDEDB.DBRef)
 
         pgMain.Visible = False
         lblTableName.Text = ""
