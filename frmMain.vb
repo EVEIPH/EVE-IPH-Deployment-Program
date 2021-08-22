@@ -62,6 +62,7 @@ Public Class frmMain
     Private ImageZipFile As String = "EVEIPH Images.zip"
     Private MoreLinqDLL As String = "MoreLinq.Portable.dll"
     Private GADLL As String = "GoogleAnalyticsClientDotNet.Net45.dll"
+    Private LPSolveDLL As String = "LpSolveDotNet.dll"
     Private LatestVersionXML As String
     Private LatestTestVersionXML As String
 
@@ -76,6 +77,7 @@ Public Class frmMain
     Private ImageZipFileURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Images.zip"
     Private MoreLinqDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/MoreLinq.Portable.dll"
     Private GAURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/GoogleAnalyticsClientDotNet.Net45.dll"
+    Private LPSolveDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/LpSolveDotNet.dll"
 
     Private TestJSONDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Newtonsoft.Json.dll"
     Private TestSQLiteDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/System.Data.SQLite.dll"
@@ -750,6 +752,7 @@ Public Class frmMain
         File.Copy(UploadFileDirectory & LatestVersionXML, FinalBinaryFolderPath & LatestVersionXML)
         File.Copy(UploadFileDirectory & MoreLinqDLL, FinalBinaryFolderPath & MoreLinqDLL)
         File.Copy(UploadFileDirectory & GADLL, FinalBinaryFolderPath & GADLL)
+        File.Copy(UploadFileDirectory & LPSolveDLL, FinalBinaryFolderPath & LPSolveDLL)
 
         ' DB
         File.Copy(SDEWorkingDirectory & EVEIPHDB, FinalBinaryFolderPath & EVEIPHDB)
@@ -2000,8 +2003,9 @@ Public Class frmMain
         SQL &= "OR (ITEM_GROUP='Tool')"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
-        ' Alliance Tournament ships added - They are set as T2 (use t2 mats to build but can't be invented) but come up as faction in game ('Mimir','Freki','Adrestia','Utu','Vangel','Malice','Etana','Cambion','Moracha','Chremoas','Whiptail','Chameleon', 'Caedes')
-        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 1 WHERE BLUEPRINT_ID IN (3517, 3519, 32789, 32791, 32788, 33396, 33398, 33674, 33676, 42525)"
+        ' Alliance Tournament ships others added - They are set as T2 (use t2 mats to build but can't be invented) but come up as faction in game ('Mimir','Freki','Adrestia','Utu','Vangel','Malice',
+        'Etana','Cambion','Moracha','Chremoas','Whiptail','Chameleon','Caedes','Marshal', 'Hydra', 'Pacifier', 'Monitor', 'Enforcer', 'Tiamat', 'Victor')
+        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 1 WHERE BLUEPRINT_ID IN (3517,3519,32789,32791,33396,33398,33674,33676,42525,45486,45487,45528,45532,45535,48637,48638)"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
         ' Quick fix to update the sql table for Rubicon - Ascendancy Implant Blueprints (and Low-Grade Ascendancy) are set to T2 implant (Alpha), not invented though so set to T1
@@ -5260,7 +5264,7 @@ Public Class frmMain
 
         Next
 
-        ' Abyssal Mining - need to check on all of these to make sure you can get them from anywhere security wise
+        ' Abyssal Mining - just Pochven
         For i = 0 To 2
             Select Case i
                 Case 0
@@ -5272,9 +5276,7 @@ Public Class frmMain
             End Select
 
             For j = 0 To 3 ' region type
-                For k = 0 To 2 ' Security type
-                    Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & CurrentOre & ",'" & GetSecurityType(k) & "','Triglavian')", EVEIPHSQLiteDB.DBRef)
-                Next
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & CurrentOre & ",'Null Sec','Triglavian')", EVEIPHSQLiteDB.DBRef)
             Next
         Next
 
@@ -5289,9 +5291,7 @@ Public Class frmMain
             End Select
 
             For j = 0 To 3 ' region type
-                For k = 0 To 2 ' Security type
-                    Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & CurrentOre & ",'" & GetSecurityType(k) & "','Triglavian')", EVEIPHSQLiteDB.DBRef)
-                Next
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & CurrentOre & ",'Null Sec','Triglavian')", EVEIPHSQLiteDB.DBRef)
             Next
         Next
 
@@ -5306,13 +5306,11 @@ Public Class frmMain
             End Select
 
             For j = 0 To 3 ' region type
-                For k = 0 To 2 ' Security type
-                    Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & CurrentOre & ",'" & GetSecurityType(k) & "','Triglavian')", EVEIPHSQLiteDB.DBRef)
-                Next
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & CurrentOre & ",'Null Sec','Triglavian')", EVEIPHSQLiteDB.DBRef)
             Next
         Next
 
-        ' Spod is apparently in Trig space (Provchen)
+        ' Spod is in Trig space (Provchen) too
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Spodumain & ",'Null Sec','Triglavian')", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedSpodumain & ",'Null Sec','Triglavian')", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.BrightSpodumain & ",'Null Sec','Triglavian')", EVEIPHSQLiteDB.DBRef)
@@ -7112,9 +7110,10 @@ Public Class frmMain
         SQL = "CREATE TABLE [SAVED_FACILITIES](
                     [CHARACTER_ID] INT NOT NULL, 
                     [PRODUCTION_TYPE] INT NOT NULL, 
-                    [PROGRAM_LOCATION] INT NOT NULL, 
+                    [FACILITY_VIEW] INT NOT NULL, 
                     [FACILITY_ID] INT NOT NULL, 
                     [FACILITY_TYPE] INT NOT NULL, 
+                    [FACILITY_TYPE_ID] INT, 
                     [REGION_ID] INT NOT NULL, 
                     [SOLAR_SYSTEM_ID] INT NOT NULL, 
                     [ACTIVITY_COST_PER_SECOND] REAL NOT NULL, 
@@ -7124,7 +7123,8 @@ Public Class frmMain
                     [FACILITY_TAX] REAL, 
                     [MATERIAL_MULTIPLIER] REAL, 
                     [TIME_MULTIPLIER] REAL, 
-                    [COST_MULTIPLIER] REAL)"
+                    [COST_MULTIPLIER] REAL,
+                    [CONVERT_TO_ORE] INT NOT NULL)"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
@@ -7132,38 +7132,38 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         ' Add default data
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,1,0,60003760,0,10000002,30000142,0,1,1,1,0.1,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,1,1,60003760,0,10000002,30000142,0,1,1,1,0.1,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,2,0,60003760,0,10000002,30000142,0,1,1,1,0.1,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,2,1,60003760,0,10000002,30000142,0,1,1,1,0.1,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,3,0,60003760,0,10000002,30000142,0,1,1,1,0.1,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,3,1,60003760,0,10000002,30000142,0,1,1,1,0.1,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,4,0,60003043,0,10000002,30000163,0,1,1,1,0.1,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,4,1,60003043,0,10000002,30000163,0,1,1,1,0.1,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,5,0,35827,3,10000047,30003713,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,5,1,35827,3,10000047,30003713,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,6,0,35825,3,10000002,30000144,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,6,1,35825,3,10000002,30000144,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,7,0,35825,3,10000002,30000144,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,7,1,35825,3,10000002,30000144,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,8,0,60003760,0,10000002,30000142,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,8,1,60003760,0,10000002,30000142,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,9,0,60001786,0,10000002,30000187,0,1,1,1,0.1,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,9,1,60001786,0,10000002,30000187,0,1,1,1,0.1,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,10,0,60001786,0,10000002,30000187,0,1,1,1,0.1,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,10,1,60001786,0,10000002,30000187,0,1,1,1,0.1,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,11,0,35835,3,10000002,30000163,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,11,1,35835,3,10000002,30000163,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,12,0,35825,3,10000002,30000144,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,12,1,35825,3,10000002,30000144,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,13,0,35825,3,10000002,30000144,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,13,1,35825,3,10000002,30000144,0,1,1,1,0,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,17,0,60003760,0,10000002,30000142,0,1,1,1,0.05,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,17,1,60003760,0,10000002,30000142,0,1,1,1,0.05,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,17,2,60003760,0,10000002,30000142,0,1,1,1,0.05,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,17,3,60003760,0,10000002,30000142,0,1,1,1,0.05,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,17,4,60003760,0,10000002,30000142,0,1,1,1,0.05,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,17,5,60003760,0,10000002,30000142,0,1,1,1,0.05,NULL, NULL, NULL)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,1,0,60003760,0,0,10000002,30000142,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,1,1,60003760,0,0,10000002,30000142,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,2,0,60003760,0,0,10000002,30000142,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,2,1,60003760,0,0,10000002,30000142,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,3,0,60003760,0,0,10000002,30000142,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,3,1,60003760,0,0,10000002,30000142,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,4,0,60003043,0,0,10000002,30000163,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,4,1,60003043,0,0,10000002,30000163,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,5,0,35827,3,0,10000047,30003713,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,5,1,35827,3,0,10000047,30003713,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,6,0,35825,3,0,10000002,30000144,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,6,1,35825,3,0,10000002,30000144,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,7,0,35825,3,0,10000002,30000144,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,7,1,35825,3,0,10000002,30000144,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,8,0,60003760,0,0,10000002,30000142,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,8,1,60003760,0,0,10000002,30000142,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,9,0,60001786,0,0,10000002,30000187,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,9,1,60001786,0,0,10000002,30000187,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,10,0,60001786,0,0,10000002,30000187,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,10,1,60001786,0,0,10000002,30000187,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,11,0,35835,3,0,10000002,30000163,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,11,1,35835,3,0,10000002,30000163,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,12,0,35825,3,0,10000002,30000144,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,12,1,35825,3,0,10000002,30000144,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,13,0,35825,3,0,10000002,30000144,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,13,1,35825,3,0,10000002,30000144,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,17,0,60003760,0,0,10000002,30000142,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,17,1,60003760,0,0,10000002,30000142,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,17,2,60003760,0,0,10000002,30000142,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,17,3,60003760,0,0,10000002,30000142,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,17,4,60003760,0,0,10000002,30000142,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO SAVED_FACILITIES VALUES (0,17,5,60003760,0,0,10000002,30000142,0,1,1,1,NULL,NULL,NULL,NULL,0)", EVEIPHSQLiteDB.DBRef)
 
     End Sub
 
@@ -7231,7 +7231,7 @@ Public Class frmMain
                 CHARACTER_ID INT NOT NULL,
                 PRODUCTION_TYPE INT NOT NULL,
                 SOLAR_SYSTEM_ID INT NOT NULL,
-                PROGRAM_LOCATION INT NOT NULL,
+                FACILITY_VIEW INT NOT NULL,
                 FACILITY_ID INT NOT NULL,
                 INSTALLED_MODULE_ID INT NOT NULL)"
 
@@ -8110,6 +8110,11 @@ Public Class frmMain
             NewFilesAdded = True
         End If
 
+        If MD5CalcFile(EVEIPHRootDirectory & LPSolveDLL) <> MD5CalcFile(FileDirectory & LPSolveDLL) Then
+            File.Copy(EVEIPHRootDirectory & LPSolveDLL, FileDirectory & LPSolveDLL, True)
+            NewFilesAdded = True
+        End If
+
         If MD5CalcFile(MSIDirectory & MSIInstaller) <> MD5CalcFile(FileDirectory & MSIInstaller) Then
             File.Copy(MSIDirectory & MSIInstaller, FileDirectory & MSIInstaller, True)
             NewFilesAdded = True
@@ -8235,6 +8240,13 @@ Public Class frmMain
                 writer.WriteEndElement()
 
                 writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", LPSolveDLL)
+                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(LPSolveDLL).FileVersion)
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & LPSolveDLL))
+                writer.WriteAttributeString("URL", LPSolveDLLURL)
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("row")
                 writer.WriteAttributeString("Name", GADLL)
                 writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(GADLL).FileVersion)
                 writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & GADLL))
@@ -8334,6 +8346,13 @@ Public Class frmMain
                 writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & MoreLinqDLL).FileVersion)
                 writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & MoreLinqDLL))
                 writer.WriteAttributeString("URL", MoreLinqDLLURL)
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", LPSolveDLL)
+                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & LPSolveDLL).FileVersion)
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & LPSolveDLL))
+                writer.WriteAttributeString("URL", LPSolveDLLURL)
                 writer.WriteEndElement()
 
                 writer.WriteStartElement("row")
