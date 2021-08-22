@@ -60,7 +60,6 @@ Public Class frmMain
     Private UpdaterManifest As String = "EVEIPH Updater.exe.manifest"
     Private EXEManifest As String = "EVE Isk per Hour.exe.manifest"
     Private ImageZipFile As String = "EVEIPH Images.zip"
-    Private MoreLinqDLL As String = "MoreLinq.Portable.dll"
     Private GADLL As String = "GoogleAnalyticsClientDotNet.Net45.dll"
     Private LPSolveDLL As String = "LpSolveDotNet.dll"
     Private LPSolve55DLL As String = "lpsolve55.dll"
@@ -76,7 +75,6 @@ Public Class frmMain
     Private UpdaterManifestURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Updater.exe.manifest"
     Private EXEManifestURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVE%20Isk%20per%20Hour.exe.manifest"
     Private ImageZipFileURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Images.zip"
-    Private MoreLinqDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/MoreLinq.Portable.dll"
     Private GAURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/GoogleAnalyticsClientDotNet.Net45.dll"
     Private LPSolveDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/LpSolveDotNet.dll"
     Private LPSolve55DLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/lpsolve55.dll"
@@ -752,7 +750,6 @@ Public Class frmMain
         File.Copy(UploadFileDirectory & UpdaterManifest, FinalBinaryFolderPath & UpdaterManifest)
         File.Copy(UploadFileDirectory & EXEManifest, FinalBinaryFolderPath & EXEManifest)
         File.Copy(UploadFileDirectory & LatestVersionXML, FinalBinaryFolderPath & LatestVersionXML)
-        File.Copy(UploadFileDirectory & MoreLinqDLL, FinalBinaryFolderPath & MoreLinqDLL)
         File.Copy(UploadFileDirectory & GADLL, FinalBinaryFolderPath & GADLL)
         File.Copy(UploadFileDirectory & LPSolveDLL, FinalBinaryFolderPath & LPSolveDLL)
         File.Copy(UploadFileDirectory & LPSolve55DLL, FinalBinaryFolderPath & LPSolve55DLL)
@@ -8103,11 +8100,6 @@ Public Class frmMain
             NewFilesAdded = True
         End If
 
-        If MD5CalcFile(EVEIPHRootDirectory & MoreLinqDLL) <> MD5CalcFile(FileDirectory & MoreLinqDLL) Then
-            File.Copy(EVEIPHRootDirectory & MoreLinqDLL, FileDirectory & MoreLinqDLL, True)
-            NewFilesAdded = True
-        End If
-
         If MD5CalcFile(EVEIPHRootDirectory & GADLL) <> MD5CalcFile(FileDirectory & GADLL) Then
             File.Copy(EVEIPHRootDirectory & GADLL, FileDirectory & GADLL, True)
             NewFilesAdded = True
@@ -8241,13 +8233,6 @@ Public Class frmMain
                 writer.WriteEndElement()
 
                 writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", MoreLinqDLL)
-                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(MoreLinqDLL).FileVersion)
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & MoreLinqDLL))
-                writer.WriteAttributeString("URL", MoreLinqDLLURL)
-                writer.WriteEndElement()
-
-                writer.WriteStartElement("row")
                 writer.WriteAttributeString("Name", LPSolveDLL)
                 writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(LPSolveDLL).FileVersion)
                 writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & LPSolveDLL))
@@ -8354,13 +8339,6 @@ Public Class frmMain
                 writer.WriteAttributeString("Version", "1.0")
                 writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EXEManifest))
                 writer.WriteAttributeString("URL", EXEManifestURL)
-                writer.WriteEndElement()
-
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", MoreLinqDLL)
-                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & MoreLinqDLL).FileVersion)
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & MoreLinqDLL))
-                writer.WriteAttributeString("URL", MoreLinqDLLURL)
                 writer.WriteEndElement()
 
                 writer.WriteStartElement("row")
