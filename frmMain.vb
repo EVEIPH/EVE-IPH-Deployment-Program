@@ -63,6 +63,7 @@ Public Class frmMain
     Private MoreLinqDLL As String = "MoreLinq.Portable.dll"
     Private GADLL As String = "GoogleAnalyticsClientDotNet.Net45.dll"
     Private LPSolveDLL As String = "LpSolveDotNet.dll"
+    Private LPSolve55DLL As String = "lpsolve55.dll"
     Private LatestVersionXML As String
     Private LatestTestVersionXML As String
 
@@ -78,6 +79,7 @@ Public Class frmMain
     Private MoreLinqDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/MoreLinq.Portable.dll"
     Private GAURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/GoogleAnalyticsClientDotNet.Net45.dll"
     Private LPSolveDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/LpSolveDotNet.dll"
+    Private LPSolve55DLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/lpsolve55.dll"
 
     Private TestJSONDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Newtonsoft.Json.dll"
     Private TestSQLiteDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/System.Data.SQLite.dll"
@@ -753,6 +755,7 @@ Public Class frmMain
         File.Copy(UploadFileDirectory & MoreLinqDLL, FinalBinaryFolderPath & MoreLinqDLL)
         File.Copy(UploadFileDirectory & GADLL, FinalBinaryFolderPath & GADLL)
         File.Copy(UploadFileDirectory & LPSolveDLL, FinalBinaryFolderPath & LPSolveDLL)
+        File.Copy(UploadFileDirectory & LPSolve55DLL, FinalBinaryFolderPath & LPSolve55DLL)
 
         ' DB
         File.Copy(SDEWorkingDirectory & EVEIPHDB, FinalBinaryFolderPath & EVEIPHDB)
@@ -8115,6 +8118,11 @@ Public Class frmMain
             NewFilesAdded = True
         End If
 
+        If MD5CalcFile(EVEIPHRootDirectory & LPSolve55DLL) <> MD5CalcFile(FileDirectory & LPSolve55DLL) Then
+            File.Copy(EVEIPHRootDirectory & LPSolve55DLL, FileDirectory & LPSolve55DLL, True)
+            NewFilesAdded = True
+        End If
+
         If MD5CalcFile(MSIDirectory & MSIInstaller) <> MD5CalcFile(FileDirectory & MSIInstaller) Then
             File.Copy(MSIDirectory & MSIInstaller, FileDirectory & MSIInstaller, True)
             NewFilesAdded = True
@@ -8247,6 +8255,13 @@ Public Class frmMain
                 writer.WriteEndElement()
 
                 writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", LPSolve55DLL)
+                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(LPSolve55DLL).FileVersion)
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & LPSolve55DLL))
+                writer.WriteAttributeString("URL", LPSolve55DLLURL)
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("row")
                 writer.WriteAttributeString("Name", GADLL)
                 writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(GADLL).FileVersion)
                 writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & GADLL))
@@ -8353,6 +8368,13 @@ Public Class frmMain
                 writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & LPSolveDLL).FileVersion)
                 writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & LPSolveDLL))
                 writer.WriteAttributeString("URL", LPSolveDLLURL)
+                writer.WriteEndElement()
+
+                writer.WriteStartElement("row")
+                writer.WriteAttributeString("Name", LPSolve55DLL)
+                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & LPSolve55DLL).FileVersion)
+                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & LPSolve55DLL))
+                writer.WriteAttributeString("URL", LPSolve55DLLURL)
                 writer.WriteEndElement()
 
                 writer.WriteStartElement("row")
