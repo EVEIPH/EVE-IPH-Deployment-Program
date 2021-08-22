@@ -39,10 +39,10 @@ Public Class frmMain
 
     ' For saving and scanning the github folder for updates - this folder is in the deployment folder (same as installer and binary)
     Private FinalBinaryFolder As String = "EVEIPH\"
-    Private FinalBinaryZip As String = "EVEIPH v" & VersionNumber & " Binaries.zip"
+    Private FinalBinaryZip As String = "EVEIPH Binaries.zip"
 
     ' File names
-    Private MSIInstaller As String = "Eve Isk per Hour " & VersionNumber & ".msi"
+    Private MSIInstaller As String = "EVE Isk per Hour.msi"
     Private MSIDirectory As String = "C:\Users\Brian\EVE Stuff\EVE IPH Project\EVEIPHSetupWizard\"
 
     ' Special Processing
@@ -449,16 +449,16 @@ Public Class frmMain
                 UploadFileTestDirectory = ""
             End If
 
-            If Not IsNothing(VersionNumber) Then
-                ' Set these if we have a version number
-                FinalBinaryZip = "EVEIPH v" & VersionNumber & " Binaries.zip"
+            'If Not IsNothing(VersionNumber) Then
+            '    ' Set these if we have a version number
+            '    FinalBinaryZip = "EVEIPH Binaries.zip"
 
-                ' File names
-                MSIInstaller = "Eve Isk per Hour " & VersionNumber & ".msi"
-            Else
-                FinalBinaryZip = "EVEIPH v4.0 Binaries.zip"
-                MSIInstaller = "Eve Isk per Hour 4.0.msi"
-            End If
+            '    ' File names
+            '    MSIInstaller = "EVE Isk per Hour.msi"
+            'Else
+            FinalBinaryZip = "EVEIPH Binaries.zip"
+            MSIInstaller = "EVE Isk per Hour.msi"
+            'End If
 
             BPStream.Close()
         Else
@@ -656,10 +656,10 @@ Public Class frmMain
         UploadFileTestDirectory = lblTestPath.Text
 
         ' Set these if we have a version number
-        FinalBinaryZip = "EVEIPH v" & VersionNumber & " Binaries.zip"
+        FinalBinaryZip = "EVEIPH Binaries.zip"
 
         ' File names
-        MSIInstaller = "Eve Isk per Hour " & VersionNumber & ".msi"
+        MSIInstaller = "EVE Isk per Hour.msi"
 
         ' Save the file path as a text file and the database name
         MyStream = File.CreateText(SettingsFileName)
