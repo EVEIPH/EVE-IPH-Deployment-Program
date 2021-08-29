@@ -1529,6 +1529,7 @@ Public Class frmMain
 
     Private Sub CloseDBs()
         On Error Resume Next
+        Call Execute_SQLiteSQL("PRAGMA integrity_check", EVEIPHSQLiteDB.DBRef)
         EVEIPHSQLiteDB.CloseDB()
         EVEIPHSQLiteDB.ClearPools()
         On Error GoTo 0
@@ -5390,6 +5391,19 @@ Public Class frmMain
 
         ' Add Data
 
+        ' Temp add for protective equipment (my manual -3 for groupid) - falls under components
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(37174,-3,NULL,1)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(37175,-3,NULL,1)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(45641,-3,NULL,1)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(43867,-3,NULL,1)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(43866,-3,NULL,1)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(43869,-3,NULL,1)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(43868,-3,NULL,1)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(45640,-3,NULL,1)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(43704,-3,NULL,1)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(43705,-3,NULL,1)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(45548,-3,NULL,1)", EVEIPHSQLiteDB.DBRef)
+
         ' XL-Set Rigs
         Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(37178,NULL,7,1)", EVEIPHSQLiteDB.DBRef)
         Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(37178,NULL,8,1)", EVEIPHSQLiteDB.DBRef)
@@ -7876,6 +7890,11 @@ Public Class frmMain
         rsCheck.Close()
 
         Call Execute_SQLiteSQL("UPDATE invTypes SET groupID = " & ProtectiveComponents & " WHERE typeID IN (57478,57479,57480,57481,57482,57483,57484,57485,57486)", SDEDB.DBRef)
+
+        ' Need to modify the attributeid for these rigs to normalize them
+        ' 2713 -> 2593 and 2714 -> 2594
+        Call Execute_SQLiteSQL("UPDATE dogmaTypeAttributes SET attributeID = 2593 WHERE attributeID = 2713", SDEDB.DBRef)
+        Call Execute_SQLiteSQL("UPDATE dogmaTypeAttributes SET attributeID = 2594 WHERE attributeID = 2714", SDEDB.DBRef)
 
         pgMain.Visible = False
         lblTableName.Text = ""
