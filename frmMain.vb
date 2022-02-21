@@ -51,18 +51,27 @@ Public Class frmMain
     Private Const MolecularForgingToolsGroupID As Integer = -2
     Private Const ProtectiveComponents As Integer = -3
 
-    Private JSONDLL As String = "Newtonsoft.Json.dll"
-    Private SQLiteDLL As String = "System.Data.SQLite.dll"
-    Private SQLInteropDLL As String = "SQLite.Interop.dll"
     Private EVEIPHEXE As String = "EVE Isk per Hour.exe"
     Private EVEIPHUpdater As String = "EVEIPH Updater.exe"
     Private EVEIPHDB As String = "EVEIPH DB.sqlite"
     Private UpdaterManifest As String = "EVEIPH Updater.exe.manifest"
     Private EXEManifest As String = "EVE Isk per Hour.exe.manifest"
     Private ImageZipFile As String = "EVEIPH Images.zip"
-    Private GADLL As String = "GoogleAnalyticsClientDotNet.Net45.dll"
+
+    ' DLLs
+    Private IMTokensJWTDLL As String = "System.IdentityModel.Tokens.Jwt.dll"
+    Private IMJsonWebTokensDLL As String = "Microsoft.IdentityModel.JsonWebTokens.dll"
+    Private IMTokensDLL As String = "Microsoft.IdentityModel.Tokens.dll"
+    Private IMLoggingDLL As String = "Microsoft.IdentityModel.Logging.dll"
+
     Private LPSolveDLL As String = "LpSolveDotNet.dll"
+    Private SQLInteropDLL As String = "SQLite.Interop.dll"
     Private LPSolve55DLL As String = "lpsolve55.dll"
+    Private JWTDLL As String = "JWT.dll"
+    Private SQLiteDLL As String = "System.Data.SQLite.dll"
+    Private JSONDLL As String = "Newtonsoft.Json.dll"
+    Private GADLL As String = "GoogleAnalyticsClientDotNet.Net45.dll"
+
     Private LatestVersionXML As String
     Private LatestTestVersionXML As String
 
@@ -79,16 +88,11 @@ Public Class frmMain
     Private LPSolveDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/LpSolveDotNet.dll"
     Private LPSolve55DLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/lpsolve55.dll"
 
-    Private TestJSONDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Newtonsoft.Json.dll"
-    Private TestSQLiteDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/System.Data.SQLite.dll"
-    Private TestSQLInteropDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/SQLite.Interop.dll"
-    Private TestEVEIPHEXEURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVE%20Isk%20per%20Hour.exe"
-    Private TestEVEIPHUpdaterURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Updater.exe"
-    Private TestEVEIPHDBURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20DB.sqlite"
-    Private TestUpdaterManifestURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Updater.exe.manifest"
-    Private TestEXEManifestURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVE%20Isk%20per%20Hour.exe.manifest"
-    Private TestImageZipFileURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Images.zip"
-    Private TestMoreLinqDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/MoreLinq.Portable.dll"
+    Private JWTDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/JWT.dll"
+    Private IMTokensJWTDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/System.IdentityModel.Tokens.Jwt.dll"
+    Private IMJsonWebTokensDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Microsoft.IdentityModel.JsonWebTokens.dll"
+    Private IMTokensDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Microsoft.IdentityModel.Tokens.dll"
+    Private IMLoggingDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Microsoft.IdentityModel.Logging.dll"
 
     Private FileList As List(Of FileNameDate)
 
@@ -751,6 +755,11 @@ Public Class frmMain
         File.Copy(UploadFileDirectory & EXEManifest, FinalBinaryFolderPath & EXEManifest)
         File.Copy(UploadFileDirectory & LatestVersionXML, FinalBinaryFolderPath & LatestVersionXML)
         File.Copy(UploadFileDirectory & GADLL, FinalBinaryFolderPath & GADLL)
+        File.Copy(UploadFileDirectory & JWTDLL, FinalBinaryFolderPath & JWTDLL)
+        File.Copy(UploadFileDirectory & IMTokensJWTDLL, FinalBinaryFolderPath & IMTokensJWTDLL)
+        File.Copy(UploadFileDirectory & IMJsonWebTokensDLL, FinalBinaryFolderPath & IMJsonWebTokensDLL)
+        File.Copy(UploadFileDirectory & IMTokensDLL, FinalBinaryFolderPath & IMTokensDLL)
+        File.Copy(UploadFileDirectory & IMLoggingDLL, FinalBinaryFolderPath & IMLoggingDLL)
         File.Copy(UploadFileDirectory & LPSolveDLL, FinalBinaryFolderPath & LPSolveDLL)
         File.Copy(UploadFileDirectory & LPSolve55DLL, FinalBinaryFolderPath & LPSolve55DLL)
 
@@ -1166,6 +1175,7 @@ Public Class frmMain
             ' Show error and exit
             'Close the streams
             writeStream.Close()
+            Call File.Delete(FileName)
             Return ""
         End Try
 
@@ -1985,7 +1995,13 @@ Public Class frmMain
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
         SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 3 WHERE ITEM_CATEGORY = 'Subsystem' OR ITEM_GROUP = 'Strategic Cruiser' OR ITEM_GROUP = 'Tactical Destroyer'"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
-        ' Structure rigs
+        ' Structure T1
+        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 1 WHERE META_GROUP = 54"
+        ' Structure T2
+        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 2, ITEM_TYPE = 2 WHERE META_GROUP = 53"
+        ' Faction Structures
+        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 15 WHERE META_GROUP = 52"
+        ' Structure Rigs
         SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 2, ITEM_TYPE = 2 WHERE ITEM_CATEGORY_ID = " & StructureRigCategory & " AND META_GROUP = 53"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
         ' for abyssal - it uses meta value where attributeid = 1692 for some reason
@@ -2622,40 +2638,40 @@ Public Class frmMain
 
     '    '' Pull new data and insert
     '    'mainSQL = "SELECT invTypes.typeID AS ARRAY_TYPE_ID, "
-    '    'mainSQL = mainSQL & "invTypes.typeName AS ARRAY_NAME, "
-    '    'mainSQL = mainSQL & "ramActivities.activityID AS ACTIVITY_ID, "
-    '    'mainSQL = mainSQL & "ramAssemblyLineTypes.baseMaterialMultiplier * ramAssemblyLineTypeDetailPerGroup.materialMultiplier AS MATERIAL_MULTIPLIER, "
-    '    'mainSQL = mainSQL & "ramAssemblyLineTypes.baseTimeMultiplier * ramAssemblyLineTypeDetailPerGroup.timeMultiplier AS TIME_MULTIPLIER, "
-    '    'mainSQL = mainSQL & "ramAssemblyLineTypes.baseCostMultiplier * ramAssemblyLineTypeDetailPerGroup.costMultiplier AS COST_MULTIPLIER, "
-    '    'mainSQL = mainSQL & "invGroups.groupID AS GROUP_ID, "
-    '    'mainSQL = mainSQL & "0 AS CATEGORY_ID "
-    '    'mainSQL = mainSQL & "FROM invTypes, ramInstallationTypeContents, invGroups AS IG1, "
-    '    'mainSQL = mainSQL & "ramActivities, ramAssemblyLineTypes, ramAssemblyLineTypeDetailPerGroup, invGroups "
-    '    'mainSQL = mainSQL & "WHERE ramAssemblyLineTypes.assemblyLineTypeID = ramInstallationTypeContents.assemblyLineTypeID "
-    '    'mainSQL = mainSQL & "AND ramInstallationTypeContents.installationTypeID = invTypes.typeID  "
-    '    'mainSQL = mainSQL & "AND ramAssemblyLineTypes.activityID = ramActivities.activityID  "
-    '    'mainSQL = mainSQL & "AND ramAssemblyLineTypes.assemblyLineTypeID = ramAssemblyLineTypeDetailPerGroup.assemblyLineTypeID  "
-    '    'mainSQL = mainSQL & "AND ramAssemblyLineTypeDetailPerGroup.groupID = invGroups.groupID "
-    '    'mainSQL = mainSQL & "AND invTypes.groupID = IG1.groupID  "
-    '    'mainSQL = mainSQL & "AND IG1.categoryID  = 23 "
-    '    'mainSQL = mainSQL & "UNION "
-    '    'mainSQL = mainSQL & "SELECT invTypes.typeID AS ARRAY_TYPE_ID, "
-    '    'mainSQL = mainSQL & "invTypes.typeName AS ARRAY_NAME, "
-    '    'mainSQL = mainSQL & "ramActivities.activityID AS ACTIVITY_ID, "
-    '    'mainSQL = mainSQL & "ramAssemblyLineTypes.baseMaterialMultiplier * ramAssemblyLineTypeDetailPerCategory.materialMultiplier AS MATERIAL_MULTIPLIER, "
-    '    'mainSQL = mainSQL & "ramAssemblyLineTypes.baseTimeMultiplier * ramAssemblyLineTypeDetailPerCategory.timeMultiplier AS TIME_MULTIPLIER, "
-    '    'mainSQL = mainSQL & "ramAssemblyLineTypes.baseCostMultiplier * ramAssemblyLineTypeDetailPerCategory.costMultiplier AS COST_MULTIPLIER, "
-    '    'mainSQL = mainSQL & "0 AS GROUP_ID, "
-    '    'mainSQL = mainSQL & "invCategories.categoryID AS CATEGORY_ID "
-    '    'mainSQL = mainSQL & "FROM invTypes, invGroups, ramInstallationTypeContents, "
-    '    'mainSQL = mainSQL & "ramActivities, ramAssemblyLineTypes, ramAssemblyLineTypeDetailPerCategory, invCategories "
-    '    'mainSQL = mainSQL & "WHERE ramAssemblyLineTypes.assemblyLineTypeID = ramInstallationTypeContents.assemblyLineTypeID "
-    '    'mainSQL = mainSQL & "AND ramInstallationTypeContents.installationTypeID = invTypes.typeID  "
-    '    'mainSQL = mainSQL & "AND ramAssemblyLineTypes.activityID = ramActivities.activityID  "
-    '    'mainSQL = mainSQL & "AND ramAssemblyLineTypes.assemblyLineTypeID = ramAssemblyLineTypeDetailPerCategory.assemblyLineTypeID  "
-    '    'mainSQL = mainSQL & "AND ramAssemblyLineTypeDetailPerCategory.categoryID = invCategories.categoryID "
-    '    'mainSQL = mainSQL & "AND invTypes.groupID = invGroups.groupID  "
-    '    'mainSQL = mainSQL & "AND invGroups.categoryID  = 23 "
+    '    'mainSQL &= "invTypes.typeName AS ARRAY_NAME, "
+    '    'mainSQL &= "ramActivities.activityID AS ACTIVITY_ID, "
+    '    'mainSQL &= "ramAssemblyLineTypes.baseMaterialMultiplier * ramAssemblyLineTypeDetailPerGroup.materialMultiplier AS MATERIAL_MULTIPLIER, "
+    '    'mainSQL &= "ramAssemblyLineTypes.baseTimeMultiplier * ramAssemblyLineTypeDetailPerGroup.timeMultiplier AS TIME_MULTIPLIER, "
+    '    'mainSQL &= "ramAssemblyLineTypes.baseCostMultiplier * ramAssemblyLineTypeDetailPerGroup.costMultiplier AS COST_MULTIPLIER, "
+    '    'mainSQL &= "invGroups.groupID AS GROUP_ID, "
+    '    'mainSQL &= "0 AS CATEGORY_ID "
+    '    'mainSQL &= "FROM invTypes, ramInstallationTypeContents, invGroups AS IG1, "
+    '    'mainSQL &= "ramActivities, ramAssemblyLineTypes, ramAssemblyLineTypeDetailPerGroup, invGroups "
+    '    'mainSQL &= "WHERE ramAssemblyLineTypes.assemblyLineTypeID = ramInstallationTypeContents.assemblyLineTypeID "
+    '    'mainSQL &= "AND ramInstallationTypeContents.installationTypeID = invTypes.typeID  "
+    '    'mainSQL &= "AND ramAssemblyLineTypes.activityID = ramActivities.activityID  "
+    '    'mainSQL &= "AND ramAssemblyLineTypes.assemblyLineTypeID = ramAssemblyLineTypeDetailPerGroup.assemblyLineTypeID  "
+    '    'mainSQL &= "AND ramAssemblyLineTypeDetailPerGroup.groupID = invGroups.groupID "
+    '    'mainSQL &= "AND invTypes.groupID = IG1.groupID  "
+    '    'mainSQL &= "AND IG1.categoryID  = 23 "
+    '    'mainSQL &= "UNION "
+    '    'mainSQL &= "SELECT invTypes.typeID AS ARRAY_TYPE_ID, "
+    '    'mainSQL &= "invTypes.typeName AS ARRAY_NAME, "
+    '    'mainSQL &= "ramActivities.activityID AS ACTIVITY_ID, "
+    '    'mainSQL &= "ramAssemblyLineTypes.baseMaterialMultiplier * ramAssemblyLineTypeDetailPerCategory.materialMultiplier AS MATERIAL_MULTIPLIER, "
+    '    'mainSQL &= "ramAssemblyLineTypes.baseTimeMultiplier * ramAssemblyLineTypeDetailPerCategory.timeMultiplier AS TIME_MULTIPLIER, "
+    '    'mainSQL &= "ramAssemblyLineTypes.baseCostMultiplier * ramAssemblyLineTypeDetailPerCategory.costMultiplier AS COST_MULTIPLIER, "
+    '    'mainSQL &= "0 AS GROUP_ID, "
+    '    'mainSQL &= "invCategories.categoryID AS CATEGORY_ID "
+    '    'mainSQL &= "FROM invTypes, invGroups, ramInstallationTypeContents, "
+    '    'mainSQL &= "ramActivities, ramAssemblyLineTypes, ramAssemblyLineTypeDetailPerCategory, invCategories "
+    '    'mainSQL &= "WHERE ramAssemblyLineTypes.assemblyLineTypeID = ramInstallationTypeContents.assemblyLineTypeID "
+    '    'mainSQL &= "AND ramInstallationTypeContents.installationTypeID = invTypes.typeID  "
+    '    'mainSQL &= "AND ramAssemblyLineTypes.activityID = ramActivities.activityID  "
+    '    'mainSQL &= "AND ramAssemblyLineTypes.assemblyLineTypeID = ramAssemblyLineTypeDetailPerCategory.assemblyLineTypeID  "
+    '    'mainSQL &= "AND ramAssemblyLineTypeDetailPerCategory.categoryID = invCategories.categoryID "
+    '    'mainSQL &= "AND invTypes.groupID = invGroups.groupID  "
+    '    'mainSQL &= "AND invGroups.categoryID  = 23 "
 
     '    'SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
     '    'SQLReader1 = SQLCommand.ExecuteReader()
@@ -2741,44 +2757,44 @@ Public Class frmMain
 
         ' Pull station data from stations for temp use if they don't load facilities from CREST
         mainSQL = "SELECT staStations.stationID AS FACILITY_ID, stationName AS FACILITY_NAME, "
-        mainSQL = mainSQL & "mapSolarSystems.solarSystemID AS SOLAR_SYSTEM_ID, mapSolarSystems.solarSystemName AS SOLAR_SYSTEM_NAME, mapSolarSystems.security AS SOLAR_SYSTEM_SECURITY, "
-        mainSQL = mainSQL & "mapRegions.regionID AS REGION_ID, mapRegions.regionName AS REGION_NAME, "
-        mainSQL = mainSQL & "staStations.stationTypeID, typeName AS FACILITY_TYPE, ramActivities.activityID AS ACTIVITY_ID, "
-        mainSQL = mainSQL & ".1 as FACILITY_TAX, "
-        mainSQL = mainSQL & "ramAssemblyLineTypes.baseMaterialMultiplier * ramAssemblyLineTypeDetailPerGroup.materialMultiplier AS MATERIAL_MULTIPLIER, "
-        mainSQL = mainSQL & "ramAssemblyLineTypes.baseTimeMultiplier * ramAssemblyLineTypeDetailPerGroup.timeMultiplier AS TIME_MULTIPLIER,  "
-        mainSQL = mainSQL & "ramAssemblyLineTypes.baseCostMultiplier * ramAssemblyLineTypeDetailPerGroup.costMultiplier AS COST_MULTIPLIER,  "
-        mainSQL = mainSQL & "invGroups.groupID AS GROUP_ID, 0 AS CATEGORY_ID "
-        mainSQL = mainSQL & "FROM staStations, invTypes, ramAssemblyLineStations, mapRegions, mapSolarSystems, "
-        mainSQL = mainSQL & "ramActivities, ramAssemblyLineTypes, ramAssemblyLineTypeDetailPerGroup, invGroups "
-        mainSQL = mainSQL & "WHERE staStations.stationTypeID = invTypes.typeID "
-        mainSQL = mainSQL & "AND ramAssemblyLineTypes.assemblyLineTypeID = ramAssemblyLineTypeDetailPerGroup.assemblyLineTypeID "
-        mainSQL = mainSQL & "AND ramAssemblyLineTypeDetailPerGroup.groupID = invGroups.groupID "
-        mainSQL = mainSQL & "AND staStations.regionID = mapRegions.regionID "
-        mainSQL = mainSQL & "AND staStations.solarSystemID = mapSolarSystems.solarSystemID "
-        mainSQL = mainSQL & "AND staStations.stationID = ramAssemblyLineStations.stationID "
-        mainSQL = mainSQL & "AND ramAssemblyLineTypes.activityID = ramActivities.activityID "
-        mainSQL = mainSQL & "AND ramAssemblyLineStations.assemblyLineTypeID = ramAssemblyLineTypes.assemblyLineTypeID "
-        mainSQL = mainSQL & "UNION "
-        mainSQL = mainSQL & "SELECT staStations.stationID, stationName, "
-        mainSQL = mainSQL & "mapSolarSystems.solarSystemID AS SOLAR_SYSTEM_ID, mapSolarSystems.solarSystemName AS SOLAR_SYSTEM_NAME, mapSolarSystems.security AS SOLAR_SYSTEM_SECURITY, "
-        mainSQL = mainSQL & "mapRegions.regionID AS REGION_ID, mapRegions.regionName AS REGION_NAME, "
-        mainSQL = mainSQL & "staStations.stationTypeID, typeName AS FACILITY_TYPE, ramActivities.activityID AS ACTIVITY_ID, "
-        mainSQL = mainSQL & ".1 as FACILITY_TAX, "
-        mainSQL = mainSQL & "ramAssemblyLineTypes.baseMaterialMultiplier * ramAssemblyLineTypeDetailPerCategory.materialMultiplier AS MATERIAL_MULTIPLIER, "
-        mainSQL = mainSQL & "ramAssemblyLineTypes.baseTimeMultiplier * ramAssemblyLineTypeDetailPerCategory.timeMultiplier AS TIME_MULTIPLIER,  "
-        mainSQL = mainSQL & "ramAssemblyLineTypes.baseCostMultiplier * ramAssemblyLineTypeDetailPerCategory.costMultiplier AS COST_MULTIPLIER,    "
-        mainSQL = mainSQL & "0 AS GROUP_ID, invCategories.categoryID AS CATEGORY_ID  "
-        mainSQL = mainSQL & "FROM staStations, invTypes, ramAssemblyLineStations, mapRegions, mapSolarSystems, "
-        mainSQL = mainSQL & "ramActivities, ramAssemblyLineTypes, ramAssemblyLineTypeDetailPerCategory, invCategories "
-        mainSQL = mainSQL & "WHERE staStations.stationTypeID = invTypes.typeID "
-        mainSQL = mainSQL & "And ramAssemblyLineTypes.assemblyLineTypeID = ramAssemblyLineTypeDetailPerCategory.assemblyLineTypeID "
-        mainSQL = mainSQL & "And ramAssemblyLineTypeDetailPerCategory.categoryID = invCategories.categoryID "
-        mainSQL = mainSQL & "And staStations.regionID = mapRegions.regionID "
-        mainSQL = mainSQL & "And staStations.solarSystemID = mapSolarSystems.solarSystemID "
-        mainSQL = mainSQL & "And staStations.stationID = ramAssemblyLineStations.stationID "
-        mainSQL = mainSQL & "And ramAssemblyLineTypes.activityID = ramActivities.activityID "
-        mainSQL = mainSQL & "And ramAssemblyLineStations.assemblyLineTypeID = ramAssemblyLineTypes.assemblyLineTypeID "
+        mainSQL &= "mapSolarSystems.solarSystemID AS SOLAR_SYSTEM_ID, mapSolarSystems.solarSystemName AS SOLAR_SYSTEM_NAME, mapSolarSystems.security AS SOLAR_SYSTEM_SECURITY, "
+        mainSQL &= "mapRegions.regionID AS REGION_ID, mapRegions.regionName AS REGION_NAME, "
+        mainSQL &= "staStations.stationTypeID, typeName AS FACILITY_TYPE, ramActivities.activityID AS ACTIVITY_ID, "
+        mainSQL &= ".1 as FACILITY_TAX, "
+        mainSQL &= "ramAssemblyLineTypes.baseMaterialMultiplier * ramAssemblyLineTypeDetailPerGroup.materialMultiplier AS MATERIAL_MULTIPLIER, "
+        mainSQL &= "ramAssemblyLineTypes.baseTimeMultiplier * ramAssemblyLineTypeDetailPerGroup.timeMultiplier AS TIME_MULTIPLIER,  "
+        mainSQL &= "ramAssemblyLineTypes.baseCostMultiplier * ramAssemblyLineTypeDetailPerGroup.costMultiplier AS COST_MULTIPLIER,  "
+        mainSQL &= "invGroups.groupID AS GROUP_ID, 0 AS CATEGORY_ID "
+        mainSQL &= "FROM staStations, invTypes, ramAssemblyLineStations, mapRegions, mapSolarSystems, "
+        mainSQL &= "ramActivities, ramAssemblyLineTypes, ramAssemblyLineTypeDetailPerGroup, invGroups "
+        mainSQL &= "WHERE staStations.stationTypeID = invTypes.typeID "
+        mainSQL &= "AND ramAssemblyLineTypes.assemblyLineTypeID = ramAssemblyLineTypeDetailPerGroup.assemblyLineTypeID "
+        mainSQL &= "AND ramAssemblyLineTypeDetailPerGroup.groupID = invGroups.groupID "
+        mainSQL &= "AND staStations.regionID = mapRegions.regionID "
+        mainSQL &= "AND staStations.solarSystemID = mapSolarSystems.solarSystemID "
+        mainSQL &= "AND staStations.stationID = ramAssemblyLineStations.stationID "
+        mainSQL &= "AND ramAssemblyLineTypes.activityID = ramActivities.activityID "
+        mainSQL &= "AND ramAssemblyLineStations.assemblyLineTypeID = ramAssemblyLineTypes.assemblyLineTypeID "
+        mainSQL &= "UNION "
+        mainSQL &= "SELECT staStations.stationID, stationName, "
+        mainSQL &= "mapSolarSystems.solarSystemID AS SOLAR_SYSTEM_ID, mapSolarSystems.solarSystemName AS SOLAR_SYSTEM_NAME, mapSolarSystems.security AS SOLAR_SYSTEM_SECURITY, "
+        mainSQL &= "mapRegions.regionID AS REGION_ID, mapRegions.regionName AS REGION_NAME, "
+        mainSQL &= "staStations.stationTypeID, typeName AS FACILITY_TYPE, ramActivities.activityID AS ACTIVITY_ID, "
+        mainSQL &= ".1 as FACILITY_TAX, "
+        mainSQL &= "ramAssemblyLineTypes.baseMaterialMultiplier * ramAssemblyLineTypeDetailPerCategory.materialMultiplier AS MATERIAL_MULTIPLIER, "
+        mainSQL &= "ramAssemblyLineTypes.baseTimeMultiplier * ramAssemblyLineTypeDetailPerCategory.timeMultiplier AS TIME_MULTIPLIER,  "
+        mainSQL &= "ramAssemblyLineTypes.baseCostMultiplier * ramAssemblyLineTypeDetailPerCategory.costMultiplier AS COST_MULTIPLIER,    "
+        mainSQL &= "0 AS GROUP_ID, invCategories.categoryID AS CATEGORY_ID  "
+        mainSQL &= "FROM staStations, invTypes, ramAssemblyLineStations, mapRegions, mapSolarSystems, "
+        mainSQL &= "ramActivities, ramAssemblyLineTypes, ramAssemblyLineTypeDetailPerCategory, invCategories "
+        mainSQL &= "WHERE staStations.stationTypeID = invTypes.typeID "
+        mainSQL &= "And ramAssemblyLineTypes.assemblyLineTypeID = ramAssemblyLineTypeDetailPerCategory.assemblyLineTypeID "
+        mainSQL &= "And ramAssemblyLineTypeDetailPerCategory.categoryID = invCategories.categoryID "
+        mainSQL &= "And staStations.regionID = mapRegions.regionID "
+        mainSQL &= "And staStations.solarSystemID = mapSolarSystems.solarSystemID "
+        mainSQL &= "And staStations.stationID = ramAssemblyLineStations.stationID "
+        mainSQL &= "And ramAssemblyLineTypes.activityID = ramActivities.activityID "
+        mainSQL &= "And ramAssemblyLineStations.assemblyLineTypeID = ramAssemblyLineTypes.assemblyLineTypeID "
 
         SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
         SQLReader1 = SQLCommand.ExecuteReader()
@@ -2851,25 +2867,25 @@ Public Class frmMain
 
         ' Figure out what lines are not in the categories table so that we can add the missing line and categoryID
         mainSQL = "SELECT ramAssemblyLineTypes.assemblyLineTypeID, activityID "
-        mainSQL = mainSQL & "FROM ramAssemblyLineTypes, ramInstallationTypeContents, invTypes "
-        mainSQL = mainSQL & "WHERE ramAssemblyLineTypes.assemblyLineTypeID Not IN (SELECT assemblyLineTypeID FROM ramAssemblyLineTypeDetailPerCategory) "
-        mainSQL = mainSQL & "And ramAssemblyLineTypes.assemblyLineTypeID Not IN (SELECT assemblyLineTypeID FROM ramAssemblyLineTypeDetailPerGroup) "
-        mainSQL = mainSQL & "And ramAssemblyLineTypes.assemblyLineTypeID = ramInstallationTypeContents.assemblyLineTypeID "
-        mainSQL = mainSQL & "And ramInstallationTypeContents.installationTypeID = invTypes.typeID "
-        mainSQL = mainSQL & "GROUP BY ramAssemblyLineTypes.assemblyLineTypeID, activityID "
+        mainSQL &= "FROM ramAssemblyLineTypes, ramInstallationTypeContents, invTypes "
+        mainSQL &= "WHERE ramAssemblyLineTypes.assemblyLineTypeID Not IN (SELECT assemblyLineTypeID FROM ramAssemblyLineTypeDetailPerCategory) "
+        mainSQL &= "And ramAssemblyLineTypes.assemblyLineTypeID Not IN (SELECT assemblyLineTypeID FROM ramAssemblyLineTypeDetailPerGroup) "
+        mainSQL &= "And ramAssemblyLineTypes.assemblyLineTypeID = ramInstallationTypeContents.assemblyLineTypeID "
+        mainSQL &= "And ramInstallationTypeContents.installationTypeID = invTypes.typeID "
+        mainSQL &= "GROUP BY ramAssemblyLineTypes.assemblyLineTypeID, activityID "
         SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
         SQLReader1 = SQLCommand.ExecuteReader()
 
         While SQLReader1.Read
             ' Look up all item categoryID's for the activity of all blueprints that have it
             mainSQL = "SELECT invCategories.categoryID "
-            mainSQL = mainSQL & "FROM industryActivityProducts, invTypes, invGroups, invCategories "
+            mainSQL &= "FROM industryActivityProducts, invTypes, invGroups, invCategories "
             ' This line figures out the items made with the bp, and then attaches it to the activities on the bp - not elegant but works with CCPs system
-            mainSQL = mainSQL & "WHERE (SELECT typeID FROM invTypes, industryActivityProducts AS X WHERE typeID = X.productTypeID And X.activityID = 1 And X.blueprintTypeID = industryActivityProducts.blueprintTypeID) = invTypes.typeID "
-            mainSQL = mainSQL & "And invTypes.groupID = invGroups.groupID "
-            mainSQL = mainSQL & "And invGroups.categoryID = invCategories.categoryID "
-            mainSQL = mainSQL & "And activityID = " & SQLReader1.GetValue(1) & " "
-            mainSQL = mainSQL & "GROUP BY invCategories.categoryID "
+            mainSQL &= "WHERE (SELECT typeID FROM invTypes, industryActivityProducts AS X WHERE typeID = X.productTypeID And X.activityID = 1 And X.blueprintTypeID = industryActivityProducts.blueprintTypeID) = invTypes.typeID "
+            mainSQL &= "And invTypes.groupID = invGroups.groupID "
+            mainSQL &= "And invGroups.categoryID = invCategories.categoryID "
+            mainSQL &= "And activityID = " & SQLReader1.GetValue(1) & " "
+            mainSQL &= "GROUP BY invCategories.categoryID "
 
             SQLCommand2 = New SQLiteCommand(mainSQL, SDEDB.DBRef)
             SQLReader12 = SQLCommand2.ExecuteReader()
@@ -2877,18 +2893,18 @@ Public Class frmMain
             While SQLReader12.Read
                 ' Now insert the data into the ramAssemblyLineTypeDetailPerCategory table if not there
                 mainSQL = "SELECT 'X' FROM ramAssemblyLineTypeDetailPerCategory "
-                mainSQL = mainSQL & "WHERE assemblyLineTypeID = " & SQLReader1.GetValue(0) & " "
-                mainSQL = mainSQL & "AND categoryID = " & SQLReader12.GetValue(0) & " "
-                mainSQL = mainSQL & "AND timeMultiplier = 1 AND materialMultiplier = 1 AND costMultiplier = 1"
+                mainSQL &= "WHERE assemblyLineTypeID = " & SQLReader1.GetValue(0) & " "
+                mainSQL &= "AND categoryID = " & SQLReader12.GetValue(0) & " "
+                mainSQL &= "AND timeMultiplier = 1 AND materialMultiplier = 1 AND costMultiplier = 1"
 
                 SQLCommand3 = New SQLiteCommand(mainSQL, SDEDB.DBRef)
                 SQLReader13 = SQLCommand3.ExecuteReader()
 
                 If Not SQLReader13.Read Then
                     mainSQL = "INSERT INTO ramAssemblyLineTypeDetailPerCategory VALUES ("
-                    mainSQL = mainSQL & CStr(SQLReader1.GetValue(0)) & ", " ' ramAssemblyLineTypeID
-                    mainSQL = mainSQL & CStr(SQLReader12.GetValue(0)) & ", " ' categoryID
-                    mainSQL = mainSQL & "1,1,1)" ' timeMultiplier, materialMultiplier, and costMultiplier are all 1 by default since they don't exist
+                    mainSQL &= CStr(SQLReader1.GetValue(0)) & ", " ' ramAssemblyLineTypeID
+                    mainSQL &= CStr(SQLReader12.GetValue(0)) & ", " ' categoryID
+                    mainSQL &= "1,1,1)" ' timeMultiplier, materialMultiplier, and costMultiplier are all 1 by default since they don't exist
                 Else
                     Application.DoEvents()
                 End If
@@ -3572,6 +3588,8 @@ Public Class frmMain
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Structure Components','Min Sell', 'The Forge','Jita',0,0)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Subsystem Components','Min Sell', 'The Forge','Jita',0,0)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'No Build Items','Min Sell', 'The Forge','Jita',0,0)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         SQL = "CREATE INDEX IDX_PP_ID ON PRICE_PROFILES (ID)"
@@ -4386,6 +4404,9 @@ Public Class frmMain
         SQL = "CREATE INDEX IDX_TA_TYPE_ID ON TYPE_ATTRIBUTES (typeID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
+        SQL = "CREATE INDEX IDX_TAID_TYPE_ID ON TYPE_ATTRIBUTES (typeID,attributeID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
         pgMain.Visible = False
 
     End Sub
@@ -4583,14 +4604,14 @@ Public Class frmMain
 
         ' Pull new data and insert
         mainSQL = "SELECT invTypes.typeID AS ORE_ID, invTypes.typeName AS ORE_NAME, invTypes.packagedVolume AS ORE_VOLUME, invTypes.portionSize AS UNITS_TO_REFINE, "
-        mainSQL = mainSQL & "CASE WHEN invTypes.groupID = 465 THEN 'Ice' WHEN invTypes.groupID = 711 THEN 'Gas' "
-        mainSQL = mainSQL & "WHEN invTypes.groupID IN (1884,1920,1921,1922,1923) THEN invGroups.groupName ELSE 'Ore' END AS BELT_TYPE, " ' Five types of moon ores
-        mainSQL = mainSQL & "CASE WHEN invTypes.groupID = 465 THEN -1 WHEN invTypes.groupID = 711 THEN -2 ELSE 0 END AS HIGH_YIELD_ORE, 0 AS COMPRESSED " ' 465 is ice, 711 is gas - neither have high yield components
-        mainSQL = mainSQL & "FROM invTypes, invGroups "
-        mainSQL = mainSQL & "WHERE invTypes.groupID = invGroups.groupID "
-        mainSQL = mainSQL & "AND (invGroups.categoryID = 25 OR invGroups.groupID = 711) " ' Clouds and Ores
-        mainSQL = mainSQL & "AND invTypes.groupID NOT IN (903, 1911) " ' make sure this isn't ores for mining missions or legacy ice ('Ancient')
-        mainSQL = mainSQL & "GROUP BY ORE_ID, ORE_NAME, ORE_VOLUME, UNITS_TO_REFINE, BELT_TYPE, HIGH_YIELD_ORE, COMPRESSED"
+        mainSQL &= "CASE WHEN invTypes.groupID = 465 THEN 'Ice' WHEN invTypes.groupID = 711 THEN 'Gas' "
+        mainSQL &= "WHEN invTypes.groupID IN (1884,1920,1921,1922,1923) THEN invGroups.groupName ELSE 'Ore' END AS BELT_TYPE, " ' Five types of moon ores
+        mainSQL &= "CASE WHEN invTypes.groupID = 465 THEN -1 WHEN invTypes.groupID = 711 THEN -2 ELSE 0 END AS HIGH_YIELD_ORE, 0 AS COMPRESSED " ' 465 is ice, 711 is gas - neither have high yield components
+        mainSQL &= "FROM invTypes, invGroups "
+        mainSQL &= "WHERE invTypes.groupID = invGroups.groupID "
+        mainSQL &= "AND (invGroups.categoryID = 25 OR invGroups.groupID = 711) " ' Clouds and Ores
+        mainSQL &= "AND invTypes.groupID NOT IN (903, 1911) " ' make sure this isn't ores for mining missions or legacy ice ('Ancient')
+        mainSQL &= "GROUP BY ORE_ID, ORE_NAME, ORE_VOLUME, UNITS_TO_REFINE, BELT_TYPE, HIGH_YIELD_ORE, COMPRESSED"
 
         SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
         SQLCommand.CommandTimeout = 300
@@ -4877,7 +4898,7 @@ Public Class frmMain
                 Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.LuminousKernite & ",'Low Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
                 Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedLuminousKernite & ",'Low Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
                 Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.FieryKernite & ",'Low Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
-                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.FieryKernite & ",'Low Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+                Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedFieryKernite & ",'Low Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
             End If
 
             If i <> 2 And i <> 3 Then
@@ -5947,11 +5968,11 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         mainSQL = "SELECT IT.typeID, IT.typeName, IT.packagedVolume, IT.portionSize, "
-        mainSQL = mainSQL & "IT2.typeID, IT2.typeName, IG2.groupName, IT2.packagedVolume, ITM.quantity "
-        mainSQL = mainSQL & "FROM invTypes AS IT, typeMaterials AS ITM, invGroups AS IG, invCategories as IC, "
-        mainSQL = mainSQL & "invTypes AS IT2, invGroups AS IG2 "
-        mainSQL = mainSQL & "WHERE IT.typeID = ITM.typeID AND IT.groupID = IG.groupID AND IG.categoryID = IC.categoryID "
-        mainSQL = mainSQL & "AND ITM.materialTypeID = IT2.typeID AND IT2.groupID = IG2.groupID "
+        mainSQL &= "IT2.typeID, IT2.typeName, IG2.groupName, IT2.packagedVolume, ITM.quantity "
+        mainSQL &= "FROM invTypes AS IT, typeMaterials AS ITM, invGroups AS IG, invCategories as IC, "
+        mainSQL &= "invTypes AS IT2, invGroups AS IG2 "
+        mainSQL &= "WHERE IT.typeID = ITM.typeID AND IT.groupID = IG.groupID AND IG.categoryID = IC.categoryID "
+        mainSQL &= "AND ITM.materialTypeID = IT2.typeID AND IT2.groupID = IG2.groupID "
 
         ' Get the count
         SQLCommand = New SQLiteCommand("SELECT COUNT(*) FROM (" & mainSQL & ") AS X", SDEDB.DBRef)
@@ -5995,8 +6016,22 @@ Public Class frmMain
 
         SQLReader1.Close()
 
-        SQL = "CREATE INDEX IDX_REPRO_ITEM_MAT_ID On REPROCESSING (ITEM_ID, REFINED_MATERIAL_ID)"
+        SQL = "CREATE INDEX IDX_REPRO_ITEM_MAT_ID ON REPROCESSING (ITEM_ID, REFINED_MATERIAL_ID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        ' After this is now done, need to enter all other items that are reprocessable to the item prices list
+        ' Now load up everything else on market for use in reprocessing - mark manufacture as -1
+        mainSQL = "INSERT INTO ITEM_PRICES_FACT SELECT DISTINCT typeID, INVENTORY_GROUPS.groupID, INVENTORY_CATEGORIES.categoryID, "
+        mainSQL &= "0 AS TECH_LEVEL, 0 AS PRICE, -1 As MANUFACTURE, 0 As ITEM_TYPE, 'None' AS PRICE_TYPE, 0, 0 "
+        mainSQL &= "FROM INVENTORY_TYPES, INVENTORY_GROUPS, INVENTORY_CATEGORIES "
+        mainSQL &= "WHERE INVENTORY_TYPES.groupID = INVENTORY_GROUPS.groupID "
+        mainSQL &= "AND INVENTORY_GROUPS.categoryID = INVENTORY_CATEGORIES.categoryID "
+        mainSQL &= "AND INVENTORY_TYPES.published <> 0 AND INVENTORY_GROUPS.published <> 0 AND INVENTORY_CATEGORIES.published <> 0 "
+        mainSQL &= "AND INVENTORY_TYPES.marketGroupID IS NOT NULL "
+        mainSQL &= "AND typeID NOT IN (SELECT ITEM_ID FROM ITEM_PRICES_FACT) "
+        mainSQL &= "AND typeID IN (SELECT DISTINCT ITEM_ID FROM REPROCESSING)"
+
+        Execute_SQLiteSQL(mainSQL, EVEIPHSQLiteDB.DBRef)
 
         pgMain.Visible = False
 
@@ -6123,18 +6158,18 @@ Public Class frmMain
 
         ' Pull new data and insert
         mainSQL = "SELECT factions.factionName, agents.corporationID, "
-        mainSQL = mainSQL & "npccorporations.corporationName, "
-        mainSQL = mainSQL & "invNames.itemID, "
-        mainSQL = mainSQL & "invNames.itemName, "
-        mainSQL = mainSQL & "agents.level, "
-        mainSQL = mainSQL & "invTypes.typeID, "
-        mainSQL = mainSQL & "invTypes.typeName, "
-        mainSQL = mainSQL & "mapRegions.regionID, "
-        mainSQL = mainSQL & "mapRegions.regionName, "
-        mainSQL = mainSQL & "mapSolarSystems.solarSystemID, "
-        mainSQL = mainSQL & "mapSolarSystems.solarSystemName, "
-        mainSQL = mainSQL & "mapSolarSystems.security, "
-        mainSQL = mainSQL & "invNames_1.itemName AS Station "
+        mainSQL &= "npccorporations.corporationName, "
+        mainSQL &= "invNames.itemID, "
+        mainSQL &= "invNames.itemName, "
+        mainSQL &= "agents.level, "
+        mainSQL &= "invTypes.typeID, "
+        mainSQL &= "invTypes.typeName, "
+        mainSQL &= "mapRegions.regionID, "
+        mainSQL &= "mapRegions.regionName, "
+        mainSQL &= "mapSolarSystems.solarSystemID, "
+        mainSQL &= "mapSolarSystems.solarSystemName, "
+        mainSQL &= "mapSolarSystems.security, "
+        mainSQL &= "invNames_1.itemName AS Station "
         msSQL2 = "FROM agents, invNames as invNames_1 INNER JOIN researchAgents ON agents.agentID = researchAgents.agentID "
         msSQL2 = msSQL2 & "INNER JOIN invTypes ON researchAgents.typeID = invTypes.typeID "
         msSQL2 = msSQL2 & "INNER JOIN npcCorporations ON agents.corporationID = npcCorporations.corporationID "
@@ -6418,7 +6453,7 @@ Public Class frmMain
 
         ' Pull new data and insert
         mainSQL = "SELECT regionID, constellationID, solarSystemID, solarSystemName, security, 0 " ' FW system set below
-        mainSQL = mainSQL & "FROM mapSolarSystems "
+        mainSQL &= "FROM mapSolarSystems "
         SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
         SQLReader1 = SQLCommand.ExecuteReader()
 
@@ -6797,19 +6832,19 @@ Public Class frmMain
 
         ' Build 2 queries and the Union, then pull data
         mainSQL = "CREATE VIEW PRICES_BUILD AS "
-        mainSQL = mainSQL & "SELECT ALL_BLUEPRINTS.ITEM_ID, "
-        mainSQL = mainSQL & "ALL_BLUEPRINTS.ITEM_NAME, "
-        mainSQL = mainSQL & "ALL_BLUEPRINTS.TECH_LEVEL, "
-        mainSQL = mainSQL & "0 AS PRICE, "
-        mainSQL = mainSQL & "ALL_BLUEPRINTS.ITEM_CATEGORY_ID, "
-        mainSQL = mainSQL & "ALL_BLUEPRINTS.ITEM_CATEGORY, "
-        mainSQL = mainSQL & "ALL_BLUEPRINTS.ITEM_GROUP_ID, "
-        mainSQL = mainSQL & "ALL_BLUEPRINTS.ITEM_GROUP, "
-        mainSQL = mainSQL & "1 AS MANUFACTURE, "
-        mainSQL = mainSQL & "ALL_BLUEPRINTS.ITEM_TYPE,"
-        mainSQL = mainSQL & "'None' AS PRICE_TYPE "
-        mainSQL = mainSQL & "FROM ALL_BLUEPRINTS "
-        mainSQL = mainSQL & "WHERE ITEM_ID <> 33195" ' For some reason spatial attunement Units are getting in here and NO Build, but they are no build items only
+        mainSQL &= "SELECT ALL_BLUEPRINTS.ITEM_ID, "
+        mainSQL &= "ALL_BLUEPRINTS.ITEM_NAME, "
+        mainSQL &= "ALL_BLUEPRINTS.TECH_LEVEL, "
+        mainSQL &= "0 AS PRICE, "
+        mainSQL &= "ALL_BLUEPRINTS.ITEM_CATEGORY_ID, "
+        mainSQL &= "ALL_BLUEPRINTS.ITEM_CATEGORY, "
+        mainSQL &= "ALL_BLUEPRINTS.ITEM_GROUP_ID, "
+        mainSQL &= "ALL_BLUEPRINTS.ITEM_GROUP, "
+        mainSQL &= "1 AS MANUFACTURE, "
+        mainSQL &= "ALL_BLUEPRINTS.ITEM_TYPE,"
+        mainSQL &= "'None' AS PRICE_TYPE "
+        mainSQL &= "FROM ALL_BLUEPRINTS "
+        mainSQL &= "WHERE ITEM_ID <> 33195" ' For some reason spatial attunement Units are getting in here and NO Build, but they are no build items only
 
         Execute_SQLiteSQL(mainSQL, SDEDB.DBRef)
 
@@ -6827,27 +6862,33 @@ Public Class frmMain
             SQLReader1.Close()
         End If
 
+        On Error Resume Next
+        SQL = "DROP VIEW PRICES_META"
+        Execute_SQLiteSQL(SQL, SDEDB.DBRef)
+        On Error GoTo 0
+
         mainSQL = "CREATE VIEW PRICES_NOBUILD AS SELECT * FROM ("
         ' Get all the materials used to build stuff
-        mainSQL = mainSQL & "SELECT DISTINCT MATERIAL_ID, MATERIAL, 0 AS TECH_LEVEL, 0 AS PRICE, MAT_CATEGORY_ID, MATERIAL_CATEGORY, MAT_GROUP_ID, MATERIAL_GROUP, 0 AS MANUFACTURE, "
-        mainSQL = mainSQL & "0 AS ITEM_TYPE, 'None' AS PRICE_TYPE "
-        mainSQL = mainSQL & "FROM ALL_BLUEPRINT_MATERIALS "
-        mainSQL = mainSQL & "WHERE MATERIAL_ID NOT IN (SELECT ITEM_ID FROM ALL_BLUEPRINTS) "
-        mainSQL = mainSQL & "AND MATERIAL_CATEGORY <> 'Skill' "
-        mainSQL = mainSQL & "UNION "
+        mainSQL &= "SELECT DISTINCT MATERIAL_ID, MATERIAL, 0 AS TECH_LEVEL, 0 AS PRICE, MAT_CATEGORY_ID, MATERIAL_CATEGORY, MAT_GROUP_ID, MATERIAL_GROUP, 0 AS MANUFACTURE, "
+        mainSQL &= "0 AS ITEM_TYPE, 'None' AS PRICE_TYPE "
+        mainSQL &= "FROM ALL_BLUEPRINT_MATERIALS "
+        mainSQL &= "WHERE MATERIAL_ID NOT IN (SELECT ITEM_ID FROM ALL_BLUEPRINTS) "
+        mainSQL &= "AND MATERIAL_CATEGORY <> 'Skill' "
+        mainSQL &= "UNION "
 
         ' Get specific materials for later use or other areas in IPH (ie asteroids)
-        mainSQL = mainSQL & "SELECT DISTINCT typeID AS MATERIAL_ID, typeName AS MATERIAL, 0 AS TECH_LEVEL, 0 AS PRICE, "
-        mainSQL = mainSQL & "invCategories.categoryID As MAT_CATEGORY_ID, categoryName As MATERIAL_CATEGORY, "
-        mainSQL = mainSQL & "invGroups.groupID As MAT_GROUP_ID, groupName As MATERIAL_GROUP, 0 As MANUFACTURE, 0 As ITEM_TYPE, 'None' AS PRICE_TYPE "
-        mainSQL = mainSQL & "FROM invTypes, invGroups, invCategories "
-        mainSQL = mainSQL & "WHERE invTypes.groupID = invGroups.groupID "
-        mainSQL = mainSQL & "AND invGroups.categoryID = invCategories.categoryID "
-        mainSQL = mainSQL & "AND invTypes.published <> 0 AND invGroups.published <> 0 AND invCategories.published <> 0 "
-        mainSQL = mainSQL & "AND invTypes.marketGroupID IS NOT NULL "
-        mainSQL = mainSQL & "AND (categoryName IN ('Asteroid','Decryptors','Planetary Commodities','Planetary Resources') "
-        mainSQL = mainSQL & "OR groupName in ('Moon Materials','Ice Product','Harvestable Cloud','Intermediate Materials'))) "
-        mainSQL = mainSQL & "WHERE MATERIAL_ID NOT IN (SELECT ITEM_ID FROM PRICES_BUILD)"
+        mainSQL &= "SELECT DISTINCT typeID AS MATERIAL_ID, typeName AS MATERIAL, 0 AS TECH_LEVEL, 0 AS PRICE, "
+        mainSQL &= "invCategories.categoryID As MAT_CATEGORY_ID, categoryName As MATERIAL_CATEGORY, "
+        mainSQL &= "invGroups.groupID As MAT_GROUP_ID, groupName As MATERIAL_GROUP, 0 As MANUFACTURE, 0 As ITEM_TYPE, 'None' AS PRICE_TYPE "
+        mainSQL &= "FROM invTypes, invGroups, invCategories "
+        mainSQL &= "WHERE invTypes.groupID = invGroups.groupID "
+        mainSQL &= "AND invGroups.categoryID = invCategories.categoryID "
+        mainSQL &= "AND invTypes.published <> 0 AND invGroups.published <> 0 AND invCategories.published <> 0 "
+        mainSQL &= "AND invTypes.marketGroupID IS NOT NULL "
+        mainSQL &= "AND (categoryName IN ('Asteroid','Decryptors','Planetary Commodities','Planetary Resources') "
+        mainSQL &= "OR groupName in ('Moon Materials','Ice Product','Harvestable Cloud','Intermediate Materials'))) "
+        mainSQL &= "WHERE MATERIAL_ID Not In (SELECT ITEM_ID FROM PRICES_BUILD)"
+
         Execute_SQLiteSQL(mainSQL, SDEDB.DBRef)
 
         ' See if the union view exists and delete if so
@@ -6888,7 +6929,7 @@ Public Class frmMain
 
         ' Now select the final query of data into a temp table
         mainSQL = "SELECT ITEM_ID, ITEM_GROUP_ID, ITEM_CATEGORY_ID, TECH_LEVEL, PRICE, MANUFACTURE, ITEM_TYPE, PRICE_TYPE FROM ITEM_PRICES_UNION "
-        mainSQL = mainSQL & "GROUP BY ITEM_ID, ITEM_GROUP_ID, ITEM_CATEGORY_ID, TECH_LEVEL, PRICE, MANUFACTURE, ITEM_TYPE, PRICE_TYPE"
+        mainSQL &= "GROUP BY ITEM_ID, ITEM_GROUP_ID, ITEM_CATEGORY_ID, TECH_LEVEL, PRICE, MANUFACTURE, ITEM_TYPE, PRICE_TYPE"
         SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
         SQLReader1 = SQLCommand.ExecuteReader()
 
@@ -8044,8 +8085,8 @@ Public Class frmMain
 
         ' Look up the current record and add the negative type id so we don't get into a recursive loop for outposts
         mainSQL = "INSERT INTO invTypes SELECT typeID * -1 AS typeID, groupID, typeName, description, mass, volume, packagedVolume, capacity, portionSize, factionID, raceID, "
-        mainSQL = mainSQL & "basePrice, published, marketGroupID, graphicID, radius, iconID, soundID, sofFactionName, sofMaterialSetID "
-        mainSQL = mainSQL & "FROM invTypes WHERE typeID = " & BPID
+        mainSQL &= "basePrice, published, marketGroupID, graphicID, radius, iconID, soundID, sofFactionName, sofMaterialSetID "
+        mainSQL &= "FROM invTypes WHERE typeID = " & BPID
 
         Call Execute_SQLiteSQL(mainSQL, SDEDB.DBRef)
 
@@ -8127,6 +8168,31 @@ Public Class frmMain
             NewFilesAdded = True
         End If
 
+        If MD5CalcFile(EVEIPHRootDirectory & IMTokensJWTDLL) <> MD5CalcFile(FileDirectory & IMTokensJWTDLL) Then
+            File.Copy(EVEIPHRootDirectory & IMTokensJWTDLL, FileDirectory & IMTokensJWTDLL, True)
+            NewFilesAdded = True
+        End If
+
+        If MD5CalcFile(EVEIPHRootDirectory & IMJsonWebTokensDLL) <> MD5CalcFile(FileDirectory & IMJsonWebTokensDLL) Then
+            File.Copy(EVEIPHRootDirectory & IMJsonWebTokensDLL, FileDirectory & IMJsonWebTokensDLL, True)
+            NewFilesAdded = True
+        End If
+
+        If MD5CalcFile(EVEIPHRootDirectory & IMTokensDLL) <> MD5CalcFile(FileDirectory & IMTokensDLL) Then
+            File.Copy(EVEIPHRootDirectory & IMTokensDLL, FileDirectory & IMTokensDLL, True)
+            NewFilesAdded = True
+        End If
+
+        If MD5CalcFile(EVEIPHRootDirectory & IMLoggingDLL) <> MD5CalcFile(FileDirectory & IMLoggingDLL) Then
+            File.Copy(EVEIPHRootDirectory & IMLoggingDLL, FileDirectory & IMLoggingDLL, True)
+            NewFilesAdded = True
+        End If
+
+        If MD5CalcFile(EVEIPHRootDirectory & JWTDLL) <> MD5CalcFile(FileDirectory & JWTDLL) Then
+            File.Copy(EVEIPHRootDirectory & JWTDLL, FileDirectory & JWTDLL, True)
+            NewFilesAdded = True
+        End If
+
         If MD5CalcFile(EVEIPHRootDirectory & LPSolveDLL) <> MD5CalcFile(FileDirectory & LPSolveDLL) Then
             File.Copy(EVEIPHRootDirectory & LPSolveDLL, FileDirectory & LPSolveDLL, True)
             NewFilesAdded = True
@@ -8167,227 +8233,149 @@ Public Class frmMain
         Dim XMLSettings As XmlWriterSettings = New XmlWriterSettings()
         XMLSettings.Indent = True
 
-        ' Delete and make a fresh copy
-        If chkCreateTest.Checked Then
-            File.Delete(LatestTestVersionXML)
+        File.Delete(LatestVersionXML)
+        VersionXMLFileName = LatestVersionXML
+        FileDirectory = UploadFileDirectory
 
-            VersionXMLFileName = LatestTestVersionXML
-            FileDirectory = UploadFileTestDirectory
+        ' Loop through the settings sent and output each name and value
+        ' Copy the new XML file into the root directory - so I don't get updates and then manually upload this to media fire so people don't get crazy updates
+        Using writer As XmlWriter = XmlWriter.Create(EVEIPHRootDirectory & VersionXMLFileName, XMLSettings)
+            writer.WriteStartDocument()
+            writer.WriteStartElement("EVEIPH") ' Root.
+            writer.WriteAttributeString("Version", VersionNumber)
+            writer.WriteStartElement("LastUpdated")
+            writer.WriteString(CStr(Now))
+            writer.WriteEndElement()
 
-            ' Loop through the settings sent and output each name and value
-            ' Copy the new XML file into the root directory - so I don't get updates and then manually upload this to media fire so people don't get crazy updates
-            Using writer As XmlWriter = XmlWriter.Create(EVEIPHRootDirectory & VersionXMLFileName, XMLSettings)
-                writer.WriteStartDocument()
-                writer.WriteStartElement("EVEIPH") ' Root.
-                writer.WriteAttributeString("Version", VersionNumber)
-                writer.WriteStartElement("LastUpdated")
-                writer.WriteString(CStr(Now))
-                writer.WriteEndElement()
+            writer.WriteStartElement("result")
+            writer.WriteStartElement("rowset")
+            writer.WriteAttributeString("name", "filelist")
+            writer.WriteAttributeString("key", "version")
+            writer.WriteAttributeString("columns", "Name,Version,MD5,URL")
 
-                writer.WriteStartElement("result")
-                writer.WriteStartElement("rowset")
-                writer.WriteAttributeString("name", "filelist")
-                writer.WriteAttributeString("key", "version")
-                writer.WriteAttributeString("columns", "Name,Version,MD5,URL")
+            ' Add each file 
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", EVEIPHEXE)
+            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & EVEIPHEXE).FileVersion)
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EVEIPHEXE))
+            writer.WriteAttributeString("URL", EVEIPHEXEURL)
+            writer.WriteEndElement()
 
-                ' Add each file 
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", EVEIPHEXE)
-                writer.WriteAttributeString("Version", VersionNumber)
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EVEIPHEXE))
-                writer.WriteAttributeString("URL", TestEVEIPHEXEURL)
-                writer.WriteEndElement()
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", EVEIPHUpdater)
+            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & EVEIPHUpdater).FileVersion)
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EVEIPHUpdater))
+            writer.WriteAttributeString("URL", EVEIPHUpdaterURL)
+            writer.WriteEndElement()
 
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", EVEIPHUpdater)
-                writer.WriteAttributeString("Version", "2.0")
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EVEIPHUpdater))
-                writer.WriteAttributeString("URL", TestEVEIPHUpdaterURL)
-                writer.WriteEndElement()
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", EVEIPHDB)
+            writer.WriteAttributeString("Version", DatabaseName)
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EVEIPHDB))
+            writer.WriteAttributeString("URL", EVEIPHDBURL)
+            writer.WriteEndElement()
 
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", EVEIPHDB)
-                writer.WriteAttributeString("Version", DatabaseName)
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EVEIPHDB))
-                writer.WriteAttributeString("URL", TestEVEIPHDBURL)
-                writer.WriteEndElement()
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", ImageZipFile)
+            writer.WriteAttributeString("Version", "1.0")
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & ImageZipFile))
+            writer.WriteAttributeString("URL", ImageZipFileURL)
+            writer.WriteEndElement()
 
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", ImageZipFile)
-                writer.WriteAttributeString("Version", "1.0")
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & ImageZipFile))
-                writer.WriteAttributeString("URL", TestImageZipFileURL)
-                writer.WriteEndElement()
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", JSONDLL)
+            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & JSONDLL).FileVersion)
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & JSONDLL))
+            writer.WriteAttributeString("URL", JSONDLLURL)
+            writer.WriteEndElement()
 
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", JSONDLL)
-                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(JSONDLL).FileVersion)
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & JSONDLL))
-                writer.WriteAttributeString("URL", TestJSONDLLURL)
-                writer.WriteEndElement()
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", SQLiteDLL)
+            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & SQLiteDLL).FileVersion)
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & SQLiteDLL))
+            writer.WriteAttributeString("URL", SQLiteDLLURL)
+            writer.WriteEndElement()
 
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", SQLiteDLL)
-                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(SQLiteDLL).FileVersion)
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & SQLiteDLL))
-                writer.WriteAttributeString("URL", TestSQLiteDLLURL)
-                writer.WriteEndElement()
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", SQLInteropDLL)
+            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & SQLInteropDLL).FileVersion)
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & SQLInteropDLL))
+            writer.WriteAttributeString("URL", SQLInteropDLLURL)
+            writer.WriteEndElement()
 
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", SQLInteropDLL)
-                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(SQLInteropDLL).FileVersion)
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & SQLInteropDLL))
-                writer.WriteAttributeString("URL", TestSQLInteropDLLURL)
-                writer.WriteEndElement()
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", UpdaterManifest)
+            writer.WriteAttributeString("Version", "1.0")
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & UpdaterManifest))
+            writer.WriteAttributeString("URL", UpdaterManifestURL)
+            writer.WriteEndElement()
 
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", UpdaterManifest)
-                writer.WriteAttributeString("Version", "1.0")
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & UpdaterManifest))
-                writer.WriteAttributeString("URL", TestUpdaterManifestURL)
-                writer.WriteEndElement()
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", EXEManifest)
+            writer.WriteAttributeString("Version", "1.0")
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EXEManifest))
+            writer.WriteAttributeString("URL", EXEManifestURL)
+            writer.WriteEndElement()
 
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", EXEManifest)
-                writer.WriteAttributeString("Version", "1.0")
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EXEManifest))
-                writer.WriteAttributeString("URL", TestEXEManifestURL)
-                writer.WriteEndElement()
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", LPSolveDLL)
+            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & LPSolveDLL).FileVersion)
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & LPSolveDLL))
+            writer.WriteAttributeString("URL", LPSolveDLLURL)
+            writer.WriteEndElement()
 
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", LPSolveDLL)
-                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(LPSolveDLL).FileVersion)
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & LPSolveDLL))
-                writer.WriteAttributeString("URL", LPSolveDLLURL)
-                writer.WriteEndElement()
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", LPSolve55DLL)
+            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & LPSolve55DLL).FileVersion)
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & LPSolve55DLL))
+            writer.WriteAttributeString("URL", LPSolve55DLLURL)
+            writer.WriteEndElement()
 
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", LPSolve55DLL)
-                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(LPSolve55DLL).FileVersion)
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & LPSolve55DLL))
-                writer.WriteAttributeString("URL", LPSolve55DLLURL)
-                writer.WriteEndElement()
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", GADLL)
+            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & GADLL).FileVersion)
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & GADLL))
+            writer.WriteAttributeString("URL", GAURL)
+            writer.WriteEndElement()
 
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", GADLL)
-                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(GADLL).FileVersion)
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & GADLL))
-                writer.WriteAttributeString("URL", GAURL)
-                writer.WriteEndElement()
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", JWTDLL)
+            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & JWTDLL).FileVersion)
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & JWTDLL))
+            writer.WriteAttributeString("URL", JWTDLLURL)
+            writer.WriteEndElement()
 
-                ' End document.
-                writer.WriteEndDocument()
-            End Using
-        Else
-            File.Delete(LatestVersionXML)
-            VersionXMLFileName = LatestVersionXML
-            FileDirectory = UploadFileDirectory
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", IMTokensJWTDLL)
+            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & IMTokensJWTDLL).FileVersion)
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & IMTokensJWTDLL))
+            writer.WriteAttributeString("URL", IMTokensJWTDLLURL)
+            writer.WriteEndElement()
 
-            ' Loop through the settings sent and output each name and value
-            ' Copy the new XML file into the root directory - so I don't get updates and then manually upload this to media fire so people don't get crazy updates
-            Using writer As XmlWriter = XmlWriter.Create(EVEIPHRootDirectory & VersionXMLFileName, XMLSettings)
-                writer.WriteStartDocument()
-                writer.WriteStartElement("EVEIPH") ' Root.
-                writer.WriteAttributeString("Version", VersionNumber)
-                writer.WriteStartElement("LastUpdated")
-                writer.WriteString(CStr(Now))
-                writer.WriteEndElement()
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", IMJsonWebTokensDLL)
+            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & IMJsonWebTokensDLL).FileVersion)
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & IMJsonWebTokensDLL))
+            writer.WriteAttributeString("URL", IMJsonWebTokensDLLURL)
+            writer.WriteEndElement()
 
-                writer.WriteStartElement("result")
-                writer.WriteStartElement("rowset")
-                writer.WriteAttributeString("name", "filelist")
-                writer.WriteAttributeString("key", "version")
-                writer.WriteAttributeString("columns", "Name,Version,MD5,URL")
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", IMTokensDLL)
+            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & IMTokensDLL).FileVersion)
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & IMTokensDLL))
+            writer.WriteAttributeString("URL", IMTokensDLLURL)
+            writer.WriteEndElement()
 
-                ' Add each file 
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", EVEIPHEXE)
-                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & EVEIPHEXE).FileVersion)
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EVEIPHEXE))
-                writer.WriteAttributeString("URL", EVEIPHEXEURL)
-                writer.WriteEndElement()
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", IMLoggingDLL)
+            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & IMLoggingDLL).FileVersion)
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & IMLoggingDLL))
+            writer.WriteAttributeString("URL", IMLoggingDLLURL)
+            writer.WriteEndElement()
 
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", EVEIPHUpdater)
-                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & EVEIPHUpdater).FileVersion)
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EVEIPHUpdater))
-                writer.WriteAttributeString("URL", EVEIPHUpdaterURL)
-                writer.WriteEndElement()
-
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", EVEIPHDB)
-                writer.WriteAttributeString("Version", DatabaseName)
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EVEIPHDB))
-                writer.WriteAttributeString("URL", EVEIPHDBURL)
-                writer.WriteEndElement()
-
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", ImageZipFile)
-                writer.WriteAttributeString("Version", "1.0")
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & ImageZipFile))
-                writer.WriteAttributeString("URL", ImageZipFileURL)
-                writer.WriteEndElement()
-
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", JSONDLL)
-                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & JSONDLL).FileVersion)
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & JSONDLL))
-                writer.WriteAttributeString("URL", JSONDLLURL)
-                writer.WriteEndElement()
-
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", SQLiteDLL)
-                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & SQLiteDLL).FileVersion)
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & SQLiteDLL))
-                writer.WriteAttributeString("URL", SQLiteDLLURL)
-                writer.WriteEndElement()
-
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", SQLInteropDLL)
-                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & SQLInteropDLL).FileVersion)
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & SQLInteropDLL))
-                writer.WriteAttributeString("URL", SQLInteropDLLURL)
-                writer.WriteEndElement()
-
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", UpdaterManifest)
-                writer.WriteAttributeString("Version", "1.0")
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & UpdaterManifest))
-                writer.WriteAttributeString("URL", UpdaterManifestURL)
-                writer.WriteEndElement()
-
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", EXEManifest)
-                writer.WriteAttributeString("Version", "1.0")
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & EXEManifest))
-                writer.WriteAttributeString("URL", EXEManifestURL)
-                writer.WriteEndElement()
-
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", LPSolveDLL)
-                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & LPSolveDLL).FileVersion)
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & LPSolveDLL))
-                writer.WriteAttributeString("URL", LPSolveDLLURL)
-                writer.WriteEndElement()
-
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", LPSolve55DLL)
-                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & LPSolve55DLL).FileVersion)
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & LPSolve55DLL))
-                writer.WriteAttributeString("URL", LPSolve55DLLURL)
-                writer.WriteEndElement()
-
-                writer.WriteStartElement("row")
-                writer.WriteAttributeString("Name", GADLL)
-                writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & GADLL).FileVersion)
-                writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & GADLL))
-                writer.WriteAttributeString("URL", GAURL)
-                writer.WriteEndElement()
-
-                ' End document.
-                writer.WriteEndDocument()
-            End Using
-        End If
+            ' End document.
+            writer.WriteEndDocument()
+        End Using
 
         ' Finally, replace all the update file's crlf with lf so that when it's uploaded to git, it works properly on download
         Dim FileText As String = File.ReadAllText(EVEIPHRootDirectory & VersionXMLFileName)
