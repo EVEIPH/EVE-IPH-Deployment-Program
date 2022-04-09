@@ -315,54 +315,55 @@ Public Class frmMain
         AbyssalRakovene = 56629
         HadalRakovene = 56630
 
-        CompressedArkonor = 28367
-        CompressedCrimsonArkonor = 28385
-        CompressedPrimeArkonor = 28387
-        CompressedBistot = 28388
-        CompressedMonoclinicBistot = 28389
-        CompressedTriclinicBistot = 28390
-        CompressedCrokite = 28391
-        CompressedCrystallineCrokite = 28392
-        CompressedSharpCrokite = 28393
-        CompressedDarkOchre = 28394
-        CompressedObsidianOchre = 28395
-        CompressedOnyxOchre = 28396
-        CompressedGneiss = 28397
-        CompressedIridescentGneiss = 28398
-        CompressedPrismaticGneiss = 28399
-        CompressedGlazedHedbergite = 28400
-        CompressedHedbergite = 28401
-        CompressedVitricHedbergite = 28402
-        CompressedHemorphite = 28403
-        CompressedRadiantHemorphite = 28404
-        CompressedVividHemorphite = 28405
-        CompressedJaspet = 28406
-        CompressedPristineJaspet = 28407
-        CompressedPureJaspet = 28408
-        CompressedFieryKernite = 28409
-        CompressedKernite = 28410
-        CompressedLuminousKernite = 28411
-        CompressedMagmaMercoxit = 28412
-        CompressedMercoxit = 28413
-        CompressedVitreousMercoxit = 28414
-        CompressedGoldenOmber = 28415
-        CompressedOmber = 28416
-        CompressedSilveryOmber = 28417
-        CompressedBrightSpodumain = 28418
-        CompressedGleamingSpodumain = 28419
-        CompressedSpodumain = 28420
-        CompressedAzurePlagioclase = 28421
-        CompressedPlagioclase = 28422
-        CompressedRichPlagioclase = 28423
-        CompressedPyroxeres = 28424
-        CompressedSolidPyroxeres = 28425
-        CompressedViscousPyroxeres = 28426
-        CompressedCondensedScordite = 28427
-        CompressedMassiveScordite = 28428
-        CompressedScordite = 28429
-        CompressedConcentratedVeldspar = 28430
-        CompressedDenseVeldspar = 28431
-        CompressedVeldspar = 28432
+        'BatchCompressedArkonor = 28367
+        'BatchCompressedCrimsonArkonor = 28385
+        'BatchCompressedPrimeArkonor = 28387
+        'BatchCompressedBistot = 28388
+        'BatchCompressedMonoclinicBistot = 28389
+        'BatchCompressedTriclinicBistot = 28390
+        'BatchCompressedCrokite = 28391
+        'BatchCompressedCrystallineCrokite = 28392
+        'BatchCompressedSharpCrokite = 28393
+        'BatchCompressedDarkOchre = 28394
+        'BatchCompressedObsidianOchre = 28395
+        'BatchCompressedOnyxOchre = 28396
+        'BatchCompressedGneiss = 28397
+        'BatchCompressedIridescentGneiss = 28398
+        'BatchCompressedPrismaticGneiss = 28399
+        'BatchCompressedGlazedHedbergite = 28400
+        'BatchCompressedHedbergite = 28401
+        'BatchCompressedVitricHedbergite = 28402
+        'BatchCompressedHemorphite = 28403
+        'BatchCompressedRadiantHemorphite = 28404
+        'BatchCompressedVividHemorphite = 28405
+        'BatchCompressedJaspet = 28406
+        'BatchCompressedPristineJaspet = 28407
+        'BatchCompressedPureJaspet = 28408
+        'BatchCompressedFieryKernite = 28409
+        'BatchCompressedKernite = 28410
+        'BatchCompressedLuminousKernite = 28411
+        'BatchCompressedMagmaMercoxit = 28412
+        'BatchCompressedMercoxit = 28413
+        'BatchCompressedVitreousMercoxit = 28414
+        'BatchCompressedGoldenOmber = 28415
+        'BatchCompressedOmber = 28416
+        'BatchCompressedSilveryOmber = 28417
+        'BatchCompressedBrightSpodumain = 28418
+        'BatchCompressedGleamingSpodumain = 28419
+        'BatchCompressedSpodumain = 28420
+        'BatchCompressedAzurePlagioclase = 28421
+        'BatchCompressedPlagioclase = 28422
+        'BatchCompressedRichPlagioclase = 28423
+        'BatchCompressedPyroxeres = 28424
+        'BatchCompressedSolidPyroxeres = 28425
+        'BatchCompressedViscousPyroxeres = 28426
+        'BatchCompressedCondensedScordite = 28427
+        'BatchCompressedMassiveScordite = 28428
+        'BatchCompressedScordite = 28429
+        'BatchCompressedConcentratedVeldspar = 28430
+        'BatchCompressedDenseVeldspar = 28431
+        'BatchCompressedVeldspar = 28432
+
         CompressedBlueIce = 28433
         CompressedClearIcicle = 28434
         CompressedDarkGlitter = 28435
@@ -390,6 +391,153 @@ Public Class frmMain
         CompressedGlossyScordite = 46703
         CompressedDazzlingSpodumain = 46704
         CompressedStableVeldspar = 46705
+
+        CompressedVeldspar = 62516
+        CompressedConcentratedVeldspar = 62517
+        CompressedDenseVeldspar = 62518
+        CompressedScordite = 62520
+        CompressedCondensedScordite = 62521
+        CompressedMassiveScordite = 62522
+        CompressedPyroxeres = 62524
+        CompressedSolidPyroxeres = 62525
+        CompressedViscousPyroxeres = 62526
+        CompressedPlagioclase = 62528
+        CompressedAzurePlagioclase = 62529
+        CompressedRichPlagioclase = 62530
+        CompressedOmber = 62532
+        CompressedSilveryOmber = 62533
+        CompressedGoldenOmber = 62534
+        CompressedKernite = 62536
+        CompressedLuminousKernite = 62537
+        CompressedFieryKernite = 62538
+        CompressedJaspet = 62540
+        CompressedPureJaspet = 62541
+        CompressedPristineJaspet = 62542
+        CompressedHemorphite = 62544
+        CompressedVividHemorphite = 62545
+        CompressedRadiantHemorphite = 62546
+        CompressedHedbergite = 62548
+        CompressedVitricHedbergite = 62549
+        CompressedGlazedHedbergite = 62550
+        CompressedGneiss = 62552
+        CompressedIridescentGneiss = 62553
+        CompressedPrismaticGneiss = 62554
+        CompressedDarkOchre = 62556
+        CompressedOnyxOchre = 62557
+        CompressedObsidianOchre = 62558
+        CompressedCrokite = 62560
+        CompressedSharpCrokite = 62561
+        CompressedCrystallineCrokite = 62562
+        CompressedBistot = 62564
+        CompressedTriclinicBistot = 62565
+        CompressedMonoclinicBistot = 62566
+        CompressedArkonor = 62568
+        CompressedCrimsonArkonor = 62569
+        CompressedPrimeArkonor = 62570
+        CompressedSpodumain = 62572
+        CompressedBrightSpodumain = 62573
+        CompressedGleamingSpodumain = 62574
+        CompressedBezdnacine = 62576
+        CompressedAbyssalBezdnacine = 62577
+        CompressedHadalBezdnacine = 62578
+        CompressedRakovene = 62579
+        CompressedAbyssalRakovene = 62580
+        CompressedHadalRakovene = 62581
+        CompressedTalassonite = 62582
+        CompressedAbyssalTalassonite = 62583
+        CompressedHadalTalassonite = 62584
+        CompressedMercoxit = 62586
+        CompressedMagmaMercoxit = 62587
+        CompressedVitreousMercoxit = 62588
+
+        CompressedAmberMykoserocin = 62377
+        CompressedAzureMykoserocin = 62379
+        CompressedCeladonMykoserocin = 62380
+        CompressedGoldenMykoserocin = 62381
+        CompressedLimeMykoserocin = 62382
+        CompressedMalachiteMykoserocin = 62383
+        CompressedVermillionMykoserocin = 62384
+        CompressedViridianMykoserocin = 62385
+        CompressedAzureCytoserocin = 62386
+        CompressedCeladonCytoserocin = 62387
+        CompressedChartreuseCytoserocin = 62388
+        CompressedGambogeCytoserocin = 62389
+        CompressedGoldenCytoserocin = 62390
+        CompressedLimeCytoserocin = 62391
+        CompressedMalachiteCytoserocin = 62392
+        CompressedVermillionCytoserocin = 62393
+        CompressedViridianCytoserocin = 62394
+        CompressedAmberCytoserocin = 62396
+        CompressedFulleriteC60 = 62397
+        CompressedFulleriteC70 = 62398
+        CompressedFulleriteC50 = 62399
+        CompressedFulleriteC84 = 62400
+        CompressedFulleriteC28 = 62402
+        CompressedFulleriteC72 = 62403
+        CompressedFulleriteC32 = 62404
+        CompressedFulleriteC540 = 62405
+        CompressedFulleriteC320 = 62406
+
+        CompressedBitumens = 62454
+        CompressedBrimfulBitumens = 62455
+        CompressedGlisteningBitumens = 62456
+        CompressedCoesite = 62457
+        CompressedBrimfulCoesite = 62458
+        CompressedGlisteningCoesite = 62459
+        CompressedSylvite = 62460
+        CompressedBrimfulSylvite = 62461
+        CompressedZeolites = 62463
+        CompressedBrimfulZeolites = 62464
+        CompressedGlisteningSylvite = 62466
+        CompressedGlisteningZeolites = 62467
+        CompressedScheelite = 62468
+        CompressedCopiousScheelite = 62469
+        CompressedTwinklingScheelite = 62470
+        CompressedEuxenite = 62471
+        CompressedCopiousEuxenite = 62472
+        CompressedTwinklingEuxenite = 62473
+        CompressedCobaltite = 62474
+        CompressedCopiousCobaltite = 62475
+        CompressedTwinklingCobaltite = 62476
+        CompressedTitanite = 62477
+        CompressedCopiousTitanite = 62478
+        CompressedTwinklingTitanite = 62479
+        CompressedChromite = 62480
+        CompressedLavishChromite = 62481
+        CompressedShimmeringChromite = 62482
+        CompressedOtavite = 62483
+        CompressedLavishOtavite = 62484
+        CompressedShimmeringOtavite = 62485
+        CompressedSperrylite = 62486
+        CompressedLavishSperrylite = 62487
+        CompressedShimmeringSperrylite = 62488
+        CompressedVanadinite = 62489
+        CompressedLavishVanadinite = 62490
+        CompressedShimmeringVanadinite = 62491
+        CompressedCarnotite = 62492
+        CompressedRepleteCarnotite = 62493
+        CompressedGlowingCarnotite = 62494
+        CompressedCinnabar = 62495
+        CompressedRepleteCinnabar = 62496
+        CompressedGlowingCinnabar = 62497
+        CompressedPollucite = 62498
+        CompressedRepletePollucite = 62499
+        CompressedGlowingPollucite = 62500
+        CompressedZircon = 62501
+        CompressedRepleteZircon = 62502
+        CompressedGlowingZircon = 62503
+        CompressedLoparite = 62504
+        CompressedBountifulLoparite = 62505
+        CompressedShiningLoparite = 62506
+        CompressedMonazite = 62507
+        CompressedBountifulMonazite = 62508
+        CompressedShiningMonazite = 62509
+        CompressedXenotime = 62510
+        CompressedBountifulXenotime = 62511
+        CompressedShiningXenotime = 62512
+        CompressedYtterbite = 62513
+        CompressedBountifulYtterbite = 62514
+        CompressedShiningYtterbite = 62515
 
     End Enum
 
@@ -2021,8 +2169,8 @@ Public Class frmMain
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
         ' Alliance Tournament ships others added - They are set as T2 (use t2 mats to build but can't be invented) but come up as faction in game ('Mimir','Freki','Adrestia','Utu','Vangel','Malice',
-        'Etana','Cambion','Moracha','Chremoas','Whiptail','Chameleon','Caedes','Marshal', 'Hydra', 'Pacifier', 'Monitor', 'Enforcer', 'Tiamat', 'Victor')
-        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 1 WHERE BLUEPRINT_ID IN (3517,3519,32789,32791,33396,33398,33674,33676,42525,45486,45487,45528,45532,45535,48637,48638)"
+        'Etana','Cambion','Moracha','Chremoas','Whiptail','Chameleon','Caedes','Marshal', 'Hydra', 'Pacifier', 'Monitor', 'Enforcer', 'Tiamat', 'Victor','Laelaps','Raiju')
+        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 1 WHERE BLUEPRINT_ID IN (3517,3519,32789,32791,33396,33398,33674,33676,42525,45486,45487,45528,45532,45535,48637,48638,60768,60767)"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
         ' Quick fix to update the sql table for Rubicon - Ascendancy Implant Blueprints (and Low-Grade Ascendancy) are set to T2 implant (Alpha), not invented though so set to T1
@@ -2052,6 +2200,8 @@ Public Class frmMain
         SQL = "UPDATE ALL_BLUEPRINTS SET ITEM_TYPE = TECH_LEVEL WHERE ITEM_TYPE = 0 OR ITEM_TYPE IS NULL"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
         SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 15 WHERE  BLUEPRINT_GROUP = 'Combat Drone Blueprint' AND ITEM_TYPE = 16" ' Aug/Integrated drones
+        Execute_SQLiteSQL(SQL, SDEDB.DBRef)
+        SQL = "UPDATE ALL_BLUEPRINTS SET ITEM_TYPE = 2, TECH_LEVEL = 1 WHERE ITEM_ID = 47331" ' For some reason, the Standup XL Energy Nuet is marked as T1
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
         ' Add the S/M/L/XL tag to these here
@@ -4604,13 +4754,14 @@ Public Class frmMain
 
         ' Pull new data and insert
         mainSQL = "SELECT invTypes.typeID AS ORE_ID, invTypes.typeName AS ORE_NAME, invTypes.packagedVolume AS ORE_VOLUME, invTypes.portionSize AS UNITS_TO_REFINE, "
-        mainSQL &= "CASE WHEN invTypes.groupID = 465 THEN 'Ice' WHEN invTypes.groupID = 711 THEN 'Gas' "
+        mainSQL &= "CASE WHEN invTypes.groupID = 465 THEN 'Ice' WHEN (invTypes.groupID = 711 OR invTypes.groupID = 4168) THEN 'Gas' "
         mainSQL &= "WHEN invTypes.groupID IN (1884,1920,1921,1922,1923) THEN invGroups.groupName ELSE 'Ore' END AS BELT_TYPE, " ' Five types of moon ores
-        mainSQL &= "CASE WHEN invTypes.groupID = 465 THEN -1 WHEN invTypes.groupID = 711 THEN -2 ELSE 0 END AS HIGH_YIELD_ORE, 0 AS COMPRESSED " ' 465 is ice, 711 is gas - neither have high yield components
+        mainSQL &= "CASE WHEN invTypes.groupID = 465 THEN -1 WHEN invTypes.groupID = 711 THEN -2 ELSE 0 END AS HIGH_YIELD_ORE, 0 AS COMPRESSED " ' 465 is ice, 711/4168 is gas - neither have high yield components
         mainSQL &= "FROM invTypes, invGroups "
         mainSQL &= "WHERE invTypes.groupID = invGroups.groupID "
-        mainSQL &= "AND (invGroups.categoryID = 25 OR invGroups.groupID = 711) " ' Clouds and Ores
+        mainSQL &= "AND (invGroups.categoryID = 25 OR invGroups.groupID = 711 OR invTypes.groupID = 4168) " ' Clouds and Ores
         mainSQL &= "AND invTypes.groupID NOT IN (903, 1911) " ' make sure this isn't ores for mining missions or legacy ice ('Ancient')
+        mainSQL &= "AND invTypes.typeName NOT LIKE 'Batch%' "
         mainSQL &= "GROUP BY ORE_ID, ORE_NAME, ORE_VOLUME, UNITS_TO_REFINE, BELT_TYPE, HIGH_YIELD_ORE, COMPRESSED"
 
         SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
@@ -4753,7 +4904,7 @@ Public Class frmMain
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Hadal%'"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
-        ' Set all to 0 first then set the 5 types
+        ' Set all to 0 first then set compressed flag
         SQL = "UPDATE ORES SET COMPRESSED = 1 WHERE ORE_NAME LIKE 'Compressed%'"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
@@ -4970,7 +5121,7 @@ Public Class frmMain
             Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.LuminousKernite & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
             Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedLuminousKernite & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
             Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.FieryKernite & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
-            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.FieryKernite & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedFieryKernite & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
 
             Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Arkonor & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
             Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedArkonor & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
@@ -4978,13 +5129,6 @@ Public Class frmMain
             Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedCrimsonArkonor & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
             Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.PrimeArkonor & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
             Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedPrimeArkonor & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
-
-            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Bistot & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
-            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedBistot & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
-            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.MonoclinicBistot & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
-            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedMonoclinicBistot & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
-            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.TriclinicBistot & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
-            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedTriclinicBistot & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
 
             Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Pyroxeres & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
             Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedPyroxeres & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
@@ -5022,7 +5166,7 @@ Public Class frmMain
             Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.LuminousKernite & ",'" & GetWHClass(i) & "','WH')", EVEIPHSQLiteDB.DBRef)
             Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedLuminousKernite & ",'" & GetWHClass(i) & "','WH')", EVEIPHSQLiteDB.DBRef)
             Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.FieryKernite & ",'" & GetWHClass(i) & "','WH')", EVEIPHSQLiteDB.DBRef)
-            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.FieryKernite & ",'" & GetWHClass(i) & "','WH')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedFieryKernite & ",'" & GetWHClass(i) & "','WH')", EVEIPHSQLiteDB.DBRef)
 
             Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Arkonor & ",'" & GetWHClass(i) & "','WH')", EVEIPHSQLiteDB.DBRef)
             Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedArkonor & ",'" & GetWHClass(i) & "','WH')", EVEIPHSQLiteDB.DBRef)
@@ -5052,12 +5196,12 @@ Public Class frmMain
             Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GoldenOmber & ",'" & GetWHClass(i) & "','WH')", EVEIPHSQLiteDB.DBRef)
             Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedGoldenOmber & ",'" & GetWHClass(i) & "','WH')", EVEIPHSQLiteDB.DBRef)
 
-            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Gneiss & ",'" & GetWHClass(i) & "','WH')", EVEIPHSQLiteDB.DBRef)
-            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedGneiss & ",'" & GetWHClass(i) & "','WH')", EVEIPHSQLiteDB.DBRef)
-            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.IridescentGneiss & ",'" & GetWHClass(i) & "','WH')", EVEIPHSQLiteDB.DBRef)
-            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedIridescentGneiss & ",'" & GetWHClass(i) & "','WH')", EVEIPHSQLiteDB.DBRef)
-            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.PrismaticGneiss & ",'" & GetWHClass(i) & "','WH')", EVEIPHSQLiteDB.DBRef)
-            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedPrismaticGneiss & ",'" & GetWHClass(i) & "','WH')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Gneiss & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedGneiss & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.IridescentGneiss & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedIridescentGneiss & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.PrismaticGneiss & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedPrismaticGneiss & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
         Next
 
         ' Gas
@@ -5099,8 +5243,46 @@ Public Class frmMain
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.ViridianMykoserocin & ",'Low Sec','Gallente')", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.ViridianMykoserocin & ",'Low Sec','Gallente')", EVEIPHSQLiteDB.DBRef)
 
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedAmberCytoserocin & ",'Low Sec','Caldari')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedAmberCytoserocin & ",'Null Sec','Caldari')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedAmberCytoserocin & ",'Null Sec','Caldari')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedGoldenCytoserocin & ",'Low Sec','Caldari')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedGoldenCytoserocin & ",'Null Sec','Caldari')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedGoldenCytoserocin & ",'Null Sec','Caldari')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedGoldenCytoserocin & ",'Null Sec','Caldari')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedGoldenCytoserocin & ",'Null Sec','Caldari')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedViridianCytoserocin & ",'Null Sec','Gallente')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedViridianCytoserocin & ",'Low Sec','Gallente')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedCeladonCytoserocin & ",'Null Sec','Gallente')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedCeladonCytoserocin & ",'Null Sec','Gallente')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedCeladonCytoserocin & ",'Null Sec','Gallente')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedCeladonCytoserocin & ",'Null Sec','Gallente')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedCeladonCytoserocin & ",'Low Sec','Gallente')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedMalachiteCytoserocin & ",'Low Sec','Amarr')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedMalachiteCytoserocin & ",'Null Sec','Amarr')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedLimeCytoserocin & ",'Null Sec','Amarr')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedLimeCytoserocin & ",'Low Sec','Amarr')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedVermillionCytoserocin & ",'Null Sec','Minmatar')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedVermillionCytoserocin & ",'Null Sec','Minmatar')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedVermillionCytoserocin & ",'Low Sec','Minmatar')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedAzureCytoserocin & ",'Low Sec','Minmatar')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedAmberMykoserocin & ",'Low Sec','Caldari')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedAmberMykoserocin & ",'Low Sec','Caldari')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedAzureMykoserocin & ",'Low Sec','Minmatar')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedAzureMykoserocin & ",'Low Sec','Minmatar')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedCeladonMykoserocin & ",'High Sec','Gallente')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedCeladonMykoserocin & ",'High Sec','Gallente')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedGoldenMykoserocin & ",'Low Sec','Caldari')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedGoldenMykoserocin & ",'High Sec','Caldari')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedLimeMykoserocin & ",'Low Sec','Amarr')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedMalachiteMykoserocin & ",'High Sec','Amarr')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedVermillionMykoserocin & ",'High Sec','Minmatar')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedVermillionMykoserocin & ",'High Sec','Minmatar')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedViridianMykoserocin & ",'Low Sec','Gallente')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedViridianMykoserocin & ",'Low Sec','Gallente')", EVEIPHSQLiteDB.DBRef)
+
         ' T3 Gas
-        For i = 0 To 6
+        For i = 0 To 13
             Select Case i
                 Case 0
                     CurrentOre = MiningMat.FulleriteC50
@@ -5116,6 +5298,20 @@ Public Class frmMain
                     CurrentOre = MiningMat.FulleriteC28
                 Case 6
                     CurrentOre = MiningMat.FulleriteC32
+                Case 7
+                    CurrentOre = MiningMat.CompressedFulleriteC50
+                Case 8
+                    CurrentOre = MiningMat.CompressedFulleriteC60
+                Case 9
+                    CurrentOre = MiningMat.CompressedFulleriteC70
+                Case 10
+                    CurrentOre = MiningMat.CompressedFulleriteC72
+                Case 11
+                    CurrentOre = MiningMat.CompressedFulleriteC84
+                Case 12
+                    CurrentOre = MiningMat.CompressedFulleriteC28
+                Case 13
+                    CurrentOre = MiningMat.CompressedFulleriteC32
             End Select
 
             For j = 0 To 5 ' Security type
@@ -5125,12 +5321,16 @@ Public Class frmMain
 
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.FulleriteC320 & ",'C5','WH')", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.FulleriteC320 & ",'C6','WH')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedFulleriteC320 & ",'C5','WH')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedFulleriteC320 & ",'C6','WH')", EVEIPHSQLiteDB.DBRef)
 
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.FulleriteC540 & ",'C5','WH')", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.FulleriteC540 & ",'C6','WH')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedFulleriteC540 & ",'C5','WH')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedFulleriteC540 & ",'C6','WH')", EVEIPHSQLiteDB.DBRef)
 
         ' Moon ores 
-        For i = 0 To 59 ' Moon ores
+        For i = 0 To 119 ' Moon ores
             Select Case i
                 ' Ubiquitous Moon Asteroids
                 Case 0
@@ -5257,6 +5457,133 @@ Public Class frmMain
                     CurrentOre = MiningMat.BountifulYtterbite
                 Case 59
                     CurrentOre = MiningMat.ShiningYtterbite
+
+                ' Compressed Ubiquitous Moon Asteroids
+                Case 60
+                    CurrentOre = MiningMat.CompressedZeolites
+                Case 61
+                    CurrentOre = MiningMat.CompressedBrimfulZeolites
+                Case 62
+                    CurrentOre = MiningMat.CompressedGlisteningZeolites
+                Case 63
+                    CurrentOre = MiningMat.CompressedCoesite
+                Case 64
+                    CurrentOre = MiningMat.CompressedBrimfulCoesite
+                Case 65
+                    CurrentOre = MiningMat.CompressedGlisteningCoesite
+                Case 66
+                    CurrentOre = MiningMat.CompressedSylvite
+                Case 67
+                    CurrentOre = MiningMat.CompressedBrimfulSylvite
+                Case 68
+                    CurrentOre = MiningMat.CompressedGlisteningSylvite
+                Case 69
+                    CurrentOre = MiningMat.CompressedBitumens
+                Case 70
+                    CurrentOre = MiningMat.CompressedBrimfulBitumens
+                Case 71
+                    CurrentOre = MiningMat.CompressedGlisteningBitumens
+                ' Compressed Common Moon Asteroids
+                Case 72
+                    CurrentOre = MiningMat.CompressedCobaltite
+                Case 73
+                    CurrentOre = MiningMat.CompressedCopiousCobaltite
+                Case 74
+                    CurrentOre = MiningMat.CompressedTwinklingCobaltite
+                Case 75
+                    CurrentOre = MiningMat.CompressedEuxenite
+                Case 76
+                    CurrentOre = MiningMat.CompressedCopiousEuxenite
+                Case 77
+                    CurrentOre = MiningMat.CompressedTwinklingEuxenite
+                Case 78
+                    CurrentOre = MiningMat.CompressedTitanite
+                Case 79
+                    CurrentOre = MiningMat.CompressedCopiousTitanite
+                Case 80
+                    CurrentOre = MiningMat.CompressedTwinklingTitanite
+                Case 81
+                    CurrentOre = MiningMat.CompressedScheelite
+                Case 82
+                    CurrentOre = MiningMat.CompressedCopiousScheelite
+                Case 83
+                    CurrentOre = MiningMat.CompressedTwinklingScheelite
+                ' Compressed Uncommon Moon Asteroids
+                Case 84
+                    CurrentOre = MiningMat.CompressedOtavite
+                Case 85
+                    CurrentOre = MiningMat.CompressedLavishOtavite
+                Case 86
+                    CurrentOre = MiningMat.CompressedShimmeringOtavite
+                Case 87
+                    CurrentOre = MiningMat.CompressedSperrylite
+                Case 88
+                    CurrentOre = MiningMat.CompressedLavishSperrylite
+                Case 89
+                    CurrentOre = MiningMat.CompressedShimmeringSperrylite
+                Case 90
+                    CurrentOre = MiningMat.CompressedVanadinite
+                Case 91
+                    CurrentOre = MiningMat.CompressedLavishVanadinite
+                Case 92
+                    CurrentOre = MiningMat.CompressedShimmeringVanadinite
+                Case 93
+                    CurrentOre = MiningMat.CompressedChromite
+                Case 94
+                    CurrentOre = MiningMat.CompressedLavishChromite
+                Case 95
+                    CurrentOre = MiningMat.CompressedShimmeringChromite
+                ' Compressed Rare Moon Asteroids
+                Case 96
+                    CurrentOre = MiningMat.CompressedCarnotite
+                Case 97
+                    CurrentOre = MiningMat.CompressedGlowingCarnotite
+                Case 98
+                    CurrentOre = MiningMat.CompressedRepleteCarnotite
+                Case 99
+                    CurrentOre = MiningMat.CompressedZircon
+                Case 100
+                    CurrentOre = MiningMat.CompressedGlowingZircon
+                Case 101
+                    CurrentOre = MiningMat.CompressedRepleteZircon
+                Case 102
+                    CurrentOre = MiningMat.CompressedPollucite
+                Case 103
+                    CurrentOre = MiningMat.CompressedGlowingPollucite
+                Case 104
+                    CurrentOre = MiningMat.CompressedRepletePollucite
+                Case 105
+                    CurrentOre = MiningMat.CompressedCinnabar
+                Case 106
+                    CurrentOre = MiningMat.CompressedGlowingCinnabar
+                Case 107
+                    CurrentOre = MiningMat.CompressedRepleteCinnabar
+                ' Compressed Exceptional Moon Asteroids
+                Case 108
+                    CurrentOre = MiningMat.CompressedXenotime
+                Case 109
+                    CurrentOre = MiningMat.CompressedBountifulXenotime
+                Case 110
+                    CurrentOre = MiningMat.CompressedShiningXenotime
+                Case 111
+                    CurrentOre = MiningMat.CompressedMonazite
+                Case 112
+                    CurrentOre = MiningMat.CompressedBountifulMonazite
+                Case 113
+                    CurrentOre = MiningMat.CompressedShiningMonazite
+                Case 114
+                    CurrentOre = MiningMat.CompressedLoparite
+                Case 1111
+                    CurrentOre = MiningMat.CompressedBountifulLoparite
+                Case 116
+                    CurrentOre = MiningMat.CompressedShiningLoparite
+                Case 117
+                    CurrentOre = MiningMat.CompressedYtterbite
+                Case 118
+                    CurrentOre = MiningMat.CompressedBountifulYtterbite
+                Case 119
+                    CurrentOre = MiningMat.CompressedShiningYtterbite
+
             End Select
 
             ' There are 5 classes Of moon ore, as shown in the table below. 
@@ -5290,7 +5617,7 @@ Public Class frmMain
         Next
 
         ' Abyssal Mining - just Pochven
-        For i = 0 To 2
+        For i = 0 To 5
             Select Case i
                 Case 0
                     CurrentOre = MiningMat.Bezdnacine
@@ -5298,6 +5625,12 @@ Public Class frmMain
                     CurrentOre = MiningMat.Rakovene
                 Case 2
                     CurrentOre = MiningMat.Talassonite
+                Case 3
+                    CurrentOre = MiningMat.CompressedBezdnacine
+                Case 4
+                    CurrentOre = MiningMat.CompressedRakovene
+                Case 5
+                    CurrentOre = MiningMat.CompressedTalassonite
             End Select
 
             For j = 0 To 3 ' region type
@@ -5305,7 +5638,7 @@ Public Class frmMain
             Next
         Next
 
-        For i = 0 To 2
+        For i = 0 To 5
             Select Case i
                 Case 0
                     CurrentOre = MiningMat.AbyssalBezdnacine
@@ -5313,6 +5646,12 @@ Public Class frmMain
                     CurrentOre = MiningMat.AbyssalRakovene
                 Case 2
                     CurrentOre = MiningMat.AbyssalTalassonite
+                Case 3
+                    CurrentOre = MiningMat.CompressedAbyssalBezdnacine
+                Case 4
+                    CurrentOre = MiningMat.CompressedAbyssalRakovene
+                Case 5
+                    CurrentOre = MiningMat.CompressedAbyssalTalassonite
             End Select
 
             For j = 0 To 3 ' region type
@@ -5320,7 +5659,7 @@ Public Class frmMain
             Next
         Next
 
-        For i = 0 To 2
+        For i = 0 To 5
             Select Case i
                 Case 0
                     CurrentOre = MiningMat.HadalBezdnacine
@@ -5328,6 +5667,12 @@ Public Class frmMain
                     CurrentOre = MiningMat.HadalRakovene
                 Case 2
                     CurrentOre = MiningMat.HadalTalassonite
+                Case 3
+                    CurrentOre = MiningMat.CompressedHadalBezdnacine
+                Case 4
+                    CurrentOre = MiningMat.CompressedHadalRakovene
+                Case 5
+                    CurrentOre = MiningMat.CompressedHadalTalassonite
             End Select
 
             For j = 0 To 3 ' region type
@@ -5338,12 +5683,15 @@ Public Class frmMain
         ' Spod is in Trig space (Provchen) too
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Spodumain & ",'Null Sec','Triglavian')", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedSpodumain & ",'Null Sec','Triglavian')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedSpodumain & ",'Null Sec','Triglavian')", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.BrightSpodumain & ",'Null Sec','Triglavian')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedBrightSpodumain & ",'Null Sec','Triglavian')", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedBrightSpodumain & ",'Null Sec','Triglavian')", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GleamingSpodumain & ",'Null Sec','Triglavian')", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedGleamingSpodumain & ",'Null Sec','Triglavian')", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedGleamingSpodumain & ",'Null Sec','Triglavian')", EVEIPHSQLiteDB.DBRef)
 
-        'Ice Belts
+        '*** Ice Belts ***
         For j = 0 To 2
             Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.ClearIcicle & ",'" & GetSecurityType(j) & "','Amarr')", EVEIPHSQLiteDB.DBRef)
             Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedClearIcicle & ",'" & GetSecurityType(j) & "','Amarr')", EVEIPHSQLiteDB.DBRef)
@@ -7398,7 +7746,7 @@ Public Class frmMain
         Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(35836,'Tatara',5,1,1,1);", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(35836,'Tatara',8,1,1,1);", EVEIPHSQLiteDB.DBRef)
         Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(35836,'Tatara',11,1,.75,1);", EVEIPHSQLiteDB.DBRef)
-        Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(35836,'Tatara',-2,.04,1,1);", EVEIPHSQLiteDB.DBRef)
+        Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(35836,'Tatara',-2,.055,1,1);", EVEIPHSQLiteDB.DBRef)
 
         ' Faction Citadels
         Execute_SQLiteSQL("INSERT INTO UPWELL_STRUCTURES VALUES(47512,'''Moreau'' Fortizar',1,.9,1,.98);", EVEIPHSQLiteDB.DBRef)
