@@ -2201,7 +2201,7 @@ Public Class frmMain
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
         SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 15 WHERE  BLUEPRINT_GROUP = 'Combat Drone Blueprint' AND ITEM_TYPE = 16" ' Aug/Integrated drones
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
-        SQL = "UPDATE ALL_BLUEPRINTS SET ITEM_TYPE = 2, TECH_LEVEL = 1 WHERE ITEM_ID = 47331" ' For some reason, the Standup XL Energy Nuet is marked as T1
+        SQL = "UPDATE ALL_BLUEPRINTS SET ITEM_TYPE = 2, TECH_LEVEL = 2 WHERE BLUEPRINT_ID = 47331" ' For some reason, the Standup XL Energy Nuet is marked as T1
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
         ' Add the S/M/L/XL tag to these here
@@ -6370,7 +6370,7 @@ Public Class frmMain
         ' After this is now done, need to enter all other items that are reprocessable to the item prices list
         ' Now load up everything else on market for use in reprocessing - mark manufacture as -1
         mainSQL = "INSERT INTO ITEM_PRICES_FACT SELECT DISTINCT typeID, INVENTORY_GROUPS.groupID, INVENTORY_CATEGORIES.categoryID, "
-        mainSQL &= "0 AS TECH_LEVEL, 0 AS PRICE, -1 As MANUFACTURE, 0 As ITEM_TYPE, 'None' AS PRICE_TYPE, 0, 0 "
+        mainSQL &= "0 AS TECH_LEVEL, 0 AS PRICE, -1 As MANUFACTURE, 0 As ITEM_TYPE, 'None' AS PRICE_TYPE, 0, 0, 0, 0 "
         mainSQL &= "FROM INVENTORY_TYPES, INVENTORY_GROUPS, INVENTORY_CATEGORIES "
         mainSQL &= "WHERE INVENTORY_TYPES.groupID = INVENTORY_GROUPS.groupID "
         mainSQL &= "AND INVENTORY_GROUPS.categoryID = INVENTORY_CATEGORIES.categoryID "
@@ -7267,7 +7267,9 @@ Public Class frmMain
         SQL &= "ITEM_TYPE INTEGER NOT NULL,"
         SQL &= "PRICE_TYPE VARCHAR(20) NOT NULL,"
         SQL &= "ADJUSTED_PRICE FLOAT NOT NULL,"
-        SQL &= "AVERAGE_PRICE FLOAT NOT NULL"
+        SQL &= "AVERAGE_PRICE FLOAT NOT NULL,"
+        SQL &= "RegionORSystem INTEGER NOT NULL,"
+        SQL &= "PRICE_SOURCE INTEGER NOT NULL"
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -7293,7 +7295,7 @@ Public Class frmMain
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(4)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(5)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(6)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(7)) & ",0,0)" ' For Adjusted market price and Average market price from CREST
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(7)) & ",0,0,0,0)" ' For Adjusted market price and Average market price from ESI - also default for regionorsystem and source of data
 
             Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
@@ -7307,7 +7309,8 @@ Public Class frmMain
         SQL = "CREATE VIEW ITEM_PRICES AS SELECT ITEM_ID, "
         SQL &= "CASE WHEN ITEM_CATEGORY_ID = 9 THEN typeName || ' Copy' ELSE typeName END AS ITEM_NAME, "
         SQL &= "TECH_LEVEL, PRICE, INVENTORY_CATEGORIES.categoryName AS ITEM_CATEGORY, "
-        SQL &= "INVENTORY_GROUPS.groupName AS ITEM_GROUP, MANUFACTURE, ITEM_TYPE, PRICE_TYPE, ADJUSTED_PRICE, AVERAGE_PRICE "
+        SQL &= "INVENTORY_GROUPS.groupName AS ITEM_GROUP, MANUFACTURE, ITEM_TYPE, PRICE_TYPE, ADJUSTED_PRICE, AVERAGE_PRICE, "
+        SQL &= "RegionORSystem, PRICE_SOURCE "
         SQL &= "FROM ITEM_PRICES_FACT, INVENTORY_TYPES, INVENTORY_GROUPS, INVENTORY_CATEGORIES "
         SQL &= "WHERE ITEM_ID = INVENTORY_TYPES.typeID AND ITEM_CATEGORY_ID = INVENTORY_CATEGORIES.categoryID AND ITEM_GROUP_ID = INVENTORY_GROUPS.groupID "
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -7322,6 +7325,9 @@ Public Class frmMain
 
         ' Build SQL Lite indexes
         SQL = "CREATE INDEX IDX_IP_GROUP_ID ON ITEM_PRICES_FACT (ITEM_GROUP_ID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "CREATE INDEX IDX_IP_ITEM_ID ON ITEM_PRICES_FACT (ITEM_ID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         SQL = "CREATE INDEX IDX_IP_TYPE ON ITEM_PRICES_FACT (ITEM_TYPE)"
@@ -7365,15 +7371,13 @@ Public Class frmMain
         SQL &= "sellPercentile REAL NOT NULL,"
         SQL &= "sellVariance REAL NOT NULL,"
         SQL &= "RegionORSystem INTEGER NOT NULL,"
-        SQL &= "UpdateDate VARCHAR(23) NOT NULL" ' Date
+        SQL &= "UpdateDate VARCHAR(23) NOT NULL," ' Date
+        SQL &= "PRICE_SOURCE INTEGER NOT NULL"
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
-        SQL = "CREATE INDEX IDX_IPC_TYPEID ON ITEM_PRICES_CACHE (typeID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE INDEX IDX_IPC_ID_REGION ON ITEM_PRICES_CACHE (typeID, RegionORSystem)"
+        SQL = "CREATE INDEX IDX_IPC_ID_REGION_PS ON ITEM_PRICES_CACHE (typeID, RegionORSystem, PRICE_SOURCE)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
     End Sub
