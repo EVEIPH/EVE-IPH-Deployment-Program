@@ -3669,6 +3669,8 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Materials & Compounds','Min Sell', 'The Forge','Jita',0,1)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Named Components','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Ancient Relics','Min Sell', 'The Forge','Jita',0,1)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -7262,7 +7264,7 @@ Public Class frmMain
         SQL &= "ITEM_GROUP_ID INTEGER NOT NULL,"
         SQL &= "ITEM_CATEGORY_ID INTEGER NOT NULL,"
         SQL &= "TECH_LEVEL INTEGER NOT NULL,"
-        SQL &= "PRICE REAL,"
+        SQL &= "PRICE REAL NOT NULL,"
         SQL &= "MANUFACTURE INTEGER NOT NULL,"
         SQL &= "ITEM_TYPE INTEGER NOT NULL,"
         SQL &= "PRICE_TYPE VARCHAR(20) NOT NULL,"
