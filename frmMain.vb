@@ -2139,7 +2139,7 @@ Public Class frmMain
         '***** TO CHECK LATER *****
         ' Set the tech level of the BPs first by looking at the item type from the query
         ' This is not ideal but meta 5 items are T2; Tengu/Legion/Proteus/Loki items are T3, and all others are T1
-        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 2, ITEM_TYPE = 2 WHERE ITEM_TYPE = 5"
+        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 2, ITEM_TYPE = 2 WHERE ITEM_TYPE = 5 AND BLUEPRINT_ID NOT IN (60349, 60371, 60372)" ' Exclude the T1 Abyssal asteroid mining crystals from setting to T2
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
         SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 3 WHERE ITEM_CATEGORY = 'Subsystem' OR ITEM_GROUP = 'Strategic Cruiser' OR ITEM_GROUP = 'Tactical Destroyer'"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
@@ -2201,7 +2201,7 @@ Public Class frmMain
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
         SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 15 WHERE  BLUEPRINT_GROUP = 'Combat Drone Blueprint' AND ITEM_TYPE = 16" ' Aug/Integrated drones
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
-        SQL = "UPDATE ALL_BLUEPRINTS SET ITEM_TYPE = 2, TECH_LEVEL = 2 WHERE BLUEPRINT_ID = 47331" ' For some reason, the Standup XL Energy Nuet is marked as T1
+        SQL = "UPDATE ALL_BLUEPRINTS SET ITEM_TYPE = 2, TECH_LEVEL = 2 WHERE BLUEPRINT_ID = 47331" ' For some reason, the Standup XL Energy Nuet II is marked as T1
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
         ' Add the S/M/L/XL tag to these here
@@ -3625,7 +3625,8 @@ Public Class frmMain
         SQL &= "INDUSTRY_SYSTEMS_CACHED_UNTIL VARCHAR(23)," ' Date
         SQL &= "PUBLIC_STRUCTURES_CACHED_UNTIL VARCHAR(23)," ' Date
         SQL &= "MARKET_PRICES_CACHED_UNTIL VARCHAR(23)," ' Date
-        SQL &= "PUBLIC_ESI_STATUS_CACHED_UNTIL VARCHAR(23)" ' Date
+        SQL &= "PUBLIC_ESI_STATUS_CACHED_UNTIL VARCHAR(23)," ' Date
+        SQL &= "PUBLIC_CONTRACTS_CACHED_UNTIL VARCHAR(23)" ' Date
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -3682,6 +3683,8 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Misc.','Min Sell', 'The Forge','Jita',0,1)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Blueprint Copies','Min Sell', 'The Forge','Jita',0,1)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Raw Moon Materials','Min Sell', 'The Forge','Jita',0,1)"
@@ -4086,8 +4089,6 @@ Public Class frmMain
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
 
-
-
         SQL = "CREATE TABLE RAM_ASSEMBLY_LINE_TYPES ("
         SQL &= "assemblyLineTypeID INTEGER NOT NULL,"
         SQL &= "assemblyLineTypeName VARCHAR(100),"
@@ -4221,6 +4222,57 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         SQL = "CREATE INDEX IDX_CS_NPC_TYPE_ID ON CHARACTER_STANDINGS (NPC_TYPE_ID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+    End Sub
+
+    Private Sub Build_Public_Contracts()
+        Dim SQL As String
+
+        SQL = "CREATE TABLE PUBLIC_CONTRACTS ("
+        SQL &= "CONTRACT_ID INTEGER NOT NULL,"
+        SQL &= "COLLATERAL REAL NOT NULL,"
+        SQL &= "DATE_EXPIRED VARCHAR(23) NOT NULL," ' DATE
+        SQL &= "DATE_ISSUED VARCHAR(23) NOT NULL," ' DATE
+        SQL &= "DAYS_TO_COMPLETE INTEGER NOT NULL,"
+        SQL &= "END_LOCATION_ID INTEGER NOT NULL,"
+        SQL &= "ISSUER_CORPORATION_ID INTEGER NOT NULL,"
+        SQL &= "ISSUER_ID INTEGER NOT NULL,"
+        SQL &= "PRICE REAL NOT NULL,"
+        SQL &= "REWARD REAL NOT NULL,"
+        SQL &= "START_LOCATION_ID INTEGER NOT NULL,"
+        SQL &= "TITLE VARCHAR(50),"
+        SQL &= "CONTRACT_TYPE VARCHAR(25) NOT NULL,"
+        SQL &= "VOLUME REAL NOT NULL,"
+        SQL &= "REGION_ID INTEGER NOT NULL"
+        SQL &= ")"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "CREATE INDEX IDX_PC_CONTRACT_ID ON PUBLIC_CONTRACTS (CONTRACT_ID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+    End Sub
+
+    Private Sub Build_Public_Contract_Items()
+        Dim SQL As String
+
+        SQL = "CREATE TABLE PUBLIC_CONTRACT_ITEMS ("
+        SQL &= "CONTRACT_ID INTEGER NOT NULL,"
+        SQL &= "IS_INCLUDED INTEGER NOT NULL,"
+        SQL &= "ITEM_ID INTEGER NOT NULL,"
+        SQL &= "QUANTITY INTEGER NOT NULL,"
+        SQL &= "RECORD_ID INTEGER NOT NULL,"
+        SQL &= "TYPE_ID INTEGER NOT NULL,"
+        SQL &= "IS_BLUEPRINT_COPY INTEGER NOT NULL,"
+        SQL &= "MATERIAL_EFFICIENCY INTEGER NOT NULL,"
+        SQL &= "TIME_EFFICIENCY INTEGER NOT NULL,"
+        SQL &= "RUNS INTEGER NOT NULL,"
+        SQL &= ")"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "CREATE INDEX IDX_PCI_CONTRACT_ID ON PUBLIC_CONTRACT_ITEMS (CONTRACT_ID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
     End Sub
@@ -6639,7 +6691,8 @@ Public Class frmMain
         SQL &= "TypeID INTEGER NOT NULL,"
         SQL &= "Quantity INTEGER NOT NULL,"
         SQL &= "Flag INTEGER NOT NULL,"
-        SQL &= "IsSingleton INTEGER NOT NULL"
+        SQL &= "IsSingleton INTEGER NOT NULL,"
+        SQL &= "ItemName VARCHAR(50)"
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -7315,6 +7368,19 @@ Public Class frmMain
         SQL &= "RegionORSystem, PRICE_SOURCE "
         SQL &= "FROM ITEM_PRICES_FACT, INVENTORY_TYPES, INVENTORY_GROUPS, INVENTORY_CATEGORIES "
         SQL &= "WHERE ITEM_ID = INVENTORY_TYPES.typeID AND ITEM_CATEGORY_ID = INVENTORY_CATEGORIES.categoryID AND ITEM_GROUP_ID = INVENTORY_GROUPS.groupID "
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        ' Finally, for prices, make a view for the price of all BPC contracts
+        SQL = "CREATE VIEW CONTRACT_BPC_PRICES AS SELECT TYPE_ID, REGION_ID, PC.CONTRACT_ID, PRICE/SUM(QUANTITY) AS CALC_PRICE "
+        SQL &= "FROM PUBLIC_CONTRACTS AS PC, PUBLIC_CONTRACT_ITEMS, INVENTORY_TYPES "
+        SQL &= "WHERE PC.CONTRACT_ID = PUBLIC_CONTRACT_ITEMS.CONTRACT_ID "
+        SQL &= "AND PC.CONTRACT_ID IN "
+        SQL &= "(SELECT DISTINCT CONTRACT_ID FROM PUBLIC_CONTRACT_ITEMS "
+        SQL &= "WHERE IS_BLUEPRINT_COPY = 1 "
+        SQL &= "GROUP BY CONTRACT_ID HAVING COUNT(DISTINCT TYPE_ID) = 1)"
+        SQL &= "AND INVENTORY_TYPES.typeID = PUBLIC_CONTRACT_ITEMS.TYPE_ID "
+        SQL &= "AND marketGroupID IS NULL " ' Only BPCs that don't have a BPO
+        SQL &= "GROUP BY PC.CONTRACT_ID"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
