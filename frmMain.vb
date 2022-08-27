@@ -1813,6 +1813,12 @@ Public Class frmMain
         lblTableName.Text = "Building: PRICE_PROFILES"
         Call Build_PRICE_PROFILES()
 
+        lblTableName.Text = "Building: PUBLIC_CONTRACTS"
+        Call Build_Public_Contracts()
+
+        lblTableName.Text = "Building: PUBLIC_CONTRACT_ITEMS"
+        Call Build_Public_Contract_Items()
+
         lblTableName.Text = "Building: CHARACTER_STANDINGS"
         Call Build_Character_Standings()
 
@@ -2154,6 +2160,9 @@ Public Class frmMain
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
         ' for abyssal - it uses meta value where attributeid = 1692 for some reason
         SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = META_GROUP, ITEM_TYPE = META_GROUP WHERE META_GROUP IN (1,2) AND (ITEM_TYPE IS NULL OR ITEM_TYPE = 0) AND META_GROUP IS NOT NULL"
+        Execute_SQLiteSQL(SQL, SDEDB.DBRef)
+        ' Treat all boosters as T1
+        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 1 WHERE BLUEPRINT_GROUP_ID = 718"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
         ' Anything not updated yet should be a 0
         SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 1 WHERE TECH_LEVEL = 0"
@@ -4267,7 +4276,7 @@ Public Class frmMain
         SQL &= "IS_BLUEPRINT_COPY INTEGER NOT NULL,"
         SQL &= "MATERIAL_EFFICIENCY INTEGER NOT NULL,"
         SQL &= "TIME_EFFICIENCY INTEGER NOT NULL,"
-        SQL &= "RUNS INTEGER NOT NULL,"
+        SQL &= "RUNS INTEGER NOT NULL"
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -7291,6 +7300,9 @@ Public Class frmMain
         mainSQL &= "AND (categoryName IN ('Asteroid','Decryptors','Planetary Commodities','Planetary Resources') "
         mainSQL &= "OR groupName in ('Moon Materials','Ice Product','Harvestable Cloud','Intermediate Materials'))) "
         mainSQL &= "WHERE MATERIAL_ID Not In (SELECT ITEM_ID FROM PRICES_BUILD)"
+
+
+        ' Need to add all BPC's not on the market to this list (T2, etc.) with Activity  = 1
 
         Execute_SQLiteSQL(mainSQL, SDEDB.DBRef)
 
