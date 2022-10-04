@@ -96,8 +96,6 @@ Public Class frmMain
 
     Private FileList As List(Of FileNameDate)
 
-    Const SpaceFlagCode As Integer = 500
-
     Structure FileNameDate
         Dim FileName As String
         Dim FileDate As DateTime
@@ -3537,12 +3535,25 @@ Public Class frmMain
         SQL &= "BLUEPRINTS_CACHE_DATE VARCHAR(23)," ' Date
         SQL &= "ASSETS_CACHE_DATE VARCHAR(23)," ' Date
         SQL &= "INDUSTRY_JOBS_CACHE_DATE VARCHAR(23)," ' Date
-        SQL &= "CORP_ROLES_CACHE_DATE VARCHAR(23)" ' Date
+        SQL &= "CORP_ROLES_CACHE_DATE VARCHAR(23)," ' Date
+        SQL &= "CORP_DIVISIONS_CACHE_DATE VARCHAR(23)" ' Date
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         SQL = "CREATE INDEX IDX_ECRD_CHARACTER_ID On ESI_CORPORATION_DATA (CORPORATION_ID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        ' Build corp divisions table here too
+        SQL = "CREATE TABLE ESI_CORPORATION_DIVISIONS ("
+        SQL &= "CORPORATION_ID INTEGER NOT NULL,"
+        SQL &= "DIVISION_TYPE VARCHAR(8) NOT NULL,"
+        SQL &= "DIVISION_NUMBER INTEGER NOT NULL,"
+        SQL &= "NAME VARCHAR(50) NOT NULL)"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "CREATE INDEX IDX_ECRDV_CHARACTER_ID On ESI_CORPORATION_DIVISIONS (CORPORATION_ID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
     End Sub
@@ -3693,7 +3704,7 @@ Public Class frmMain
 
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Misc.','Min Sell', 'The Forge','Jita',0,1)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Blueprint Copies','Min Sell', 'The Forge','Jita',0,1)"
+        SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Blueprint','Min Sell', 'The Forge','Jita',0,1)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         SQL = "INSERT INTO PRICE_PROFILES VALUES (0,'Raw Moon Materials','Min Sell', 'The Forge','Jita',0,1)"
@@ -6346,6 +6357,14 @@ Public Class frmMain
         Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46497,974,NULL,11)", EVEIPHSQLiteDB.DBRef)
         Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46497,712,NULL,11)", EVEIPHSQLiteDB.DBRef)
 
+        ' Molecular Forged
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46484,4096,NULL,11)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46485,4096,NULL,11)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46486,4096,NULL,11)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46487,4096,NULL,11)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46497,4096,NULL,11)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO ENGINEERING_RIG_BONUSES VALUES(46496,4096,NULL,11)", EVEIPHSQLiteDB.DBRef)
+
         SQL = "CREATE INDEX IDX_ERB_TID ON ENGINEERING_RIG_BONUSES (typeID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
@@ -7152,8 +7171,7 @@ Public Class frmMain
         SQL = "CREATE TABLE INVENTORY_FLAGS ("
         SQL &= "flagID INTEGER NOT NULL,"
         SQL &= "flagName VARCHAR(200) NOT NULL,"
-        SQL &= "flagText VARCHAR(100) NOT NULL,"
-        SQL &= "orderID INTEGER NOT NULL"
+        SQL &= "flagText VARCHAR(100) NOT NULL"
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -7175,20 +7193,19 @@ Public Class frmMain
 
             Select Case CInt(SQLReader1.GetValue(0))
                 Case 63, 64, 146, 147
-                    ' Set these to None flag text
-                    SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & "," & "'None','None',0)"
+                    ' Set these to None flag text - Locked/Unlocked/Junkyard
+                    SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & "," & BuildInsertFieldString(SQLReader1.GetValue(1)) & ",'None')"
                 Case Else
-                    ' Just whatever is in the table
-                    SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
-                    SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
                     If CStr(SQLReader1.GetValue(2)).Contains("Corp Security Access Group") Then
                         ' Change name to corp hanger - save the number
                         Temp = BuildInsertFieldString(SQLReader1.GetValue(2))
-                        SQL &= "'Corp Hanger " & Temp.Substring(Len(Temp) - 2, 1) & "',"
+                        SQL &= "'Corp Hangar " & Temp.Substring(Len(Temp) - 2, 1) & "')"
                     Else
-                        SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ","
+                        ' Just whatever is in the table
+                        SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
+                        SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
+                        SQL &= BuildInsertFieldString(StrConv(SQLReader1.GetValue(2), VbStrConv.ProperCase)) & ")"
                     End If
-                    SQL &= BuildInsertFieldString(SQLReader1.GetValue(3)) & ")"
             End Select
 
             Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -7199,10 +7216,19 @@ Public Class frmMain
 
         End While
 
-        ' Add a final flag for space
-        SQL = "INSERT INTO INVENTORY_FLAGS VALUES (" & CStr(SpaceFlagCode) & ",'Space','Space',0)"
+        ' Add flags not listed in this table from ESI
+        ' Const SpaceFlagCode As Integer = 500
+        Dim SQLList As New List(Of String)
+        SQLList.Add("INSERT INTO INVENTORY_FLAGS VALUES (" & CStr(500) & ",'Space','Space')")
+        SQLList.Add("INSERT INTO INVENTORY_FLAGS VALUES (" & CStr(501) & ",'AutoFit','Auto Fit')")
+        SQLList.Add("INSERT INTO INVENTORY_FLAGS VALUES (" & CStr(502) & ",'CorpseBay','Corpse Bay')")
+        SQLList.Add("INSERT INTO INVENTORY_FLAGS VALUES (" & CStr(503) & ",'HangerAll','Hangar All')")
+        SQLList.Add("INSERT INTO INVENTORY_FLAGS VALUES (" & CStr(504) & ",'SpecializedOreHold','Specialized Ore Hold')")
+        SQLList.Add("INSERT INTO INVENTORY_FLAGS VALUES (" & CStr(515) & ",'OfficeFolder','Offices')")
 
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        For Each query In SQLList
+            Call Execute_SQLiteSQL(query, EVEIPHSQLiteDB.DBRef)
+        Next
 
         Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
@@ -7299,10 +7325,17 @@ Public Class frmMain
         mainSQL &= "AND invTypes.marketGroupID IS NOT NULL "
         mainSQL &= "AND (categoryName IN ('Asteroid','Decryptors','Planetary Commodities','Planetary Resources') "
         mainSQL &= "OR groupName in ('Moon Materials','Ice Product','Harvestable Cloud','Intermediate Materials'))) "
-        mainSQL &= "WHERE MATERIAL_ID Not In (SELECT ITEM_ID FROM PRICES_BUILD)"
+        mainSQL &= "WHERE MATERIAL_ID Not In (SELECT ITEM_ID FROM PRICES_BUILD) "
+        mainSQL &= "UNION "
 
-
-        ' Need to add all BPC's not on the market to this list (T2, etc.) with Activity  = 1
+        ' Add all blueprints - will treat separately in price updates so BPO prices aren't downloaded
+        mainSQL &= "SELECT DISTINCT typeID AS MATERIAL_ID, typeName AS MATERIAL, 0 AS TECH_LEVEL, 0 AS PRICE, "
+        mainSQL &= "invCategories.categoryID As MAT_CATEGORY_ID, categoryName As MATERIAL_CATEGORY, "
+        mainSQL &= "invGroups.groupID As MAT_GROUP_ID, groupName As MATERIAL_GROUP, 0 As MANUFACTURE, 0 As ITEM_TYPE, 'None' AS PRICE_TYPE "
+        mainSQL &= "FROM invTypes, invGroups, invCategories "
+        mainSQL &= "WHERE invTypes.groupID = invGroups.groupID "
+        mainSQL &= "AND invGroups.categoryID = invCategories.categoryID AND invCategories.categoryID = 9 "
+        mainSQL &= "AND invTypes.published <> 0 AND invGroups.published <> 0 AND invCategories.published <> 0 "
 
         Execute_SQLiteSQL(mainSQL, SDEDB.DBRef)
 
@@ -7382,17 +7415,18 @@ Public Class frmMain
         SQL &= "WHERE ITEM_ID = INVENTORY_TYPES.typeID AND ITEM_CATEGORY_ID = INVENTORY_CATEGORIES.categoryID AND ITEM_GROUP_ID = INVENTORY_GROUPS.groupID "
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
-        ' Finally, for prices, make a view for the price of all BPC contracts
-        SQL = "CREATE VIEW CONTRACT_BPC_PRICES AS SELECT TYPE_ID, REGION_ID, PC.CONTRACT_ID, PRICE/SUM(QUANTITY) AS CALC_PRICE "
-        SQL &= "FROM PUBLIC_CONTRACTS AS PC, PUBLIC_CONTRACT_ITEMS, INVENTORY_TYPES "
-        SQL &= "WHERE PC.CONTRACT_ID = PUBLIC_CONTRACT_ITEMS.CONTRACT_ID "
-        SQL &= "AND PC.CONTRACT_ID IN "
-        SQL &= "(SELECT DISTINCT CONTRACT_ID FROM PUBLIC_CONTRACT_ITEMS "
-        SQL &= "WHERE IS_BLUEPRINT_COPY = 1 "
-        SQL &= "GROUP BY CONTRACT_ID HAVING COUNT(DISTINCT TYPE_ID) = 1)"
-        SQL &= "AND INVENTORY_TYPES.typeID = PUBLIC_CONTRACT_ITEMS.TYPE_ID "
-        SQL &= "AND marketGroupID IS NULL " ' Only BPCs that don't have a BPO
-        SQL &= "GROUP BY PC.CONTRACT_ID"
+        ' Finally create a table and index for updating Contract prices (BPC's for now)
+        SQL = "CREATE TABLE CONTRACT_BPC_PRICES ("
+        SQL &= "TYPE_ID INTEGER NOT NULL,"
+        SQL &= "REGION_ID INTEGER NOT NULL,"
+        SQL &= "CONTRACT_ID INTEGER NOT NULL,"
+        SQL &= "PRICE REAL NOT NULL,"
+        SQL &= "QUANTITY INTEGER NOT NULL"
+        SQL &= ")"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "CREATE INDEX IDX_TID_RID ON CONTRACT_BPC_PRICES (TYPE_ID, REGION_ID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
