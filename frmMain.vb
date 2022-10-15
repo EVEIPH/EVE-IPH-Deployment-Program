@@ -8720,26 +8720,6 @@ Public Class frmMain
             NewFilesAdded = True
         End If
 
-        If MD5CalcFile(EVEIPHRootDirectory & EVEIPHEXE) <> MD5CalcFile(FileDirectory & EVEIPHEXE) Then
-            File.Copy(EVEIPHRootDirectory & EVEIPHEXE, FileDirectory & EVEIPHEXE, True)
-            NewFilesAdded = True
-        End If
-
-        If MD5CalcFile(EVEIPHRootDirectory & EVEIPHUpdater) <> MD5CalcFile(FileDirectory & EVEIPHUpdater) Then
-            File.Copy(EVEIPHRootDirectory & EVEIPHUpdater, FileDirectory & EVEIPHUpdater, True)
-            NewFilesAdded = True
-        End If
-
-        If MD5CalcFile(SDEWorkingDirectory & EVEIPHDB) <> MD5CalcFile(FileDirectory & EVEIPHDB) Then
-            File.Copy(SDEWorkingDirectory & EVEIPHDB, FileDirectory & EVEIPHDB, True)
-            NewFilesAdded = True
-        End If
-
-        If MD5CalcFile(SDEWorkingDirectory & ImageZipFile) <> MD5CalcFile(FileDirectory & ImageZipFile) Then
-            File.Copy(SDEWorkingDirectory & ImageZipFile, FileDirectory & ImageZipFile, True)
-            NewFilesAdded = True
-        End If
-
         If MD5CalcFile(EVEIPHRootDirectory & UpdaterManifest) <> MD5CalcFile(FileDirectory & UpdaterManifest) Then
             File.Copy(EVEIPHRootDirectory & UpdaterManifest, FileDirectory & UpdaterManifest, True)
             NewFilesAdded = True
@@ -8792,6 +8772,26 @@ Public Class frmMain
 
         If MD5CalcFile(MSIDirectory & MSIInstaller) <> MD5CalcFile(FileDirectory & MSIInstaller) Then
             File.Copy(MSIDirectory & MSIInstaller, FileDirectory & MSIInstaller, True)
+            NewFilesAdded = True
+        End If
+
+        If MD5CalcFile(EVEIPHRootDirectory & EVEIPHEXE) <> MD5CalcFile(FileDirectory & EVEIPHEXE) Then
+            File.Copy(EVEIPHRootDirectory & EVEIPHEXE, FileDirectory & EVEIPHEXE, True)
+            NewFilesAdded = True
+        End If
+
+        If MD5CalcFile(EVEIPHRootDirectory & EVEIPHUpdater) <> MD5CalcFile(FileDirectory & EVEIPHUpdater) Then
+            File.Copy(EVEIPHRootDirectory & EVEIPHUpdater, FileDirectory & EVEIPHUpdater, True)
+            NewFilesAdded = True
+        End If
+
+        If MD5CalcFile(SDEWorkingDirectory & EVEIPHDB) <> MD5CalcFile(FileDirectory & EVEIPHDB) Then
+            File.Copy(SDEWorkingDirectory & EVEIPHDB, FileDirectory & EVEIPHDB, True)
+            NewFilesAdded = True
+        End If
+
+        If MD5CalcFile(SDEWorkingDirectory & ImageZipFile) <> MD5CalcFile(FileDirectory & ImageZipFile) Then
+            File.Copy(SDEWorkingDirectory & ImageZipFile, FileDirectory & ImageZipFile, True)
             NewFilesAdded = True
         End If
 
