@@ -5270,12 +5270,12 @@ Public Class frmMain
             Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.GoldenOmber & ",'" & GetWHClass(i) & "','WH')", EVEIPHSQLiteDB.DBRef)
             Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedGoldenOmber & ",'" & GetWHClass(i) & "','WH')", EVEIPHSQLiteDB.DBRef)
 
-            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Gneiss & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
-            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedGneiss & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
-            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.IridescentGneiss & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
-            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedIridescentGneiss & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
-            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.PrismaticGneiss & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
-            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedPrismaticGneiss & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Gneiss & ",'WH','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedGneiss & ",'WH','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.IridescentGneiss & ",'WH','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedIridescentGneiss & ",'WH','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.PrismaticGneiss & ",'WH','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedPrismaticGneiss & ",'WH','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
         Next
 
         ' Gas - Cytoserocin
