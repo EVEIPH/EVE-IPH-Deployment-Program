@@ -3535,8 +3535,7 @@ Public Class frmMain
         SQL &= "BLUEPRINTS_CACHE_DATE VARCHAR(23)," ' Date
         SQL &= "ASSETS_CACHE_DATE VARCHAR(23)," ' Date
         SQL &= "INDUSTRY_JOBS_CACHE_DATE VARCHAR(23)," ' Date
-        SQL &= "CORP_ROLES_CACHE_DATE VARCHAR(23)," ' Date
-        SQL &= "CORP_DIVISIONS_CACHE_DATE VARCHAR(23)" ' Date
+        SQL &= "CORP_ROLES_CACHE_DATE VARCHAR(23)" ' Date
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
