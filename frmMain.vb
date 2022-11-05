@@ -4308,7 +4308,6 @@ Public Class frmMain
         SQL &= "BLUEPRINT_ID INTEGER NOT NULL,"
         SQL &= "BLUEPRINT_NAME VARCHAR(100) NOT NULL,"
         SQL &= "QUANTITY INTEGER NOT NULL,"
-        SQL &= "FLAG_ID INTEGER NOT NULL,"
         SQL &= "ME INTEGER NOT NULL,"
         SQL &= "TE INTEGER NOT NULL,"
         SQL &= "RUNS INTEGER NOT NULL,"
@@ -4322,7 +4321,9 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         ' Indexes
-        SQL = "CREATE INDEX IDX_OBP_USER_ID ON OWNED_BLUEPRINTS (USER_ID)"
+        SQL = "CREATE INDEX IDX_OBP_USER_ID_BPID ON OWNED_BLUEPRINTS (USER_ID, BLUEPRINT_ID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "CREATE INDEX IDX_OBP_USER_ID_IID ON OWNED_BLUEPRINTS (USER_ID, ITEM_ID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
     End Sub
@@ -4338,7 +4339,6 @@ Public Class frmMain
         SQL &= "BLUEPRINT_ID INTEGER NOT NULL,"
         SQL &= "BLUEPRINT_NAME VARCHAR(100) NOT NULL,"
         SQL &= "QUANTITY INTEGER NOT NULL,"
-        SQL &= "FLAG_ID INTEGER NOT NULL,"
         SQL &= "ME INTEGER NOT NULL,"
         SQL &= "TE INTEGER NOT NULL,"
         SQL &= "RUNS INTEGER NOT NULL,"
@@ -6776,10 +6776,13 @@ Public Class frmMain
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
-        SQL = "CREATE INDEX IDX_ITEM_ASSET_LOC ON ASSETS (LocationID)"
+        SQL = "CREATE INDEX IDX_ITEM_ASSET_IILIS ON ASSETS (ID, ItemID, LocationID, isSingleton)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE INDEX IDX_ITEM_TYPEID_ID ON ASSETS (TypeID, ID)"
+        SQL = "CREATE INDEX IDX_ITEM_ASSET_IILIN ON ASSETS (ID, LocationID, ItemID, ItemName)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "CREATE INDEX IDX_ITEM_TYPEID_IID ON ASSETS (ItemID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "CREATE INDEX IDX_ITEM_TYPEID_TIDIL ON ASSETS (TypeID, ID, LocationID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
     End Sub
@@ -7295,6 +7298,8 @@ Public Class frmMain
         SQLReader1.Close()
 
         SQL = "CREATE INDEX IDX_ITEM_FLAG_ID ON INVENTORY_FLAGS (FlagID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "CREATE INDEX IDX_ITEM_FLAG_NAME ON INVENTORY_FLAGS (flagName)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
     End Sub
