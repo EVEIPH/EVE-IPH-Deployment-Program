@@ -7220,86 +7220,147 @@ Public Class frmMain
 
     End Sub
 
+
     ' INVENTORY_FLAGS
     Private Sub Build_INVENTORY_FLAGS()
         Dim SQL As String
 
-        ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
-        Dim SQLReader1 As SQLiteDataReader
-        Dim mainSQL As String
-        Dim Temp As String
-
+        ' Build new table
         SQL = "CREATE TABLE INVENTORY_FLAGS ("
         SQL &= "flagID INTEGER NOT NULL,"
-        SQL &= "flagName VARCHAR(200) NOT NULL,"
-        SQL &= "flagText VARCHAR(100) NOT NULL"
+        SQL &= "flagName VARCHAR(40) NOT NULL,"
+        SQL &= "flagText VARCHAR(40) NOT NULL"
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         Call SetProgressBarValues("invFlags")
 
-        ' Pull new data and insert
-        mainSQL = "SELECT * FROM invFlags"
-        SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
-        SQLReader1 = SQLCommand.ExecuteReader()
+        ' Build my own table based on ESI data returned in the assets endpoint
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (1,'Wallet','Wallet')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (2,'OfficeFolder','Offices')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (3,'Wardrobe','Wardrobe')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (4,'Hangar','Hangar')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (5,'Cargo','Cargo')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (6,'Impounded','Impounded')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (7,'Skill','Skill')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (8,'Reward','Reward')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (11,'LoSlot0','Low Power Slot 1')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (12,'LoSlot1','Low Power Slot 2')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (13,'LoSlot2','Low Power Slot 3')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (14,'LoSlot3','Low Power Slot 4')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (15,'LoSlot4','Low Power Slot 5')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (16,'LoSlot5','Low Power Slot 6')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (17,'LoSlot6','Low Power Slot 7')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (18,'LoSlot7','Low Power Slot 8')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (19,'MedSlot0','Medium Power Slot 1')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (20,'MedSlot1','Medium Power Slot 2')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (21,'MedSlot2','Medium Power Slot 3')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (22,'MedSlot3','Medium Power Slot 4')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (23,'MedSlot4','Medium Power Slot 5')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (24,'MedSlot5','Medium Power Slot 6')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (25,'MedSlot6','Medium Power Slot 7')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (26,'MedSlot7','Medium Power Slot 8')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (27,'HiSlot0','High Power Slot 1')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (28,'HiSlot1','High Power Slot 2')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (29,'HiSlot2','High Power Slot 3')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (30,'HiSlot3','High Power Slot 4')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (31,'HiSlot4','High Power Slot 5')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (32,'HiSlot5','High Power Slot 6')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (33,'HiSlot6','High Power Slot 7')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (34,'HiSlot7','High Power Slot 8')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (36,'AssetSafety','Asset Safety')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (56,'Capsule','Capsule')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (57,'Pilot','Pilot')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (61,'SkillInTraining','Skill In Training')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (62,'CorpDeliveries','Corporation Market Deliveries / Returns')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (63,'Locked','Locked')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (64,'Unlocked','Unlocked')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (86,'Bonus','Bonus')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (87,'DroneBay','Drone Bay')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (88,'Booster','Booster')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (89,'Implant','Implant')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (90,'ShipHangar','Ship Hangar')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (91,'ShipOffline','Ship Offline')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (92,'RigSlot0','Rig Slot 1')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (93,'RigSlot1','Rig Slot 2')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (94,'RigSlot2','Rig Slot 3')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (95,'RigSlot3','Rig Slot 4')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (96,'RigSlot4','Rig Slot 5')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (97,'RigSlot5','Rig Slot 6')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (98,'RigSlot6','Rig Slot 7')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (99,'RigSlot7','Rig Slot 8')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (115,'CorpSAG1','Corp Hangar 1')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (116,'CorpSAG2','Corp Hangar 2')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (117,'CorpSAG3','Corp Hangar 3')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (118,'CorpSAG4','Corp Hangar 4')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (119,'CorpSAG5','Corp Hangar 5')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (120,'CorpSAG6','Corp Hangar 6')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (121,'CorpSAG7','Corp Hangar 7')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (122,'SecondaryStorage','Secondary Storage')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (125,'SubSystemSlot0','Sub System Slot 0')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (126,'SubSystemSlot1','Sub System Slot 1')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (127,'SubSystemSlot2','Sub System Slot 2')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (128,'SubSystemSlot3','Sub System Slot 3')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (129,'SubSystemSlot4','Sub System Slot 4')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (130,'SubSystemSlot5','Sub System Slot 5')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (131,'SubSystemSlot6','Sub System Slot 6')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (132,'SubSystemSlot7','Sub System Slot 7')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (133,'SpecializedFuelBay','Specialized Fuel Bay')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (134,'SpecializedAsteroidHold','Specialized Asteroid Hold')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (135,'SpecializedGasHold','Specialized Gas Hold')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (136,'SpecializedMineralHold','Specialized Mineral Hold')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (137,'SpecializedSalvageHold','Specialized Salvage Hold')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (138,'SpecializedShipHold','Specialized Ship Hold')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (139,'SpecializedSmallShipHold','Specialized Small Ship Hold')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (140,'SpecializedMediumShipHold','Specialized Medium Ship Hold')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (141,'SpecializedLargeShipHold','Specialized Large Ship Hold')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (142,'SpecializedIndustrialShipHold','Specialized Industrial Ship Hold')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (143,'SpecializedAmmoHold','Specialized Ammo Hold')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (144,'StructureActive','Structure Active')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (145,'StructureInactive','Structure Inactive')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (146,'JunkyardReprocessed','Junkyard Reprocessed')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (147,'JunkyardTrashed','Junkyard Trashed')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (148,'SpecializedCommandCenterHold','Specialized Command Center Hold')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (149,'SpecializedPlanetaryCommoditiesHold','Specialized Planetary Commodities Hold')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (150,'PlanetSurface','Planet Surface')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (151,'SpecializedMaterialBay','Specialized Material Bay')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (152,'DustDatabank','Dust Databank')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (153,'DustBattle','Dust Battle')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (154,'QuafeBay','Quafe Bay')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (155,'FleetHangar','Fleet Hangar')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (156,'HiddenModifiers','Hidden Modifiers')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (157,'StructureOffline','Structure Offline')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (158,'FighterBay','Fighter Bay')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (159,'FighterTube0','Fighter Tube 1')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (160,'FighterTube1','Fighter Tube 2')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (161,'FighterTube2','Fighter Tube 3')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (162,'FighterTube3','Fighter Tube 4')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (163,'FighterTube4','Fighter Tube 5')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (164,'ServiceSlot0','Structure Service Slot 1')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (165,'ServiceSlot1','Structure Service Slot 2')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (166,'ServiceSlot2','Structure Service Slot 3')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (167,'ServiceSlot3','Structure Service Slot 4')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (168,'ServiceSlot4','Structure Service Slot 5')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (169,'ServiceSlot5','Structure Service Slot 6')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (170,'ServiceSlot6','Structure Service Slot 7')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (171,'ServiceSlot7','Structure Service Slot 8')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (172,'StructureFuel','Structure Fuel')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (173,'Deliveries','Deliveries')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (174,'CrateLoot','Crate Loot')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (176,'BoosterBay','Booster Hold')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (177,'SubSystemBay','Subsystem Hold')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (179,'FrigateEscapeBay','Frigate Escape Bay Hangar')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (180,'StructureDeedBay','Structure Deed Bay')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (181,'SpecializedIceHold','Specialized Ice Hold')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (500,'AutoFit','Auto Fit')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (501,'HangarAll','Hangar All')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (502,'QuantumCoreRoom','Quantum Core Room')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (503,'CorpseBay','Corpse Bay')", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (504,'SpecializedOreHold','Specialized Ore Hold')", EVEIPHSQLiteDB.DBRef)
 
-        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
-
-        ' Add to Access table
-        While SQLReader1.Read
-            Application.DoEvents()
-
-            SQL = "INSERT INTO INVENTORY_FLAGS VALUES ("
-
-            Select Case CInt(SQLReader1.GetValue(0))
-                Case 63, 64, 146, 147
-                    ' Set these to None flag text - Locked/Unlocked/Junkyard
-                    SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & "," & BuildInsertFieldString(SQLReader1.GetValue(1)) & ",'None')"
-                Case Else
-                    If CStr(SQLReader1.GetValue(2)).Contains("Corp Security Access Group") Then
-                        SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & "," & BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
-                        ' Change name to corp hanger - save the number
-                        Temp = BuildInsertFieldString(SQLReader1.GetValue(2))
-                        SQL &= "'Corp Hangar " & Temp.Substring(Len(Temp) - 2, 1) & "')"
-                    Else
-                        ' Just whatever is in the table
-                        SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
-                        SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
-                        SQL &= BuildInsertFieldString(StrConv(SQLReader1.GetValue(2), VbStrConv.ProperCase)) & ")"
-                    End If
-            End Select
-
-            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-            ' For each record, update the progress bar
-            Call IncrementProgressBar(pgMain)
-            Application.DoEvents()
-
-        End While
-
-        ' Add flags not listed in this table from ESI
-        ' Const SpaceFlagCode As Integer = 500
-        Dim SQLList As New List(Of String)
-        SQLList.Add("INSERT INTO INVENTORY_FLAGS VALUES (" & CStr(500) & ",'Space','Space')")
-        SQLList.Add("INSERT INTO INVENTORY_FLAGS VALUES (" & CStr(501) & ",'AutoFit','Auto Fit')")
-        SQLList.Add("INSERT INTO INVENTORY_FLAGS VALUES (" & CStr(502) & ",'CorpseBay','Corpse Bay')")
-        SQLList.Add("INSERT INTO INVENTORY_FLAGS VALUES (" & CStr(503) & ",'HangerAll','Hangar All')")
-        SQLList.Add("INSERT INTO INVENTORY_FLAGS VALUES (" & CStr(504) & ",'SpecializedOreHold','Specialized Ore Hold')")
-        SQLList.Add("INSERT INTO INVENTORY_FLAGS VALUES (" & CStr(515) & ",'OfficeFolder','Offices')")
-
-        For Each query In SQLList
-            Call Execute_SQLiteSQL(query, EVEIPHSQLiteDB.DBRef)
-        Next
-
-        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
-
-        SQLReader1.Close()
-
+        ' Index
         SQL = "CREATE INDEX IDX_ITEM_FLAG_ID ON INVENTORY_FLAGS (FlagID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "CREATE INDEX IDX_ITEM_FLAG_NAME ON INVENTORY_FLAGS (flagName)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
     End Sub
