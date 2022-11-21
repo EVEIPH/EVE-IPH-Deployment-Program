@@ -4531,6 +4531,7 @@ Public Class frmMain
         ' SQL variables
         Dim SQLCommand As New SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
+        Dim SQLReader2 As SQLiteDataReader
         Dim mainSQL As String
 
         SQL = "CREATE TABLE ATTRIBUTE_TYPES ("
@@ -4554,12 +4555,18 @@ Public Class frmMain
         While SQLReader1.Read
             Application.DoEvents()
 
-            SQL = "INSERT INTO ATTRIBUTE_TYPES VALUES ("
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ")"
+            ' Check for duplicates - added with Uprising expansion
+            SQLCommand = New SQLiteCommand("SELECT 'X' FROM ATTRIBUTE_TYPES WHERE attributeID=" & CStr(SQLReader1.GetValue(0)), SDEDB.DBRef)
+            SQLReader2 = SQLCommand.ExecuteReader()
 
-            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+            If Not SQLReader2.HasRows Then
+                SQL = "INSERT INTO ATTRIBUTE_TYPES VALUES ("
+                SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
+                SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
+                SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ")"
+
+                Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+            End If
 
             ' For each record, update the progress bar
             Call IncrementProgressBar(pgMain)
