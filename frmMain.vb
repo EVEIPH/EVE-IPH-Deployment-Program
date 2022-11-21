@@ -4556,7 +4556,7 @@ Public Class frmMain
             Application.DoEvents()
 
             ' Check for duplicates - added with Uprising expansion
-            SQLCommand = New SQLiteCommand("SELECT 'X' FROM ATTRIBUTE_TYPES WHERE attributeID=" & CStr(SQLReader1.GetValue(0)), SDEDB.DBRef)
+            SQLCommand = New SQLiteCommand("SELECT 'X' FROM ATTRIBUTE_TYPES WHERE attributeID=" & CStr(SQLReader1.GetValue(0)), EVEIPHSQLiteDB.DBRef)
             SQLReader2 = SQLCommand.ExecuteReader()
 
             If Not SQLReader2.HasRows Then
