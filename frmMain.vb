@@ -8472,6 +8472,9 @@ Public Class frmMain
         Call Execute_SQLiteSQL("UPDATE dogmaTypeAttributes SET attributeID = 2593 WHERE attributeID = 2713", SDEDB.DBRef)
         Call Execute_SQLiteSQL("UPDATE dogmaTypeAttributes SET attributeID = 2594 WHERE attributeID = 2714", SDEDB.DBRef)
 
+        ' Nag Fleet Issue BPC is published
+        Call Execute_SQLiteSQL("UPDATE invTypes SET published = 1 WHERE typeID = 73999", SDEDB.DBRef)
+
         pgMain.Visible = False
         lblTableName.Text = ""
 
