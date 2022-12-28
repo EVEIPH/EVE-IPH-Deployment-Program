@@ -8683,15 +8683,15 @@ Public Class frmMain
             NewFilesAdded = True
         End If
 
-        If MD5CalcFile(EVEIPHRootDirectory & SQLiteDLL) <> MD5CalcFile(FileDirectory & SQLiteDLL) Then
-            File.Copy(EVEIPHRootDirectory & SQLiteDLL, FileDirectory & SQLiteDLL, True)
-            NewFilesAdded = True
-        End If
+        'If MD5CalcFile(EVEIPHRootDirectory & SQLiteDLL) <> MD5CalcFile(FileDirectory & SQLiteDLL) Then
+        '    File.Copy(EVEIPHRootDirectory & SQLiteDLL, FileDirectory & SQLiteDLL, True)
+        '    NewFilesAdded = True
+        'End If
 
-        If MD5CalcFile(EVEIPHRootDirectory & SQLInteropDLL) <> MD5CalcFile(FileDirectory & SQLInteropDLL) Then
-            File.Copy(EVEIPHRootDirectory & SQLInteropDLL, FileDirectory & SQLInteropDLL, True)
-            NewFilesAdded = True
-        End If
+        'If MD5CalcFile(EVEIPHRootDirectory & SQLInteropDLL) <> MD5CalcFile(FileDirectory & SQLInteropDLL) Then
+        '    File.Copy(EVEIPHRootDirectory & SQLInteropDLL, FileDirectory & SQLInteropDLL, True)
+        '    NewFilesAdded = True
+        'End If
 
         If MD5CalcFile(EVEIPHRootDirectory & UpdaterManifest) <> MD5CalcFile(FileDirectory & UpdaterManifest) Then
             File.Copy(EVEIPHRootDirectory & UpdaterManifest, FileDirectory & UpdaterManifest, True)
