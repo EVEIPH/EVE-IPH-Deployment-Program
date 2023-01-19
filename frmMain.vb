@@ -2048,7 +2048,8 @@ Public Class frmMain
                WHERE  [type_attributes].[attributeid] = [attribute_types].[attributeID] AND [inventory_types].[typeid] = [type_attributes].[typeid] ORDER  BY [attributename]"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
-        SQL = "CREATE VIEW [ITEM_LOOKUP] AS SELECT [typeID], [typeName], [IT].[groupID] AS [groupID], [groupName], [IC].[categoryID] AS [categoryID], [categoryName]
+        SQL = "CREATE VIEW [ITEM_LOOKUP] AS SELECT [typeID], [typeName], [IT].[groupID] AS [groupID], [groupName], [IC].[categoryID] AS [categoryID], [categoryName],
+               IT.published AS IT_Published, IG.published AS IG_Published, IC.published AS IC_Published
                FROM [INVENTORY_TYPES] AS [IT], [INVENTORY_GROUPS] AS [IG], [INVENTORY_CATEGORIES] AS [IC] WHERE  [IT].[groupID] = [IG].[groupID] AND [IG].[categoryID] = [IC].[categoryID]"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
