@@ -8643,6 +8643,9 @@ Public Class frmMain
         ' Need to insert blueprints as products for copy, ME/TE 
         Call UpdateIndustryActivityProducts()
 
+        ' CRAB is only 5 run bpc
+        Call Execute_SQLiteSQL("UPDATE industryBlueprints SET maxProductionLimit = 5 WHERE blueprintTypeID = 60514", SDEDB.DBRef)
+
         ' Special processing - Add a Category for 'Structure Rigs' to separate from 'Structure Modules' - use the same code just the negative
         Dim rsCheck As SQLiteDataReader
         Dim SQLCommand As SQLiteCommand
@@ -8692,6 +8695,7 @@ Public Class frmMain
         End If
         rsCheck.Close()
 
+        ' Need to reset the group ID for these items too
         Call Execute_SQLiteSQL("UPDATE invTypes SET groupID = " & MolecularForgingToolsGroupID & " WHERE typeID IN (57443,57445,57446,57447,57448,57452)", SDEDB.DBRef)
 
         '57478   Auto-Integrity Preservation Seal
