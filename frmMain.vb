@@ -2184,10 +2184,13 @@ Public Class frmMain
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
         ' Structure T1
         SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 1 WHERE META_GROUP = 54"
+        Execute_SQLiteSQL(SQL, SDEDB.DBRef)
         ' Structure T2
         SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 2, ITEM_TYPE = 2 WHERE META_GROUP = 53"
+        Execute_SQLiteSQL(SQL, SDEDB.DBRef)
         ' Faction Structures
         SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 15 WHERE META_GROUP = 52"
+        Execute_SQLiteSQL(SQL, SDEDB.DBRef)
         ' Structure Rigs
         SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 2, ITEM_TYPE = 2 WHERE ITEM_CATEGORY_ID = " & StructureRigCategory & " AND META_GROUP = 53"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
@@ -2196,6 +2199,8 @@ Public Class frmMain
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
         ' Treat all boosters as T1
         SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 1 WHERE BLUEPRINT_GROUP_ID = 718"
+        Execute_SQLiteSQL(SQL, SDEDB.DBRef)
+        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 2, ITEM_TYPE = 2 WHERE BLUEPRINT_NAME LIKE 'Polarized%'"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
         ' Anything not updated yet should be a 0
         SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 1 WHERE TECH_LEVEL = 0"
