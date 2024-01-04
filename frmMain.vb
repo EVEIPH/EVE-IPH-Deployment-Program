@@ -1833,6 +1833,21 @@ Public Class frmMain
         lblTableName.Text = "Building: ESI_CORPORATION_ROLES"
         Call Build_ESI_CORPORATION_ROLES()
 
+        lblTableName.Text = "Building: ESI_CHARACTER_LOYALTY_POINTS"
+        Call Build_ESI_CHARACTER_LOYALTY_POINTS()
+
+        lblTableName.Text = "Building: ESI_CHARACTER_PLANETS"
+        Call Build_ESI_CHARACTER_PLANETS()
+
+        lblTableName.Text = "Building: ESI_MARKET_ORDERS"
+        Call Build_ESI_MARKET_ORDERS()
+
+        lblTableName.Text = "Building: ESI_WALLET_JOURNAL"
+        Call Build_ESI_WALLET_JOURNAL()
+
+        lblTableName.Text = "Building: ESI_WALLET_TRANSACTIONS"
+        Call Build_ESI_WALLET_TRANSACTIONS()
+
         lblTableName.Text = "Building: ESI_STATUS_ITEMS"
         Call Build_ESI_STATUS_ITEMS()
 
@@ -1841,6 +1856,9 @@ Public Class frmMain
 
         lblTableName.Text = "Building: ESI_PUBLIC_CACHE_DATES"
         Call Build_ESI_PUBLIC_CACHE_DATES()
+
+        lblTableName.Text = "Building: CORPORATION_LP_STORE"
+        Call Build_CORPORATION_LP_STORE()
 
         lblTableName.Text = "Building: PRICE_PROFILES"
         Call Build_PRICE_PROFILES()
@@ -3542,6 +3560,10 @@ Public Class frmMain
         SQL &= "BLUEPRINTS_CACHE_DATE VARCHAR(23)," ' Date
         SQL &= "ASSETS_CACHE_DATE VARCHAR(23)," ' Date
         SQL &= "INDUSTRY_JOBS_CACHE_DATE VARCHAR(23)," ' Date
+        SQL &= "LOYALTY_POINTS_CACHE_DATE VARCHAR(23)," ' Date
+        SQL &= "PLANETS_CACHE_DATE VARCHAR(23)," ' Date
+        SQL &= "MARKET_ORDERS_CACHE_DATE VARCHAR(23)," ' Date
+        SQL &= "WALLET_DATA_CACHE_DATE VARCHAR(23)," ' Date
         SQL &= "IS_DEFAULT Integer NOT NULL"
         SQL &= ")"
 
@@ -3576,7 +3598,9 @@ Public Class frmMain
         SQL &= "ASSETS_CACHE_DATE VARCHAR(23)," ' Date
         SQL &= "INDUSTRY_JOBS_CACHE_DATE VARCHAR(23)," ' Date
         SQL &= "CORP_ROLES_CACHE_DATE VARCHAR(23)," ' Date
-        SQL &= "CORP_DIVISIONS_CACHE_DATE VARCHAR(23)" ' Date
+        SQL &= "CORP_DIVISIONS_CACHE_DATE VARCHAR(23)," ' Date
+        SQL &= "MARKET_ORDERS_CACHE_DATE VARCHAR(23)," ' Date
+        SQL &= "WALLET_DATA_CACHE_DATE VARCHAR(23)" ' Date
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -3647,32 +3671,172 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         ' Add data
-        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/assets/','esi-assets.read_assets','to import character assets')"
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/assets/','esi-assets.read_assets','To import character assets')"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/agents_research/','esi-characters.read_agents_research','to import a character`s research agents')"
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/agents_research/','esi-characters.read_agents_research','To import a character`s research agents')"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/blueprints/','esi-characters.read_blueprints','to import all character blueprints')"
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/blueprints/','esi-characters.read_blueprints','To import all character blueprints')"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/standings/','esi-characters.read_standings','to import all character standings')"
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/standings/','esi-characters.read_standings','To import all character standings')"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/industry/jobs/','esi-industry.read_character_jobs','to load all character industry jobs')"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/skills/','esi-skills.read_skills', 'to import character skills')"
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/skills/','esi-skills.read_skills', 'To import character skills')"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/corporations/{corporation_id}/assets/','esi-assets.read_corporation_assets','to import corporation assets')"
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/orders/','esi-markets.read_character_orders','To import character market orders')"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/corporations/{corporation_id}/blueprints/','esi-corporations.read_blueprints','to import all corporation blueprints')"
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/wallet/','esi-wallet.read_character_wallet','To import character wallet data')"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/corporations/{corporation_id}/industry/jobs/','esi-industry.read_corporation_jobs','to import all corporation industry jobs for a selected character')"
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/loyalty/points/','esi-characters.read_loyalty','To import character loyalty points')"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/corporations/{corporation_id}/roles/','esi-corporations.read_corporation_membership','to import character roles within a corporation')"
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/planets/','esi-planets.manage_planets','To import character planetary interaction information')"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/universe/structures/','esi-universe.read_structures','to import public market structures')"
+
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/corporations/{corporation_id}/assets/','esi-assets.read_corporation_assets','To import corporation assets')"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/markets/structures/{structure_id}/','esi-markets.structure_markets','to import prices from structures')"
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/corporations/{corporation_id}/blueprints/','esi-corporations.read_blueprints','To import all corporation blueprints')"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/corporations/{corporation_id}/industry/jobs/','esi-industry.read_corporation_jobs','To import all corporation industry jobs for a selected character')"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/corporations/{corporation_id}/roles/','esi-corporations.read_corporation_membership','To import character roles within a corporation')"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/corporations/{corporation_id}/divisions/','esi-corporation.read_divisions','To import corporation divisions')"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/corporations/{corporation_id}/orders/','esi-markets.read_character_orders','To import corporation market orders')"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/corporations/{corporation_id}/wallets/','esi-wallet.read_character_wallet','To import corporation wallet data')"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/universe/structures/','esi-universe.read_structures','To import public market structures')"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/markets/structures/{structure_id}/','esi-markets.structure_markets','To import prices from structures')"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         SQL = "CREATE INDEX IDX_EERTS_ER ON ESI_ENDPOINT_ROUTE_TO_SCOPE (endpoint_route)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+    End Sub
+
+    ' ESI_CHARACTER_LOYALTY_POINTS
+    Private Sub Build_ESI_CHARACTER_LOYALTY_POINTS()
+        Dim SQL As String
+
+        SQL = "CREATE TABLE ESI_CHARACTER_LOYALTY_POINTS ("
+        SQL &= "CHARACTER_ID INTEGER NOT NULL,"
+        SQL &= "CORPORATION_ID INTEGER NOT NULL,"
+        SQL &= "LOYALTY_POINTS INTEGER NOT NULL"
+        SQL &= ")"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "CREATE INDEX IDX_ECHLP_CHARACTER_ID ON ESI_CHARACTER_LOYALTY_POINTS (CHARACTER_ID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+    End Sub
+
+    ' ESI_CHARACTER_PLANETS
+    Private Sub Build_ESI_CHARACTER_PLANETS()
+        Dim SQL As String
+
+        SQL = "CREATE TABLE ESI_CHARACTER_PLANETS ("
+        SQL &= "CHARACTER_ID INTEGER NOT NULL,"
+        SQL &= "PLANET_ID INTEGER NOT NULL,"
+        SQL &= "PLANET_TYPE VARCHAR(10) NOT NULL,"
+        SQL &= "SOLAR_SYSTEM_ID INTEGER NOT NULL,"
+        SQL &= "UPGRADE_LEVEL INTEGER NOT NULL"
+        SQL &= ")"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "CREATE INDEX IDX_ECP_CHARACTER_ID ON ESI_CHARACTER_PLANETS (CHARACTER_ID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+    End Sub
+
+    ' ESI_MARKET_ORDERS - for both character and corporations
+    Private Sub Build_ESI_MARKET_ORDERS()
+        Dim SQL As String
+
+        SQL = "CREATE TABLE ESI_MARKET_ORDERS ("
+        SQL &= "ID INTEGER NOT NULL,"
+        SQL &= "TYPE_ID INTEGER NOT NULL,"
+        SQL &= "STATE VARCHAR(10),"
+        SQL &= "DURATION INTEGER NOT NULL,"
+        SQL &= "ESCROW FLOAT,"
+        SQL &= "IS_BUY_ORDER INTEGER,"
+        SQL &= "ISSUED VARCHAR(23) NOT NULL,"
+        SQL &= "ISSUED_BY INTEGER NOT NULL,"
+        SQL &= "LOCATION_ID INTEGER NOT NULL,"
+        SQL &= "MIN_VOLUME INTEGER,"
+        SQL &= "ORDER_ID INTEGER NOT NULL,"
+        SQL &= "PRICE FLOAT NOT NULL,"
+        SQL &= "RANGE VARCHAR(15) NOT NULL,"
+        SQL &= "REGION_ID INTEGER NOT NULL,"
+        SQL &= "VOLUME_REMAIN INTEGER NOT NULL,"
+        SQL &= "VOLUME_TOTAL INTEGER NOT NULL,"
+        SQL &= "WALLET_DIVISION INTEGER"
+        SQL &= ")"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "CREATE UNIQUE INDEX IDX_EMO_OID ON ESI_MARKET_ORDERS (ORDER_ID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "CREATE INDEX IDX_EMO_CID ON ESI_MARKET_ORDERS (ID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+    End Sub
+
+    ' ESI_WALLET_TRANSACTIONS - for both character and corporations
+    Private Sub Build_ESI_WALLET_TRANSACTIONS()
+        Dim SQL As String
+
+        SQL = "CREATE TABLE ESI_WALLET_TRANSACTIONS ("
+        SQL &= "ID INTEGER NOT NULL," ' Client ID
+        SQL &= "DIVISION_ID INTEGER," ' Null for characters
+        SQL &= "DATE VARCHAR(23) NOT NULL,"
+        SQL &= "IS_BUY INTEGER NOT NULL,"
+        SQL &= "IS_PERSONAL INTEGER," ' Null for corps
+        SQL &= "JOURNAL_REF_ID INTEGER,"
+        SQL &= "LOCATION_ID INTEGER,"
+        SQL &= "QUANTITY INTEGER NOT NULL,"
+        SQL &= "TRANSACTION_ID INTEGER NOT NULL,"
+        SQL &= "TYPE_ID INTEGER,"
+        SQL &= "UNIT_PRICE FLOAT NOT NULL"
+        SQL &= ")"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "CREATE INDEX IDX_EWT_ID ON ESI_WALLET_TRANSACTIONS (ID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+    End Sub
+
+    ' ESI_WALLET_JOURNAL - for both character and corporations
+    Private Sub Build_ESI_WALLET_JOURNAL()
+        Dim SQL As String
+
+        SQL = "CREATE TABLE ESI_WALLET_JOURNAL ("
+        SQL &= "ID INTEGER NOT NULL," ' Client ID
+        SQL &= "DIVISION_ID INTEGER," ' Null for characters
+        SQL &= "DATE VARCHAR(23) NOT NULL,"
+        SQL &= "DESCRIPTION VARCHAR(100) NOT NULL,"
+        SQL &= "REF_TYPE VARCHAR(100) NOT NULL,"
+        SQL &= "REASON VARCHAR(250),"
+        SQL &= "CONTEXT_ID INTEGER,"
+        SQL &= "CONTEXT_ID_TYPE VARCHAR(25),"
+        SQL &= "FIRST_PARTY_ID INTEGER,"
+        SQL &= "SECOND_PARTY_ID INTEGER,"
+        SQL &= "AMOUNT FLOAT,"
+        SQL &= "TAX FLOAT,"
+        SQL &= "TAX_RECEIVER_ID INTEGER,"
+        SQL &= "BALANCE FLOAT,"
+        SQL &= "JOURNAL_ID INTEGER NOT NULL"
+        SQL &= ")"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+
+        SQL = "CREATE INDEX IDX_EWJ_ID ON ESI_WALLET_JOURNAL (ID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
     End Sub
@@ -3692,6 +3856,129 @@ Public Class frmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
     End Sub
+
+    ' CORPORATION_LP_STORE
+    Private Sub Build_CORPORATION_LP_STORE()
+        Dim SQL As String
+
+        SQL = "CREATE TABLE CORPORATION_LP_STORE ("
+        SQL &= "CORPORATION_ID INTEGER NOT NULL,"
+        SQL &= "CORPORATION_NAME VARCHAR(100) NOT NULL,"
+        SQL &= "AK_COST INTEGER NOT NULL,"
+        SQL &= "ISK_COST INTEGER NOT NULL,"
+        SQL &= "LP_COST INTEGER NOT NULL,"
+        SQL &= "OFFER_ID INTEGER NOT NULL, "
+        SQL &= "QUANTITY INTEGER NOT NULL,"
+        SQL &= "TYPE_ID INTEGER NOT NULL"
+        SQL &= ")"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "CREATE INDEX IDX_CLPS_CHARACTER_ID ON CORPORATION_LP_STORE (CORPORATION_ID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "CREATE INDEX IDX_CLPS_OFFER_ID ON CORPORATION_LP_STORE (OFFER_ID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "CREATE TABLE CORPORATION_LP_STORE_REQ_ITEMS ("
+        SQL &= "OFFER_ID INTEGER NOT NULL,"
+        SQL &= "TYPE_ID INTEGER NOT NULL,"
+        SQL &= "QUANTITY INTEGER NOT NULL"
+        SQL &= ")"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "CREATE INDEX IDX_CLPSRI_OFFER_ID ON CORPORATION_LP_STORE_REQ_ITEMS (OFFER_ID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        ' Download all the NPC corp IDs, then look up the names in Universe
+        Dim PublicData As String = GetPublicData("https://esi.evetech.net/latest/corporations/npccorps/?datasource=tranquility")
+        Dim CorpIDs As New List(Of Long)
+        Dim IDList As String = ""
+        Dim CorpIDNames As New List(Of CorpIDName)
+        Dim UniverseAddress As String = "https://esi.evetech.net/latest/universe/names/?datasource=tranquility"
+        Dim WC As New WebClient
+
+        If Not IsNothing(PublicData) Then
+            CorpIDs = JsonConvert.DeserializeObject(Of List(Of Long))(PublicData)
+        End If
+
+        ' Now get the names
+        For Each item In CorpIDs
+            IDList &= CStr(item) & ","
+        Next
+
+        ' Post data and get response, and parse the data to the class
+        CorpIDNames = JsonConvert.DeserializeObject(Of List(Of CorpIDName))(WC.UploadString(UniverseAddress, "POST", "[" & IDList.Substring(0, Len(IDList) - 1) & "]"))
+
+        pgMain.Maximum = CorpIDNames.Count
+        pgMain.Value = 0
+        pgMain.Visible = True
+
+        Dim LPStoreItems As New List(Of LPStoreItem)
+        ' Now for each corporation, get the LP store items and save them
+        For Each corp In CorpIDNames
+            PublicData = GetPublicData("https://esi.evetech.net/latest/loyalty/stores/" & CStr(corp.id) & "/offers/?datasource=tranquility")
+            LPStoreItems = JsonConvert.DeserializeObject(Of List(Of LPStoreItem))(PublicData)
+
+            For Each item In LPStoreItems
+                ' Insert each into the stores
+                SQL = "INSERT INTO CORPORATION_LP_STORE VALUES ("
+                SQL &= CStr(corp.id) & ",'"
+                SQL &= FormatDBString(corp.name) & "',"
+                SQL &= CStr(item.ak_cost) & ","
+                SQL &= CStr(item.isk_cost) & ","
+                SQL &= CStr(item.lp_cost) & ","
+                SQL &= CStr(item.offer_id) & ","
+                SQL &= CStr(item.quantity) & ","
+                SQL &= CStr(item.type_id) & ")"
+                Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+                SQL &= "CORPORATION_ID INTEGER NOT NULL,"
+                SQL &= "CORPORATION_NAME VARCHAR(100) NOT NULL,"
+                SQL &= "AK_COST INTEGER NOT NULL,"
+                SQL &= "ISK_COST INTEGER NOT NULL,"
+                SQL &= "LP_COST INTEGER NOT NULL,"
+                SQL &= "OFFER_ID INTEGER NOT NULL, "
+                SQL &= "QUANTITY INTEGER NOT NULL,"
+                SQL &= "TYPE_ID INTEGER NOT NULL"
+
+                For Each reqitem In item.required_items
+                    ' Save to separate table
+                    SQL = "INSERT INTO CORPORATION_LP_STORE_REQ_ITEMS VALUES ("
+                    SQL &= CStr(item.offer_id) & ","
+                    SQL &= CStr(reqitem.type_id) & ","
+                    SQL &= CStr(reqitem.quantity) & ")"
+
+                    Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+                Next
+            Next
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
+        Next
+
+        pgMain.Visible = False
+
+    End Sub
+
+    Public Class LPStoreItem
+        <JsonProperty("ak_cost")> Public ak_cost As Long
+        <JsonProperty("isk_cost")> Public isk_cost As Long
+        <JsonProperty("lp_cost")> Public lp_cost As Long
+        <JsonProperty("offer_id")> Public offer_id As Integer
+        <JsonProperty("quantity")> Public quantity As Integer
+        <JsonProperty("required_items")> Public required_items As List(Of LPStoreRequiredItem)
+        <JsonProperty("type_id")> Public type_id As Long
+    End Class
+    Public Class LPStoreRequiredItem
+        <JsonProperty("quantity")> Public quantity As Integer
+        <JsonProperty("type_id")> Public type_id As Long
+    End Class
+    Public Class CorpIDName
+        <JsonProperty("category")> Public category As String
+        <JsonProperty("id")> Public id As Long
+        <JsonProperty("name")> Public name As String
+    End Class
 
     ' PRICE_PROFILES
     Private Sub Build_PRICE_PROFILES()
@@ -3949,317 +4236,6 @@ Public Class frmMain
         Call Execute_SQLiteSQL("INSERT INTO INDUSTRY_ACTIVITIES VALUES(-2,'Reprocessing','Reprocessing',0)", EVEIPHSQLiteDB.DBRef)
 
         SQL = "CREATE INDEX IDX_ACTIVITY_ID ON INDUSTRY_ACTIVITIES (activityID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-    End Sub
-
-    ' RAM_ASSEMBLY_LINE_STATIONS
-    Private Sub Build_RAM_ASSEMBLY_LINE_STATIONS()
-        Dim SQL As String
-
-        ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
-        Dim SQLReader1 As SQLiteDataReader
-        Dim mainSQL As String
-
-        SQL = "CREATE TABLE RAM_ASSEMBLY_LINE_STATIONS ("
-        SQL &= "stationID INTEGER NOT NULL,"
-        SQL &= "assemblyLineTypeID INTEGER NOT NULL,"
-        SQL &= "quantity INTEGER,"
-        SQL &= "stationTypeID INTEGER, "
-        SQL &= "ownerID INTEGER,"
-        SQL &= "solarSystemID INTEGER,"
-        SQL &= "regionID INTEGER"
-        SQL &= ")"
-
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        Call SetProgressBarValues("ramAssemblyLineStations")
-
-        ' Pull new data and insert
-        mainSQL = "SELECT * FROM ramAssemblyLineStations"
-        SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
-        SQLReader1 = SQLCommand.ExecuteReader()
-
-        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
-
-        ' Add to Access table
-        While SQLReader1.Read
-            Application.DoEvents()
-
-            SQL = "INSERT INTO RAM_ASSEMBLY_LINE_STATIONS VALUES ("
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(3)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(4)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(5)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(6)) & ")"
-
-            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-            ' For each record, update the progress bar
-            Call IncrementProgressBar(pgMain)
-            Application.DoEvents()
-
-        End While
-
-        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
-
-        SQLReader1.Close()
-
-        ' Indexes
-        SQL = "CREATE INDEX IDX_RALS_SID ON RAM_ASSEMBLY_LINE_STATIONS (stationID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE INDEX IDX_RALS_SSID ON RAM_ASSEMBLY_LINE_STATIONS (solarSystemID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE INDEX IDX_RALS_ALTID ON RAM_ASSEMBLY_LINE_STATIONS (assemblyLineTypeID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-    End Sub
-
-    ' RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_CATEGORY
-    Private Sub Build_RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_CATEGORY()
-        Dim SQL As String
-
-        ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
-        Dim SQLReader1 As SQLiteDataReader
-        Dim mainSQL As String
-
-        SQL = "CREATE TABLE RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_CATEGORY ("
-        SQL &= "assemblyLineTypeID INTEGER NOT NULL,"
-        SQL &= "categoryID INTEGER NOT NULL,"
-        SQL &= "timeMultiplier FLOAT,"
-        SQL &= "materialMultiplier FLOAT, "
-        SQL &= "costMultiplier FLOAT"
-        SQL &= ")"
-
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        Call SetProgressBarValues("ramAssemblyLineTypeDetailPerCategory")
-
-        ' Pull new data and insert
-        mainSQL = "SELECT * FROM ramAssemblyLineTypeDetailPerCategory"
-        SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
-        SQLReader1 = SQLCommand.ExecuteReader()
-
-        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
-
-        ' Add to Access table
-        While SQLReader1.Read
-            Application.DoEvents()
-
-            SQL = "INSERT INTO RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_CATEGORY VALUES ("
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(3)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(4)) & ")"
-
-            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-            ' For each record, update the progress bar
-            Call IncrementProgressBar(pgMain)
-            Application.DoEvents()
-
-        End While
-
-        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
-
-        SQLReader1.Close()
-
-        ' Indexes
-        SQL = "CREATE INDEX IDX_ALC_ALTID ON RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_CATEGORY (assemblyLineTypeID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE INDEX IDX_ALC_CID ON RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_CATEGORY (categoryID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-    End Sub
-
-    ' RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_GROUP
-    Private Sub Build_RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_GROUP()
-        Dim SQL As String
-
-        ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
-        Dim SQLReader1 As SQLiteDataReader
-        Dim mainSQL As String
-
-        SQL = "CREATE TABLE RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_GROUP ("
-        SQL &= "assemblyLineTypeID INTEGER NOT NULL,"
-        SQL &= "groupID INTEGER NOT NULL,"
-        SQL &= "timeMultiplier FLOAT,"
-        SQL &= "materialMultiplier FLOAT, "
-        SQL &= "costMultiplier FLOAT"
-        SQL &= ")"
-
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        Call SetProgressBarValues("ramAssemblyLineTypeDetailPerGroup")
-
-        ' Pull new data and insert
-        mainSQL = "SELECT * FROM ramAssemblyLineTypeDetailPerGroup"
-        SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
-        SQLReader1 = SQLCommand.ExecuteReader()
-
-        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
-
-        ' Add to Access table
-        While SQLReader1.Read
-            Application.DoEvents()
-
-            SQL = "INSERT INTO RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_GROUP VALUES ("
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(3)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(4)) & ")"
-
-            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-            ' For each record, update the progress bar
-            Call IncrementProgressBar(pgMain)
-            Application.DoEvents()
-
-        End While
-
-        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
-
-        SQLReader1.Close()
-
-        ' Indexes
-        SQL = "CREATE INDEX IDX_ALG_ALTID ON RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_GROUP (assemblyLineTypeID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE INDEX IDX_ALG_GID ON RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_GROUP (groupID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-    End Sub
-
-    ' RAM_ASSEMBLY_LINE_TYPES
-    Private Sub Build_RAM_ASSEMBLY_LINE_TYPES()
-        Dim SQL As String
-
-        ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
-        Dim SQLReader1 As SQLiteDataReader
-        Dim mainSQL As String
-
-        SQL = "CREATE TABLE RAM_ASSEMBLY_LINE_TYPES ("
-        SQL &= "assemblyLineTypeID INTEGER NOT NULL,"
-        SQL &= "assemblyLineTypeName VARCHAR(100),"
-        SQL &= "description VARCHAR(1000),"
-        SQL &= "baseTimeMultiplier FLOAT, "
-        SQL &= "baseMaterialMultiplier FLOAT,"
-        SQL &= "baseCostMultiplier FLOAT,"
-        SQL &= "volume FLOAT,"
-        SQL &= "activityID INTEGER,"
-        SQL &= "minCostPerHour FLOAT"
-        SQL &= ")"
-
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        Call SetProgressBarValues("ramAssemblyLineTypes")
-
-        ' Pull new data and insert
-        mainSQL = "SELECT * FROM ramAssemblyLineTypes"
-        SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
-        SQLReader1 = SQLCommand.ExecuteReader()
-
-        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
-
-        ' Add to Access table
-        While SQLReader1.Read
-            Application.DoEvents()
-
-            SQL = "INSERT INTO RAM_ASSEMBLY_LINE_TYPES VALUES ("
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(3)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(4)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(5)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(6)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(7)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(8)) & ")"
-
-            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-            ' For each record, update the progress bar
-            Call IncrementProgressBar(pgMain)
-            Application.DoEvents()
-
-        End While
-
-        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
-
-        SQLReader1.Close()
-
-        ' Indexes
-        SQL = "CREATE INDEX IDX_ALT_ALTID_AID ON RAM_ASSEMBLY_LINE_TYPES (assemblyLineTypeID, activityID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE INDEX IDX_ALT_AID ON RAM_ASSEMBLY_LINE_TYPES (activityID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-    End Sub
-
-    ' RAM_INSTALLATION_TYPE_CONTENTS
-    Private Sub Build_RAM_INSTALLATION_TYPE_CONTENTS()
-        Dim SQL As String
-
-        ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
-        Dim SQLReader1 As SQLiteDataReader
-        Dim mainSQL As String
-
-        SQL = "CREATE TABLE RAM_INSTALLATION_TYPE_CONTENTS ("
-        SQL &= "installationTypeID INTEGER NOT NULL,"
-        SQL &= "assemblyLineTypeID INTEGER NOT NULL,"
-        SQL &= "quantity INTEGER"
-        SQL &= ")"
-
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        Call SetProgressBarValues("ramInstallationTypeContents")
-
-        ' Pull new data and insert
-        mainSQL = "SELECT * FROM ramInstallationTypeContents"
-        SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
-        SQLReader1 = SQLCommand.ExecuteReader()
-
-        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
-
-        ' Add to Access table
-        While SQLReader1.Read
-            Application.DoEvents()
-
-            SQL = "INSERT INTO RAM_INSTALLATION_TYPE_CONTENTS VALUES ("
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ")"
-
-            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-            ' For each record, update the progress bar
-            Call IncrementProgressBar(pgMain)
-            Application.DoEvents()
-
-        End While
-
-        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
-
-        SQLReader1.Close()
-
-        ' Indexes
-        SQL = "CREATE INDEX IDX_RITC_ITID_ALTID ON RAM_INSTALLATION_TYPE_CONTENTS (installationTypeID, assemblyLineTypeID)"
-        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-
-        SQL = "CREATE INDEX IDX_RITC_ALTID ON RAM_INSTALLATION_TYPE_CONTENTS (assemblyLineTypeID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
     End Sub
@@ -8818,6 +8794,10 @@ Public Class frmMain
 
         ' Nag Fleet Issue BPC is published
         Call Execute_SQLiteSQL("UPDATE invTypes SET published = 1 WHERE typeID = 73999", SDEDB.DBRef)
+
+        ' unused blueprint type
+        ' Nag Fleet Issue BPC is published
+        Call Execute_SQLiteSQL("UPDATE invTypes SET published = 0 WHERE typeName = 'unused blueprint type'", SDEDB.DBRef)
 
         pgMain.Visible = False
         lblTableName.Text = ""
