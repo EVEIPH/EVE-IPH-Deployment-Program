@@ -2,15 +2,13 @@
 Imports System.Data.SQLite
 
 ' Class to support SQLite Databases
-<CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable")>
 Public Class SQLiteDBConnection
 
-    Private DB As SQLiteConnection
+    Private ReadOnly DB As SQLiteConnection
 
     ' Initializes the DB connection for the sent file name
     Public Sub New(ByVal DBFileName As String)
-        DB = New SQLiteConnection
-        DB.ConnectionString = "Data Source=" & DBFileName & ";Version=3;"
+        DB = New SQLiteConnection With {.ConnectionString = "Data Source=" & DBFileName & ";Version=3;"}
         DB.Open()
         Call ExecuteNonQuerySQL("PRAGMA synchronous = NORMAL; PRAGMA locking_mode = NORMAL; PRAGMA cache_size = 10000; PRAGMA page_size = 4096; PRAGMA temp_store = DEFAULT; PRAGMA journal_mode = TRUNCATE; PRAGMA count_changes = OFF")
         Call ExecuteNonQuerySQL("PRAGMA auto_vacuum = FULL;") ' Keep the DB small
@@ -40,7 +38,6 @@ Public Class SQLiteDBConnection
     End Sub
 
     ' Executes the SQL sent, which doesn't require a return value
-    <CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")>
     Public Sub ExecuteNonQuerySQL(ByVal SQL As String)
         Dim DBExecuteCmd As SQLiteCommand = DB.CreateCommand
         DBExecuteCmd.CommandTimeout = 0
@@ -74,7 +71,6 @@ Public Class SQLiteDBConnection
     End Function
 
     ' Runs the sent recordset query and returns true if it returns data
-    <CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")>
     Public Function DataExists(ByVal SQL As String) As Boolean
         ' Run the query and if it returns rows, return true else false
         Dim SQLQuery As SQLiteCommand
@@ -93,8 +89,6 @@ Public Class SQLiteDBConnection
         End If
 
         SQLReader.Close()
-        SQLReader = Nothing
-        SQLQuery = Nothing
 
         Return ReturnValue
 
@@ -102,7 +96,7 @@ Public Class SQLiteDBConnection
 
     ' Drops the sent table name if it exists
     Public Sub DropTable(TableName As String)
-        Dim SQL As String = ""
+        Dim SQL As String
 
         ' See if the table exists and drop if it does
         SQL = "SELECT * FROM sys.tables WHERE name  = '" & TableName & "'"
