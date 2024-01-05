@@ -63,6 +63,7 @@ Public Class FrmMain
     Private ReadOnly IMJsonWebTokensDLL As String = "Microsoft.IdentityModel.JsonWebTokens.dll"
     Private ReadOnly IMTokensDLL As String = "Microsoft.IdentityModel.Tokens.dll"
     Private ReadOnly IMLoggingDLL As String = "Microsoft.IdentityModel.Logging.dll"
+    Private ReadOnly IMAbstractionsDLL As String = "Microsoft.IdentityModel.Abstractions.dll"
 
     Private ReadOnly LPSolveDLL As String = "LpSolveDotNet.dll"
     Private ReadOnly SQLInteropDLL As String = "SQLite.Interop.dll"
@@ -93,6 +94,7 @@ Public Class FrmMain
     Private ReadOnly IMJsonWebTokensDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Microsoft.IdentityModel.JsonWebTokens.dll"
     Private ReadOnly IMTokensDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Microsoft.IdentityModel.Tokens.dll"
     Private ReadOnly IMLoggingDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Microsoft.IdentityModel.Logging.dll"
+    Private ReadOnly IMAbstractionsDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Microsoft.IdentityModel.Abstractions.dll"
 
     Private FileList As List(Of FileNameDate)
 
@@ -916,6 +918,7 @@ Public Class FrmMain
         File.Copy(UploadFileDirectory & IMJsonWebTokensDLL, FinalBinaryFolderPath & IMJsonWebTokensDLL)
         File.Copy(UploadFileDirectory & IMTokensDLL, FinalBinaryFolderPath & IMTokensDLL)
         File.Copy(UploadFileDirectory & IMLoggingDLL, FinalBinaryFolderPath & IMLoggingDLL)
+        File.Copy(UploadFileDirectory & IMAbstractionsDLL, FinalBinaryFolderPath & IMAbstractionsDLL)
         File.Copy(UploadFileDirectory & LPSolveDLL, FinalBinaryFolderPath & LPSolveDLL)
         File.Copy(UploadFileDirectory & LPSolve55DLL, FinalBinaryFolderPath & LPSolve55DLL)
         File.Copy(UploadFileDirectory & SBUFFERSDLL, FinalBinaryFolderPath & SBUFFERSDLL)
@@ -8935,6 +8938,11 @@ Public Class FrmMain
             NewFilesAdded = True
         End If
 
+        If MD5CalcFile(EVEIPHRootDirectory & IMAbstractionsDLL) <> MD5CalcFile(FileDirectory & IMAbstractionsDLL) Then
+            File.Copy(EVEIPHRootDirectory & IMAbstractionsDLL, FileDirectory & IMAbstractionsDLL, True)
+            NewFilesAdded = True
+        End If
+
         If MD5CalcFile(EVEIPHRootDirectory & JWTDLL) <> MD5CalcFile(FileDirectory & JWTDLL) Then
             File.Copy(EVEIPHRootDirectory & JWTDLL, FileDirectory & JWTDLL, True)
             NewFilesAdded = True
@@ -9137,6 +9145,13 @@ Public Class FrmMain
             writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & IMLoggingDLL).FileVersion)
             writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & IMLoggingDLL))
             writer.WriteAttributeString("URL", IMLoggingDLLURL)
+            writer.WriteEndElement()
+
+            writer.WriteStartElement("row")
+            writer.WriteAttributeString("Name", IMAbstractionsDLL)
+            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & IMAbstractionsDLL).FileVersion)
+            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & IMAbstractionsDLL))
+            writer.WriteAttributeString("URL", IMAbstractionsDLLURL)
             writer.WriteEndElement()
 
             ' End document.
