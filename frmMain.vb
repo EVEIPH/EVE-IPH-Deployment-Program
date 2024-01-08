@@ -5,7 +5,7 @@ Imports Newtonsoft.Json
 Imports System.Net
 Imports System.Text
 
-Public Class frmMain
+Public Class FrmMain
     Inherits Form
 
     Public EVEIPHSQLiteDB As SQLiteDBConnection
@@ -25,25 +25,25 @@ Public Class frmMain
     Private DatabasePath As String ' Where we build the SQLite database
     Private FinalDBPath As String ' Final DB
     Private DatabaseName As String
-    Private FinalDBName As String = "EVEIPH DB"
-    Private SQLInstance As String ' how to log into the SQL server on the host computer
+    Private ReadOnly FinalDBName As String = "EVEIPH DB"
+    Private ReadOnly SQLInstance As String ' how to log into the SQL server on the host computer
     Private Const DBExtention As String = ".sqlite"
 
     ' Image folder
     Private EVEIPHImageFolder As String
-    Private BaseImageFolder As String = "EVEIPH Images"
+    Private ReadOnly BaseImageFolder As String = "EVEIPH Images"
 
     ' When updating the image files to build the zip, update the root directory images as well so we have the updated images for running in debug mode
     Private DebugImageFolder As String
     Private MissingImagesFilePath As String
 
     ' For saving and scanning the github folder for updates - this folder is in the deployment folder (same as installer and binary)
-    Private FinalBinaryFolder As String = "EVEIPH\"
-    Private FinalBinaryZip As String = "EVEIPH Binaries.zip"
+    Private ReadOnly FinalBinaryFolder As String = "EVEIPH\"
+    Private ReadOnly FinalBinaryZip As String = "EVEIPH Binaries.zip"
 
     ' File names
-    Private MSIInstaller As String = "EVE Isk per Hour.msi"
-    Private MSIDirectory As String = "C:\Users\Brian\EVE Stuff\EVE IPH Project\EVEIPHSetupWizard\"
+    Private ReadOnly MSIInstaller As String = "EVE Isk per Hour.msi"
+    Private ReadOnly MSIDirectory As String = "C:\Users\Brian\EVE Stuff\EVE IPH Project\EVEIPHSetupWizard\"
 
     ' Special Processing
     Private Const StructureRigCategory As Integer = -66
@@ -51,48 +51,35 @@ Public Class frmMain
     Private Const MolecularForgingToolsGroupID As Integer = -2
     Private Const ProtectiveComponents As Integer = -3
 
-    Private EVEIPHEXE As String = "EVE Isk per Hour.exe"
-    Private EVEIPHUpdater As String = "EVEIPH Updater.exe"
-    Private EVEIPHDB As String = "EVEIPH DB.sqlite"
-    Private UpdaterManifest As String = "EVEIPH Updater.exe.manifest"
-    Private EXEManifest As String = "EVE Isk per Hour.exe.manifest"
-    Private ImageZipFile As String = "EVEIPH Images.zip"
+    Private ReadOnly EVEIPHEXE As String = "EVE Isk per Hour.exe"
+    Private ReadOnly EVEIPHUpdater As String = "EVEIPH Updater.exe"
+    Private ReadOnly EVEIPHDB As String = "EVEIPH DB.sqlite"
+    Private ReadOnly ImageZipFile As String = "EVEIPH Images.zip"
+    Private ReadOnly UpdaterManifest As String = "EVEIPH Updater.exe.manifest"
+    Private ReadOnly EXEManifest As String = "EVE Isk per Hour.exe.manifest"
+
+    Private ReadOnly EVEIPHEXEURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVE%20Isk%20per%20Hour.exe"
+    Private ReadOnly EVEIPHUpdaterURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Updater.exe"
+    Private ReadOnly EVEIPHDBURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20DB.sqlite"
+    Private ReadOnly ImageZipFileURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Images.zip"
+    Private ReadOnly UpdaterManifestURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Updater.exe.manifest"
+    Private ReadOnly EXEManifestURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVE%20Isk%20per%20Hour.exe.manifest"
 
     ' DLLs
-    Private IMTokensJWTDLL As String = "System.IdentityModel.Tokens.Jwt.dll"
-    Private IMJsonWebTokensDLL As String = "Microsoft.IdentityModel.JsonWebTokens.dll"
-    Private IMTokensDLL As String = "Microsoft.IdentityModel.Tokens.dll"
-    Private IMLoggingDLL As String = "Microsoft.IdentityModel.Logging.dll"
+    Private ReadOnly LPSolveDLL As String = "LpSolveDotNet.dll"
+    Private ReadOnly LPSolve55DLL As String = "lpsolve55.dll"
+    Private ReadOnly SQLInteropDLL As String = "SQLite.Interop.dll"
+    Private ReadOnly SQLiteDLL As String = "System.Data.SQLite.dll"
+    Private ReadOnly JSONDLL As String = "Newtonsoft.Json.dll"
 
-    Private LPSolveDLL As String = "LpSolveDotNet.dll"
-    Private SQLInteropDLL As String = "SQLite.Interop.dll"
-    Private LPSolve55DLL As String = "lpsolve55.dll"
-    Private JWTDLL As String = "JWT.dll"
-    Private SQLiteDLL As String = "System.Data.SQLite.dll"
-    Private JSONDLL As String = "Newtonsoft.Json.dll"
-    Private GADLL As String = "GoogleAnalyticsClientDotNet.Net45.dll"
+    Private ReadOnly LPSolveDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/LpSolveDotNet.dll"
+    Private ReadOnly LPSolve55DLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/lpsolve55.dll"
+    Private ReadOnly SQLiteDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/System.Data.SQLite.dll"
+    Private ReadOnly SQLInteropDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/SQLite.Interop.dll"
+    Private ReadOnly JSONDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Newtonsoft.Json.dll"
 
     Private LatestVersionXML As String
     Private LatestTestVersionXML As String
-
-    Private JSONDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Newtonsoft.Json.dll"
-    Private SQLiteDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/System.Data.SQLite.dll"
-    Private SQLInteropDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/SQLite.Interop.dll"
-    Private EVEIPHEXEURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVE%20Isk%20per%20Hour.exe"
-    Private EVEIPHUpdaterURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Updater.exe"
-    Private EVEIPHDBURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20DB.sqlite"
-    Private UpdaterManifestURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Updater.exe.manifest"
-    Private EXEManifestURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVE%20Isk%20per%20Hour.exe.manifest"
-    Private ImageZipFileURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Images.zip"
-    Private GAURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/GoogleAnalyticsClientDotNet.Net45.dll"
-    Private LPSolveDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/LpSolveDotNet.dll"
-    Private LPSolve55DLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/lpsolve55.dll"
-
-    Private JWTDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/JWT.dll"
-    Private IMTokensJWTDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/System.IdentityModel.Tokens.Jwt.dll"
-    Private IMJsonWebTokensDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Microsoft.IdentityModel.JsonWebTokens.dll"
-    Private IMTokensDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Microsoft.IdentityModel.Tokens.dll"
-    Private IMLoggingDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Microsoft.IdentityModel.Logging.dll"
 
     Private FileList As List(Of FileNameDate)
 
@@ -594,20 +581,18 @@ Public Class frmMain
 
     End Sub
 
-    <CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1821:RemoveEmptyFinalizers")>
-    <CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")>
     Protected Overrides Sub Finalize()
         MyBase.Finalize()
     End Sub
 
-    Private Sub btnExit_Click(sender As System.Object, e As System.EventArgs) Handles btnExit.Click
+    Private Sub BtnExit_Click(sender As System.Object, e As System.EventArgs) Handles btnExit.Click
         Me.Dispose()
         End
     End Sub
 
     Private Sub GetFilePaths()
         ' Read the settings file and lines
-        Dim BPStream As StreamReader = Nothing
+        Dim BPStream As StreamReader
         If File.Exists(SettingsFileName) Then
             BPStream = New System.IO.StreamReader(SettingsFileName)
 
@@ -631,17 +616,6 @@ Public Class frmMain
                 UploadFileTestDirectory = ""
             End If
 
-            'If Not IsNothing(VersionNumber) Then
-            '    ' Set these if we have a version number
-            '    FinalBinaryZip = "EVEIPH Binaries.zip"
-
-            '    ' File names
-            '    MSIInstaller = "EVE Isk per Hour.msi"
-            'Else
-            FinalBinaryZip = "EVEIPH Binaries.zip"
-            MSIInstaller = "EVE Isk per Hour.msi"
-            'End If
-
             BPStream.Close()
         Else
             DatabaseName = ""
@@ -658,25 +632,25 @@ Public Class frmMain
         ' Add the slash if not there
         If EVEIPHRootDirectory <> "" Then
             If EVEIPHRootDirectory.Substring(Len(EVEIPHRootDirectory) - 1) <> "\" Then
-                EVEIPHRootDirectory = EVEIPHRootDirectory & "\"
+                EVEIPHRootDirectory &= "\"
             End If
         End If
 
         If SDEWorkingDirectory <> "" Then
             If SDEWorkingDirectory.Substring(Len(SDEWorkingDirectory) - 1) <> "\" Then
-                SDEWorkingDirectory = SDEWorkingDirectory & "\"
+                SDEWorkingDirectory &= "\"
             End If
         End If
 
         If UploadFileDirectory <> "" Then
             If UploadFileDirectory.Substring(Len(UploadFileDirectory) - 1) <> "\" Then
-                UploadFileDirectory = UploadFileDirectory & "\"
+                UploadFileDirectory &= "\"
             End If
         End If
 
         If UploadFileTestDirectory <> "" Then
             If UploadFileTestDirectory.Substring(Len(UploadFileTestDirectory) - 1) <> "\" Then
-                UploadFileTestDirectory = UploadFileTestDirectory & "\"
+                UploadFileTestDirectory &= "\"
             End If
         End If
 
@@ -717,10 +691,8 @@ Public Class frmMain
 
         ' SQL variables
         Dim SQL As String
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
-
-        Dim i As Integer
 
         ' Now select the count of the final query of data
         SQL = "SELECT COUNT(*) FROM " & TableName
@@ -730,14 +702,12 @@ Public Class frmMain
 
         pgMain.Maximum = SQLReader1.GetValue(0)
         pgMain.Value = 0
-        i = 0
         pgMain.Visible = True
         SQLReader1.Close()
-        SQLCommand = Nothing
 
     End Sub
 
-    Private Sub btnSelectFilePath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectFilePath.Click
+    Private Sub BtnSelectFilePath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectFilePath.Click
         If UploadFileDirectory <> "" Then
             FolderBrowserDialog.SelectedPath = UploadFileDirectory
         End If
@@ -753,7 +723,7 @@ Public Class frmMain
         End If
     End Sub
 
-    Private Sub btnSelectTestFilePath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectTestFilePath.Click
+    Private Sub BtnSelectTestFilePath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectTestFilePath.Click
         If UploadFileTestDirectory <> "" Then
             FolderBrowserDialog.SelectedPath = UploadFileTestDirectory
         End If
@@ -769,7 +739,7 @@ Public Class frmMain
         End If
     End Sub
 
-    Private Sub btnSelectDBImagesPath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectWorkingPath.Click
+    Private Sub BtnSelectDBImagesPath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectWorkingPath.Click
         If SDEWorkingDirectory <> "" Then
             FolderBrowserDialog.SelectedPath = SDEWorkingDirectory
         End If
@@ -785,7 +755,7 @@ Public Class frmMain
         End If
     End Sub
 
-    Private Sub btnSaveFilePath_Click(sender As System.Object, e As System.EventArgs) Handles btnSaveFilePath.Click
+    Private Sub BtnSaveFilePath_Click(sender As System.Object, e As System.EventArgs) Handles btnSaveFilePath.Click
         Call SaveFilePaths()
     End Sub
 
@@ -837,12 +807,6 @@ Public Class frmMain
         UploadFileDirectory = lblFilesPath.Text
         UploadFileTestDirectory = lblTestPath.Text
 
-        ' Set these if we have a version number
-        FinalBinaryZip = "EVEIPH Binaries.zip"
-
-        ' File names
-        MSIInstaller = "EVE Isk per Hour.msi"
-
         ' Save the file path as a text file and the database name
         MyStream = File.CreateText(SettingsFileName)
         MyStream.Write(txtDBName.Text & Environment.NewLine)
@@ -864,11 +828,11 @@ Public Class frmMain
 
     End Sub
 
-    Private Sub btnSelectRootDebugPath2_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectRootDebugPath.Click
+    Private Sub BtnSelectRootDebugPath2_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectRootDebugPath.Click
         Call SelectRootDebugPath()
     End Sub
 
-    Private Sub btnSelectRootDebugPath_Click(sender As System.Object, e As System.EventArgs)
+    Private Sub BtnSelectRootDebugPath_Click(sender As System.Object, e As System.EventArgs)
         Call SelectRootDebugPath()
     End Sub
 
@@ -889,18 +853,18 @@ Public Class frmMain
         End If
     End Sub
 
-    Private Sub txtDBName_DoubleClick(sender As Object, e As System.EventArgs)
+    Private Sub TxtDBName_DoubleClick(sender As Object, e As System.EventArgs)
         Call GetFilePaths()
         txtDBName.Text = DatabaseName
     End Sub
 
-    Private Sub txtDBName_KeyUp(sender As Object, e As System.Windows.Forms.KeyEventArgs)
+    Private Sub TxtDBName_KeyUp(sender As Object, e As System.Windows.Forms.KeyEventArgs)
         DatabaseName = txtDBName.Text
         Call SetFilePaths()
     End Sub
 
     ' Builds the binary zip file
-    Private Sub btnBuildBinary_Click(sender As System.Object, e As System.EventArgs) Handles btnBuildBinary.Click
+    Private Sub BtnBuildBinary_Click(sender As System.Object, e As System.EventArgs) Handles btnBuildBinary.Click
         ' Build this in the working directory
         Dim FinalBinaryFolderPath As String = SDEWorkingDirectory & FinalBinaryFolder
         Dim FinalBinaryZipPath As String = SDEWorkingDirectory & FinalBinaryZip
@@ -934,15 +898,8 @@ Public Class frmMain
         File.Copy(UploadFileDirectory & UpdaterManifest, FinalBinaryFolderPath & UpdaterManifest)
         File.Copy(UploadFileDirectory & EXEManifest, FinalBinaryFolderPath & EXEManifest)
         File.Copy(UploadFileDirectory & LatestVersionXML, FinalBinaryFolderPath & LatestVersionXML)
-        File.Copy(UploadFileDirectory & GADLL, FinalBinaryFolderPath & GADLL)
-        File.Copy(UploadFileDirectory & JWTDLL, FinalBinaryFolderPath & JWTDLL)
-        File.Copy(UploadFileDirectory & IMTokensJWTDLL, FinalBinaryFolderPath & IMTokensJWTDLL)
-        File.Copy(UploadFileDirectory & IMJsonWebTokensDLL, FinalBinaryFolderPath & IMJsonWebTokensDLL)
-        File.Copy(UploadFileDirectory & IMTokensDLL, FinalBinaryFolderPath & IMTokensDLL)
-        File.Copy(UploadFileDirectory & IMLoggingDLL, FinalBinaryFolderPath & IMLoggingDLL)
         File.Copy(UploadFileDirectory & LPSolveDLL, FinalBinaryFolderPath & LPSolveDLL)
         File.Copy(UploadFileDirectory & LPSolve55DLL, FinalBinaryFolderPath & LPSolve55DLL)
-
         ' DB
         File.Copy(SDEWorkingDirectory & EVEIPHDB, FinalBinaryFolderPath & EVEIPHDB)
 
@@ -1025,7 +982,7 @@ Public Class frmMain
 #Region "Images"
 
     ' Copies just the bp images that I use for EVE IPH from the latest dump into a new folder and zips them up for deployment
-    Private Sub btnImageCopy_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnImageCopy.Click
+    Private Sub BtnImageCopy_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnImageCopy.Click
         Dim ReaderCount As Long
         Dim SQL As String
         Dim rsReader As SQLiteDataReader
@@ -1417,17 +1374,17 @@ Public Class frmMain
 
         Do
             While Sentlist(LowIndex).FileDate > MidValue
-                LowIndex = LowIndex + 1
+                LowIndex += 1
             End While
 
             While Sentlist(HighIndex).FileDate < MidValue
-                HighIndex = HighIndex - 1
+                HighIndex -= 1
             End While
 
             If LowIndex <= HighIndex Then
                 Swap(LowIndex, HighIndex)
-                LowIndex = LowIndex + 1
-                HighIndex = HighIndex - 1
+                LowIndex += 1
+                HighIndex -= 1
             End If
         Loop While LowIndex <= HighIndex
 
@@ -1489,9 +1446,9 @@ Public Class frmMain
 
     ' Updates the value in the progressbar for a smooth progress - total hack from this: http://stackoverflow.com/questions/977278/how-can-i-make-the-progress-bar-update-fast-enough/1214147#1214147
     Public Sub IncrementProgressBar(ByRef PG As ProgressBar)
-        PG.Value = PG.Value + 1
-        PG.Value = PG.Value - 1
-        PG.Value = PG.Value + 1
+        PG.Value += 1
+        PG.Value -= 1
+        PG.Value += 1
     End Sub
 
     Private Function CheckNull(ByVal inVariable As Object) As Object
@@ -1556,7 +1513,7 @@ Public Class frmMain
 
     Public Function GetLenSQLExpField(ByVal FieldName As String, ByVal TableName As String) As String
         Dim SQL As String
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim ColumnLength As Integer
 
@@ -1579,7 +1536,7 @@ Public Class frmMain
 
     Public Sub ResetTable(TableName As String)
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
 
@@ -1606,7 +1563,7 @@ Public Class frmMain
 #Region "Database Update"
 
     ' Create a new database, build tables and indexes, then populate it with the different updated tables
-    Private Sub btnBuildDatabase_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnBuildDatabase.Click
+    Private Sub BtnBuildDatabase_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles btnBuildDatabase.Click
 
         ' Make sure we have a DB first
         If DatabaseName = "" Then
@@ -1684,7 +1641,6 @@ Public Class frmMain
     Private Function ConnectToDBs() As Boolean
         Application.DoEvents()
         Me.Cursor = Cursors.WaitCursor
-        Dim SQLInstanceName = ""
 
         Try
 
@@ -1728,7 +1684,7 @@ Public Class frmMain
     ' Main Table Building Query
     Private Sub BuildEVEDatabase()
         Dim SQL As String
-        Dim SQLiteDBCommand As New SQLiteCommand
+        Dim SQLiteDBCommand As SQLiteCommand
         Dim SQLiteReader As SQLiteDataReader
 
         Me.Cursor = Cursors.WaitCursor
@@ -2119,7 +2075,7 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
 
@@ -2613,7 +2569,7 @@ Public Class frmMain
     '    Dim SQL As String
 
     '    ' SQL variables
-    '    'Dim SQLCommand As New SQLiteCommand
+    '    'Dim SQLCommand As SQLiteCommand
     '    'Dim SQLReader1 As SQLiteDataReader
     '    'Dim mainSQL As String
 
@@ -2937,10 +2893,9 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
-        Dim i As Integer
 
         SQL = "CREATE TABLE STATION_FACILITIES ( "
         SQL &= "FACILITY_ID INT NOT NULL, "
@@ -2967,7 +2922,6 @@ Public Class frmMain
 
         pgMain.Maximum = 110000
         pgMain.Value = 0
-        i = 0
         pgMain.Visible = True
 
         ' Pull station data from stations for temp use if they don't load facilities from CREST
@@ -3072,9 +3026,9 @@ Public Class frmMain
     ' Updates the table with categories not included - this makes it easier to run the station_facilities table without joins
     Private Sub UpdateramAssemblyLineTypeDetailPerCategory()
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
-        Dim SQLCommand2 As New SQLiteCommand
-        Dim SQLCommand3 As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
+        Dim SQLCommand2 As SQLiteCommand
+        Dim SQLCommand3 As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim SQLReader12 As SQLiteDataReader
         Dim SQLReader13 As SQLiteDataReader
@@ -3151,11 +3105,11 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
 
-        Dim SQLCommand2 As New SQLiteCommand
+        Dim SQLCommand2 As SQLiteCommand
         Dim SQLReader2 As SQLiteDataReader
         Dim mainSQL2 As String
 
@@ -4104,7 +4058,7 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader As SQLiteDataReader
         Dim mainSQL As String
 
@@ -4154,7 +4108,7 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
 
@@ -4195,8 +4149,6 @@ Public Class frmMain
         Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         SQLReader1.Close()
-        SQLReader1 = Nothing
-        SQLCommand = Nothing
 
         SQL = "CREATE INDEX IDX_IAP_BTID_AID ON INDUSTRY_ACTIVITY_PRODUCTS (blueprintTypeID, activityID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -4236,6 +4188,317 @@ Public Class frmMain
         Call Execute_SQLiteSQL("INSERT INTO INDUSTRY_ACTIVITIES VALUES(-2,'Reprocessing','Reprocessing',0)", EVEIPHSQLiteDB.DBRef)
 
         SQL = "CREATE INDEX IDX_ACTIVITY_ID ON INDUSTRY_ACTIVITIES (activityID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+    End Sub
+
+    ' RAM_ASSEMBLY_LINE_STATIONS
+    Private Sub Build_RAM_ASSEMBLY_LINE_STATIONS()
+        Dim SQL As String
+
+        ' SQL variables
+        Dim SQLCommand As New SQLiteCommand
+        Dim SQLReader1 As SQLiteDataReader
+        Dim mainSQL As String
+
+        SQL = "CREATE TABLE RAM_ASSEMBLY_LINE_STATIONS ("
+        SQL &= "stationID INTEGER NOT NULL,"
+        SQL &= "assemblyLineTypeID INTEGER NOT NULL,"
+        SQL &= "quantity INTEGER,"
+        SQL &= "stationTypeID INTEGER, "
+        SQL &= "ownerID INTEGER,"
+        SQL &= "solarSystemID INTEGER,"
+        SQL &= "regionID INTEGER"
+        SQL &= ")"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        Call SetProgressBarValues("ramAssemblyLineStations")
+
+        ' Pull new data and insert
+        mainSQL = "SELECT * FROM ramAssemblyLineStations"
+        SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
+        SQLReader1 = SQLCommand.ExecuteReader()
+
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
+
+        ' Add to Access table
+        While SQLReader1.Read
+            Application.DoEvents()
+
+            SQL = "INSERT INTO RAM_ASSEMBLY_LINE_STATIONS VALUES ("
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(3)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(4)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(5)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(6)) & ")"
+
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
+
+        End While
+
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
+
+        SQLReader1.Close()
+
+        ' Indexes
+        SQL = "CREATE INDEX IDX_RALS_SID ON RAM_ASSEMBLY_LINE_STATIONS (stationID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "CREATE INDEX IDX_RALS_SSID ON RAM_ASSEMBLY_LINE_STATIONS (solarSystemID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "CREATE INDEX IDX_RALS_ALTID ON RAM_ASSEMBLY_LINE_STATIONS (assemblyLineTypeID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+    End Sub
+
+    ' RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_CATEGORY
+    Private Sub Build_RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_CATEGORY()
+        Dim SQL As String
+
+        ' SQL variables
+        Dim SQLCommand As New SQLiteCommand
+        Dim SQLReader1 As SQLiteDataReader
+        Dim mainSQL As String
+
+        SQL = "CREATE TABLE RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_CATEGORY ("
+        SQL &= "assemblyLineTypeID INTEGER NOT NULL,"
+        SQL &= "categoryID INTEGER NOT NULL,"
+        SQL &= "timeMultiplier FLOAT,"
+        SQL &= "materialMultiplier FLOAT, "
+        SQL &= "costMultiplier FLOAT"
+        SQL &= ")"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        Call SetProgressBarValues("ramAssemblyLineTypeDetailPerCategory")
+
+        ' Pull new data and insert
+        mainSQL = "SELECT * FROM ramAssemblyLineTypeDetailPerCategory"
+        SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
+        SQLReader1 = SQLCommand.ExecuteReader()
+
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
+
+        ' Add to Access table
+        While SQLReader1.Read
+            Application.DoEvents()
+
+            SQL = "INSERT INTO RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_CATEGORY VALUES ("
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(3)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(4)) & ")"
+
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
+
+        End While
+
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
+
+        SQLReader1.Close()
+
+        ' Indexes
+        SQL = "CREATE INDEX IDX_ALC_ALTID ON RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_CATEGORY (assemblyLineTypeID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "CREATE INDEX IDX_ALC_CID ON RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_CATEGORY (categoryID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+    End Sub
+
+    ' RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_GROUP
+    Private Sub Build_RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_GROUP()
+        Dim SQL As String
+
+        ' SQL variables
+        Dim SQLCommand As New SQLiteCommand
+        Dim SQLReader1 As SQLiteDataReader
+        Dim mainSQL As String
+
+        SQL = "CREATE TABLE RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_GROUP ("
+        SQL &= "assemblyLineTypeID INTEGER NOT NULL,"
+        SQL &= "groupID INTEGER NOT NULL,"
+        SQL &= "timeMultiplier FLOAT,"
+        SQL &= "materialMultiplier FLOAT, "
+        SQL &= "costMultiplier FLOAT"
+        SQL &= ")"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        Call SetProgressBarValues("ramAssemblyLineTypeDetailPerGroup")
+
+        ' Pull new data and insert
+        mainSQL = "SELECT * FROM ramAssemblyLineTypeDetailPerGroup"
+        SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
+        SQLReader1 = SQLCommand.ExecuteReader()
+
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
+
+        ' Add to Access table
+        While SQLReader1.Read
+            Application.DoEvents()
+
+            SQL = "INSERT INTO RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_GROUP VALUES ("
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(3)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(4)) & ")"
+
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
+
+        End While
+
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
+
+        SQLReader1.Close()
+
+        ' Indexes
+        SQL = "CREATE INDEX IDX_ALG_ALTID ON RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_GROUP (assemblyLineTypeID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "CREATE INDEX IDX_ALG_GID ON RAM_ASSEMBLY_LINE_TYPE_DETAIL_PER_GROUP (groupID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+    End Sub
+
+    ' RAM_ASSEMBLY_LINE_TYPES
+    Private Sub Build_RAM_ASSEMBLY_LINE_TYPES()
+        Dim SQL As String
+
+        ' SQL variables
+        Dim SQLCommand As New SQLiteCommand
+        Dim SQLReader1 As SQLiteDataReader
+        Dim mainSQL As String
+
+        SQL = "CREATE TABLE RAM_ASSEMBLY_LINE_TYPES ("
+        SQL &= "assemblyLineTypeID INTEGER NOT NULL,"
+        SQL &= "assemblyLineTypeName VARCHAR(100),"
+        SQL &= "description VARCHAR(1000),"
+        SQL &= "baseTimeMultiplier FLOAT, "
+        SQL &= "baseMaterialMultiplier FLOAT,"
+        SQL &= "baseCostMultiplier FLOAT,"
+        SQL &= "volume FLOAT,"
+        SQL &= "activityID INTEGER,"
+        SQL &= "minCostPerHour FLOAT"
+        SQL &= ")"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        Call SetProgressBarValues("ramAssemblyLineTypes")
+
+        ' Pull new data and insert
+        mainSQL = "SELECT * FROM ramAssemblyLineTypes"
+        SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
+        SQLReader1 = SQLCommand.ExecuteReader()
+
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
+
+        ' Add to Access table
+        While SQLReader1.Read
+            Application.DoEvents()
+
+            SQL = "INSERT INTO RAM_ASSEMBLY_LINE_TYPES VALUES ("
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(3)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(4)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(5)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(6)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(7)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(8)) & ")"
+
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
+
+        End While
+
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
+
+        SQLReader1.Close()
+
+        ' Indexes
+        SQL = "CREATE INDEX IDX_ALT_ALTID_AID ON RAM_ASSEMBLY_LINE_TYPES (assemblyLineTypeID, activityID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "CREATE INDEX IDX_ALT_AID ON RAM_ASSEMBLY_LINE_TYPES (activityID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+    End Sub
+
+    ' RAM_INSTALLATION_TYPE_CONTENTS
+    Private Sub Build_RAM_INSTALLATION_TYPE_CONTENTS()
+        Dim SQL As String
+
+        ' SQL variables
+        Dim SQLCommand As New SQLiteCommand
+        Dim SQLReader1 As SQLiteDataReader
+        Dim mainSQL As String
+
+        SQL = "CREATE TABLE RAM_INSTALLATION_TYPE_CONTENTS ("
+        SQL &= "installationTypeID INTEGER NOT NULL,"
+        SQL &= "assemblyLineTypeID INTEGER NOT NULL,"
+        SQL &= "quantity INTEGER"
+        SQL &= ")"
+
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        Call SetProgressBarValues("ramInstallationTypeContents")
+
+        ' Pull new data and insert
+        mainSQL = "SELECT * FROM ramInstallationTypeContents"
+        SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
+        SQLReader1 = SQLCommand.ExecuteReader()
+
+        Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
+
+        ' Add to Access table
+        While SQLReader1.Read
+            Application.DoEvents()
+
+            SQL = "INSERT INTO RAM_INSTALLATION_TYPE_CONTENTS VALUES ("
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(0)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(1)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(2)) & ")"
+
+            Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+            ' For each record, update the progress bar
+            Call IncrementProgressBar(pgMain)
+            Application.DoEvents()
+
+        End While
+
+        Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
+
+        SQLReader1.Close()
+
+        ' Indexes
+        SQL = "CREATE INDEX IDX_RITC_ITID_ALTID ON RAM_INSTALLATION_TYPE_CONTENTS (installationTypeID, assemblyLineTypeID)"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "CREATE INDEX IDX_RITC_ALTID ON RAM_INSTALLATION_TYPE_CONTENTS (assemblyLineTypeID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
     End Sub
@@ -4374,7 +4637,7 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
 
@@ -4428,7 +4691,7 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
 
@@ -4545,7 +4808,7 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim SQLReader2 As SQLiteDataReader
         Dim mainSQL As String
@@ -4603,7 +4866,7 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
 
@@ -4663,7 +4926,7 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
 
@@ -4714,7 +4977,7 @@ Public Class frmMain
 
     ' OreRefine
     Private Sub Build_OreRefine()
-        Dim SQL As String = ""
+        Dim SQL As String
 
         Application.DoEvents()
 
@@ -4832,7 +5095,7 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
 
@@ -4861,8 +5124,7 @@ Public Class frmMain
         mainSQL &= "AND invTypes.typeName NOT LIKE 'Batch%' "
         mainSQL &= "GROUP BY ORE_ID, ORE_NAME, ORE_VOLUME, UNITS_TO_REFINE, BELT_TYPE, HIGH_YIELD_ORE, COMPRESSED"
 
-        SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
-        SQLCommand.CommandTimeout = 300
+        SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef) With {.CommandTimeout = 300}
         SQLReader1 = SQLCommand.ExecuteReader()
 
         Call EVEIPHSQLiteDB.BeginSQLiteTransaction()
@@ -4890,21 +5152,21 @@ Public Class frmMain
 
         ' Moon ore versions of typical ores don't have a 15% bonus so set them to type 3
         SQL = "UPDATE ORES Set HIGH_YIELD_ORE = 3, BELT_TYPE = 'Moon Asteroids' WHERE  "
-        SQL = SQL & "ORE_NAME LIKE '%Flawless Arkonor' OR "
-        SQL = SQL & "ORE_NAME LIKE '%Cubic Bistot' OR "
-        SQL = SQL & "ORE_NAME LIKE '%Pellucid Crokite' OR "
-        SQL = SQL & "ORE_NAME LIKE '%Brilliant Gneiss' OR "
-        SQL = SQL & "ORE_NAME LIKE '%Lustrous Hedbergite' OR "
-        SQL = SQL & "ORE_NAME LIKE '%Scintillating Hemorphite' OR "
-        SQL = SQL & "ORE_NAME LIKE '%Resplendant Kernite' OR "
-        SQL = SQL & "ORE_NAME LIKE '%Immaculate Jaspet' OR "
-        SQL = SQL & "ORE_NAME LIKE '%Platinoid Omber' OR "
-        SQL = SQL & "ORE_NAME LIKE '%Sparkling Plagioclase' OR "
-        SQL = SQL & "ORE_NAME LIKE '%Opulent Pyroxeres' OR "
-        SQL = SQL & "ORE_NAME LIKE '%Glossy Scordite' OR "
-        SQL = SQL & "ORE_NAME LIKE '%Dazzling Spodumain' OR "
-        SQL = SQL & "ORE_NAME LIKE '%Stable Veldspar' OR "
-        SQL = SQL & "ORE_NAME LIKE '%Jet Ochre' "
+        SQL &= "ORE_NAME LIKE '%Flawless Arkonor' OR "
+        SQL &= "ORE_NAME LIKE '%Cubic Bistot' OR "
+        SQL &= "ORE_NAME LIKE '%Pellucid Crokite' OR "
+        SQL &= "ORE_NAME LIKE '%Brilliant Gneiss' OR "
+        SQL &= "ORE_NAME LIKE '%Lustrous Hedbergite' OR "
+        SQL &= "ORE_NAME LIKE '%Scintillating Hemorphite' OR "
+        SQL &= "ORE_NAME LIKE '%Resplendant Kernite' OR "
+        SQL &= "ORE_NAME LIKE '%Immaculate Jaspet' OR "
+        SQL &= "ORE_NAME LIKE '%Platinoid Omber' OR "
+        SQL &= "ORE_NAME LIKE '%Sparkling Plagioclase' OR "
+        SQL &= "ORE_NAME LIKE '%Opulent Pyroxeres' OR "
+        SQL &= "ORE_NAME LIKE '%Glossy Scordite' OR "
+        SQL &= "ORE_NAME LIKE '%Dazzling Spodumain' OR "
+        SQL &= "ORE_NAME LIKE '%Stable Veldspar' OR "
+        SQL &= "ORE_NAME LIKE '%Jet Ochre' "
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         ' Now set the 5%/10% flag for standard ores
@@ -5090,14 +5352,9 @@ Public Class frmMain
     Private Sub Build_ORE_LOCATIONS()
         Dim SQL As String
         Dim CurrentOre As MiningMat
-        Dim CurrentRegionType As String = ""
-        Dim CurrentSecurityType As String = ""
         Dim i, j, k As Integer
 
         Application.DoEvents()
-
-        ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
 
         SQL = "CREATE TABLE ORE_LOCATIONS ("
         SQL &= "ORE_ID INTEGER Not NULL,"
@@ -6109,7 +6366,7 @@ Public Class frmMain
 
     ' ENGINEERING_RIG_BONUSES
     Private Sub Build_StructureRigBonuses()
-        Dim SQL As String = ""
+        Dim SQL As String
 
         Application.DoEvents()
 
@@ -6672,12 +6929,10 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mySQLReader2 As SQLiteDataReader
         Dim mainSQL As String
-
-        Dim i As Integer
 
         SQL = "CREATE TABLE REPROCESSING ("
         SQL &= "ITEM_ID INTEGER NOT NULL,"
@@ -6707,7 +6962,6 @@ Public Class frmMain
         mySQLReader2.Read()
         pgMain.Maximum = mySQLReader2.GetValue(0)
         pgMain.Value = 0
-        i = 0
         pgMain.Visible = True
         mySQLReader2.Close()
 
@@ -6792,13 +7046,11 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mySQLReader2 As SQLiteDataReader
         Dim mainSQL As String
         Dim msSQL2 As String
-
-        Dim i As Integer
 
         SQL = "CREATE TABLE SKILLS ("
         SQL &= "SKILL_TYPE_ID INTEGER PRIMARY KEY,"
@@ -6811,7 +7063,7 @@ Public Class frmMain
         ' Pull new data and insert
         mainSQL = "SELECT invTypes.typeID, invTypes.typeName, invGroups.groupName "
         msSQL2 = "FROM (invTypes INNER JOIN invGroups ON invTypes.groupID = invGroups.groupID) INNER JOIN invCategories ON invGroups.categoryID = invCategories.categoryID "
-        msSQL2 = msSQL2 & "WHERE invCategories.categoryName='Skill' AND invTypes.published<>0 AND invGroups.published<>0 AND invCategories.published<>0"
+        msSQL2 &= "WHERE invCategories.categoryName='Skill' AND invTypes.published<>0 AND invGroups.published<>0 AND invCategories.published<>0"
 
         ' Get the count
         SQLCommand = New SQLiteCommand("SELECT COUNT(*) " & msSQL2, SDEDB.DBRef)
@@ -6819,7 +7071,6 @@ Public Class frmMain
         mySQLReader2.Read()
         pgMain.Maximum = mySQLReader2.GetValue(0)
         pgMain.Value = 0
-        i = 0
         pgMain.Visible = True
         mySQLReader2.Close()
 
@@ -6856,13 +7107,11 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mySQLReader2 As SQLiteDataReader
         Dim mainSQL As String
         Dim msSQL2 As String
-
-        Dim i As Integer
 
         SQL = "CREATE TABLE RESEARCH_AGENTS ("
         SQL &= "FACTION VARCHAR(100) NOT NULL,"
@@ -6897,16 +7146,17 @@ Public Class frmMain
         mainSQL &= "mapSolarSystems.solarSystemName, "
         mainSQL &= "mapSolarSystems.security, "
         mainSQL &= "invNames_1.itemName AS Station "
+
         msSQL2 = "FROM agents, invNames as invNames_1 INNER JOIN researchAgents ON agents.agentID = researchAgents.agentID "
-        msSQL2 = msSQL2 & "INNER JOIN invTypes ON researchAgents.typeID = invTypes.typeID "
-        msSQL2 = msSQL2 & "INNER JOIN npcCorporations ON agents.corporationID = npcCorporations.corporationID "
-        msSQL2 = msSQL2 & "INNER JOIN invNames ON researchAgents.agentID = invNames.itemID "
-        msSQL2 = msSQL2 & "INNER JOIN mapDenormalize ON agents.locationID = mapDenormalize.itemID "
-        msSQL2 = msSQL2 & "INNER JOIN mapSolarSystems ON mapDenormalize.solarSystemID = mapSolarSystems.solarSystemID "
-        msSQL2 = msSQL2 & "INNER JOIN mapConstellations ON mapDenormalize.constellationID = mapConstellations.constellationID "
-        msSQL2 = msSQL2 & "INNER JOIN mapRegions ON mapDenormalize.regionID = mapRegions.regionID "
-        msSQL2 = msSQL2 & "INNER JOIN factions ON npcCorporations.factionID = factions.factionID "
-        msSQL2 = msSQL2 & "WHERE agents.agentTypeID= 4 AND mapDenormalize.itemID = invNames_1.itemID"
+        msSQL2 &= "INNER JOIN invTypes ON researchAgents.typeID = invTypes.typeID "
+        msSQL2 &= "INNER JOIN npcCorporations ON agents.corporationID = npcCorporations.corporationID "
+        msSQL2 &= "INNER JOIN invNames ON researchAgents.agentID = invNames.itemID "
+        msSQL2 &= "INNER JOIN mapDenormalize ON agents.locationID = mapDenormalize.itemID "
+        msSQL2 &= "INNER JOIN mapSolarSystems ON mapDenormalize.solarSystemID = mapSolarSystems.solarSystemID "
+        msSQL2 &= "INNER JOIN mapConstellations ON mapDenormalize.constellationID = mapConstellations.constellationID "
+        msSQL2 &= "INNER JOIN mapRegions ON mapDenormalize.regionID = mapRegions.regionID "
+        msSQL2 &= "INNER JOIN factions ON npcCorporations.factionID = factions.factionID "
+        msSQL2 &= "WHERE agents.agentTypeID= 4 AND mapDenormalize.itemID = invNames_1.itemID"
 
         ' Get the count
         SQLCommand = New SQLiteCommand("SELECT COUNT(*) " & msSQL2, SDEDB.DBRef)
@@ -6914,7 +7164,6 @@ Public Class frmMain
         mySQLReader2.Read()
         pgMain.Maximum = mySQLReader2.GetValue(0)
         pgMain.Value = 0
-        i = 0
         pgMain.Visible = True
         mySQLReader2.Close()
 
@@ -7059,7 +7308,7 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
 
@@ -7096,8 +7345,6 @@ Public Class frmMain
         Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         SQLReader1.Close()
-        SQLReader1 = Nothing
-        SQLCommand = Nothing
 
         SQL = "CREATE INDEX IDX_R_REGION_NAME ON REGIONS (regionName)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -7119,7 +7366,7 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
 
@@ -7152,10 +7399,7 @@ Public Class frmMain
 
         Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
-
         SQLReader1.Close()
-        SQLReader1 = Nothing
-        SQLCommand = Nothing
 
         SQL = "CREATE INDEX IDX_C_REGION_ID ON CONSTELLATIONS (regionID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -7167,7 +7411,7 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
 
@@ -7208,8 +7452,6 @@ Public Class frmMain
         Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         SQLReader1.Close()
-        SQLReader1 = Nothing
-        SQLCommand = Nothing
 
         Dim FWSystems As List(Of Long) = GetFWSystemIDs()
 
@@ -7256,7 +7498,7 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
 
@@ -7356,7 +7598,7 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
 
@@ -7425,7 +7667,7 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
 
@@ -7630,7 +7872,7 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
 
@@ -8283,7 +8525,7 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
 
@@ -8317,8 +8559,6 @@ Public Class frmMain
         Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         SQLReader1.Close()
-        SQLReader1 = Nothing
-        SQLCommand = Nothing
 
         ' Now index and PK the table
 
@@ -8336,7 +8576,7 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
 
@@ -8370,8 +8610,6 @@ Public Class frmMain
         Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         SQLReader1.Close()
-        SQLReader1 = Nothing
-        SQLCommand = Nothing
 
         ' Now index and PK the table
 
@@ -8503,7 +8741,7 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
 
@@ -8539,8 +8777,6 @@ Public Class frmMain
         Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         SQLReader1.Close()
-        SQLReader1 = Nothing
-        SQLCommand = Nothing
 
         ' Now index and PK the table
 
@@ -8558,7 +8794,7 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
 
@@ -8597,11 +8833,8 @@ Public Class frmMain
         Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         SQLReader1.Close()
-        SQLReader1 = Nothing
-        SQLCommand = Nothing
 
         ' Now index and PK the table
-
         SQL = "CREATE INDEX IDX_SCHEMATIC_ID_TMAP ON PLANET_SCHEMATICS_TYPE_MAP (schematicID)"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
@@ -8616,7 +8849,7 @@ Public Class frmMain
         Dim SQL As String
 
         ' SQL variables
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
         Dim mainSQL As String
 
@@ -8651,8 +8884,6 @@ Public Class frmMain
         Call EVEIPHSQLiteDB.CommitSQLiteTransaction()
 
         SQLReader1.Close()
-        SQLReader1 = Nothing
-        SQLCommand = Nothing
 
         ' Now index and PK the table
 
@@ -8816,7 +9047,7 @@ Public Class frmMain
 
     Private Function GetFWSystemIDs() As List(Of Long)
         Dim PublicData As String = GetPublicData("https://esi.evetech.net/latest/fw/systems/?datasource=tranquility")
-        Dim ESIData As New List(Of ESIFWSystem)
+        Dim ESIData As List(Of ESIFWSystem)
         Dim ReturnSystemIDs As New List(Of Long)
 
         If Not IsNothing(PublicData) Then
@@ -8846,7 +9077,7 @@ Public Class frmMain
         Dim PublicData As String
         Dim ESIPublicURL As String = "https://esi.evetech.net/latest/"
         Dim TranquilityDataSource As String = "?datasource=tranquility"
-        Dim ESIData As New List(Of ESINameData)
+        Dim ESIData As List(Of ESINameData)
 
         SQLCommand = New SQLiteCommand("SELECT typeID FROM invTypes WHERE typeName IS NULL", SDEDB.DBRef)
         rsIDs = SQLCommand.ExecuteReader()
@@ -8926,7 +9157,7 @@ Public Class frmMain
 
         ' Now insert a record for each 
         SQL = "SELECT DISTINCT typeID FROM invTypes, invGroups WHERE categoryID = 34 AND invTypes.groupID = invGroups.groupID"
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
 
         SQLCommand = New SQLiteCommand(SQL, SDEDB.DBRef)
@@ -8944,7 +9175,7 @@ Public Class frmMain
     Private Sub UpdateIndustryActivityProducts()
         Dim SQL As String = "SELECT blueprintTypeID, activityID FROM industryActivities WHERE activityID NOT IN (1,8,11)" ' Manufacturing, Invention, Reactions
 
-        Dim SQLCommand As New SQLiteCommand
+        Dim SQLCommand As SQLiteCommand
         Dim SQLReader1 As SQLiteDataReader
 
         SQLCommand = New SQLiteCommand(SQL, SDEDB.DBRef)
@@ -8982,7 +9213,7 @@ Public Class frmMain
 
 #Region "Deploy files"
 
-    Private Sub btnCopyFilesBuildXML_Click(sender As System.Object, e As System.EventArgs) Handles btnCopyFilesBuildXML.Click
+    Private Sub BtnCopyFilesBuildXML_Click(sender As System.Object, e As System.EventArgs) Handles btnCopyFilesBuildXML.Click
         Call CopyFilesBuildXML()
     End Sub
 
@@ -9024,36 +9255,6 @@ Public Class frmMain
 
         If MD5CalcFile(EVEIPHRootDirectory & EXEManifest) <> MD5CalcFile(FileDirectory & EXEManifest) Then
             File.Copy(EVEIPHRootDirectory & EXEManifest, FileDirectory & EXEManifest, True)
-            NewFilesAdded = True
-        End If
-
-        If MD5CalcFile(EVEIPHRootDirectory & GADLL) <> MD5CalcFile(FileDirectory & GADLL) Then
-            File.Copy(EVEIPHRootDirectory & GADLL, FileDirectory & GADLL, True)
-            NewFilesAdded = True
-        End If
-
-        If MD5CalcFile(EVEIPHRootDirectory & IMTokensJWTDLL) <> MD5CalcFile(FileDirectory & IMTokensJWTDLL) Then
-            File.Copy(EVEIPHRootDirectory & IMTokensJWTDLL, FileDirectory & IMTokensJWTDLL, True)
-            NewFilesAdded = True
-        End If
-
-        If MD5CalcFile(EVEIPHRootDirectory & IMJsonWebTokensDLL) <> MD5CalcFile(FileDirectory & IMJsonWebTokensDLL) Then
-            File.Copy(EVEIPHRootDirectory & IMJsonWebTokensDLL, FileDirectory & IMJsonWebTokensDLL, True)
-            NewFilesAdded = True
-        End If
-
-        If MD5CalcFile(EVEIPHRootDirectory & IMTokensDLL) <> MD5CalcFile(FileDirectory & IMTokensDLL) Then
-            File.Copy(EVEIPHRootDirectory & IMTokensDLL, FileDirectory & IMTokensDLL, True)
-            NewFilesAdded = True
-        End If
-
-        If MD5CalcFile(EVEIPHRootDirectory & IMLoggingDLL) <> MD5CalcFile(FileDirectory & IMLoggingDLL) Then
-            File.Copy(EVEIPHRootDirectory & IMLoggingDLL, FileDirectory & IMLoggingDLL, True)
-            NewFilesAdded = True
-        End If
-
-        If MD5CalcFile(EVEIPHRootDirectory & JWTDLL) <> MD5CalcFile(FileDirectory & JWTDLL) Then
-            File.Copy(EVEIPHRootDirectory & JWTDLL, FileDirectory & JWTDLL, True)
             NewFilesAdded = True
         End If
 
@@ -9110,12 +9311,11 @@ Public Class frmMain
 
     ' Writes the sent settings to the sent file name
     Private Sub WriteLatestXMLFile()
-        Dim VersionXMLFileName As String = ""
-        Dim FileDirectory As String = ""
+        Dim VersionXMLFileName As String
+        Dim FileDirectory As String
 
         ' Create XmlWriterSettings.
-        Dim XMLSettings As XmlWriterSettings = New XmlWriterSettings()
-        XMLSettings.Indent = True
+        Dim XMLSettings As New XmlWriterSettings With {.Indent = True}
 
         File.Delete(LatestVersionXML)
         VersionXMLFileName = LatestVersionXML
@@ -9215,48 +9415,6 @@ Public Class frmMain
             writer.WriteAttributeString("URL", LPSolve55DLLURL)
             writer.WriteEndElement()
 
-            writer.WriteStartElement("row")
-            writer.WriteAttributeString("Name", GADLL)
-            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & GADLL).FileVersion)
-            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & GADLL))
-            writer.WriteAttributeString("URL", GAURL)
-            writer.WriteEndElement()
-
-            writer.WriteStartElement("row")
-            writer.WriteAttributeString("Name", JWTDLL)
-            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & JWTDLL).FileVersion)
-            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & JWTDLL))
-            writer.WriteAttributeString("URL", JWTDLLURL)
-            writer.WriteEndElement()
-
-            writer.WriteStartElement("row")
-            writer.WriteAttributeString("Name", IMTokensJWTDLL)
-            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & IMTokensJWTDLL).FileVersion)
-            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & IMTokensJWTDLL))
-            writer.WriteAttributeString("URL", IMTokensJWTDLLURL)
-            writer.WriteEndElement()
-
-            writer.WriteStartElement("row")
-            writer.WriteAttributeString("Name", IMJsonWebTokensDLL)
-            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & IMJsonWebTokensDLL).FileVersion)
-            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & IMJsonWebTokensDLL))
-            writer.WriteAttributeString("URL", IMJsonWebTokensDLLURL)
-            writer.WriteEndElement()
-
-            writer.WriteStartElement("row")
-            writer.WriteAttributeString("Name", IMTokensDLL)
-            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & IMTokensDLL).FileVersion)
-            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & IMTokensDLL))
-            writer.WriteAttributeString("URL", IMTokensDLLURL)
-            writer.WriteEndElement()
-
-            writer.WriteStartElement("row")
-            writer.WriteAttributeString("Name", IMLoggingDLL)
-            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & IMLoggingDLL).FileVersion)
-            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & IMLoggingDLL))
-            writer.WriteAttributeString("URL", IMLoggingDLLURL)
-            writer.WriteEndElement()
-
             ' End document.
             writer.WriteEndDocument()
         End Using
@@ -9271,7 +9429,7 @@ Public Class frmMain
 
     End Sub
 
-    Private Sub btnRefreshList_Click(sender As System.Object, e As System.EventArgs) Handles btnRefreshList.Click
+    Private Sub BtnRefreshList_Click(sender As System.Object, e As System.EventArgs) Handles btnRefreshList.Click
         ' Refresh the grid
         Call LoadFileGrid()
     End Sub
@@ -9302,7 +9460,7 @@ Public Class frmMain
         Count += 1
         If Count < PGRef.Maximum - 1 And Count <> 0 Then
             PGRef.Value = Count
-            PGRef.Value = PGRef.Value - 1
+            PGRef.Value -= 1
             PGRef.Value = Count
         Else
             PGRef.Value = Count
