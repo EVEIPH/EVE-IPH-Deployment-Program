@@ -54,47 +54,32 @@ Public Class FrmMain
     Private ReadOnly EVEIPHEXE As String = "EVE Isk per Hour.exe"
     Private ReadOnly EVEIPHUpdater As String = "EVEIPH Updater.exe"
     Private ReadOnly EVEIPHDB As String = "EVEIPH DB.sqlite"
+    Private ReadOnly ImageZipFile As String = "EVEIPH Images.zip"
     Private ReadOnly UpdaterManifest As String = "EVEIPH Updater.exe.manifest"
     Private ReadOnly EXEManifest As String = "EVE Isk per Hour.exe.manifest"
-    Private ReadOnly ImageZipFile As String = "EVEIPH Images.zip"
 
-    ' DLLs
-    Private ReadOnly IMTokensJWTDLL As String = "System.IdentityModel.Tokens.Jwt.dll"
-    Private ReadOnly IMJsonWebTokensDLL As String = "Microsoft.IdentityModel.JsonWebTokens.dll"
-    Private ReadOnly IMTokensDLL As String = "Microsoft.IdentityModel.Tokens.dll"
-    Private ReadOnly IMLoggingDLL As String = "Microsoft.IdentityModel.Logging.dll"
-    Private ReadOnly IMAbstractionsDLL As String = "Microsoft.IdentityModel.Abstractions.dll"
-
-    Private ReadOnly LPSolveDLL As String = "LpSolveDotNet.dll"
-    Private ReadOnly SQLInteropDLL As String = "SQLite.Interop.dll"
-    Private ReadOnly LPSolve55DLL As String = "lpsolve55.dll"
-    Private ReadOnly JWTDLL As String = "JWT.dll"
-    Private ReadOnly SQLiteDLL As String = "System.Data.SQLite.dll"
-    Private ReadOnly JSONDLL As String = "Newtonsoft.Json.dll"
-    Private ReadOnly SBUFFERSDLL As String = "System.Buffers.dll"
-
-    Private LatestVersionXML As String
-    Private LatestTestVersionXML As String
-
-    Private ReadOnly JSONDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Newtonsoft.Json.dll"
-    Private ReadOnly SQLiteDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/System.Data.SQLite.dll"
-    Private ReadOnly SQLInteropDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/SQLite.Interop.dll"
     Private ReadOnly EVEIPHEXEURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVE%20Isk%20per%20Hour.exe"
     Private ReadOnly EVEIPHUpdaterURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Updater.exe"
     Private ReadOnly EVEIPHDBURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20DB.sqlite"
+    Private ReadOnly ImageZipFileURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Images.zip"
     Private ReadOnly UpdaterManifestURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Updater.exe.manifest"
     Private ReadOnly EXEManifestURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVE%20Isk%20per%20Hour.exe.manifest"
-    Private ReadOnly ImageZipFileURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/EVEIPH%20Images.zip"
+
+    ' DLLs
+    Private ReadOnly LPSolveDLL As String = "LpSolveDotNet.dll"
+    Private ReadOnly LPSolve55DLL As String = "lpsolve55.dll"
+    Private ReadOnly SQLInteropDLL As String = "SQLite.Interop.dll"
+    Private ReadOnly SQLiteDLL As String = "System.Data.SQLite.dll"
+    Private ReadOnly JSONDLL As String = "Newtonsoft.Json.dll"
+
     Private ReadOnly LPSolveDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/LpSolveDotNet.dll"
     Private ReadOnly LPSolve55DLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/lpsolve55.dll"
-    Private ReadOnly SBUFFERSURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/System.Buffers.dll"
+    Private ReadOnly SQLiteDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/System.Data.SQLite.dll"
+    Private ReadOnly SQLInteropDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/SQLite.Interop.dll"
+    Private ReadOnly JSONDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Newtonsoft.Json.dll"
 
-    Private ReadOnly JWTDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/JWT.dll"
-    Private ReadOnly IMTokensJWTDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/System.IdentityModel.Tokens.Jwt.dll"
-    Private ReadOnly IMJsonWebTokensDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Microsoft.IdentityModel.JsonWebTokens.dll"
-    Private ReadOnly IMTokensDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Microsoft.IdentityModel.Tokens.dll"
-    Private ReadOnly IMLoggingDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Microsoft.IdentityModel.Logging.dll"
-    Private ReadOnly IMAbstractionsDLLURL As String = "https://raw.githubusercontent.com/EVEIPH/LatestFiles/master/Microsoft.IdentityModel.Abstractions.dll"
+    Private LatestVersionXML As String
+    Private LatestTestVersionXML As String
 
     Private FileList As List(Of FileNameDate)
 
@@ -913,15 +898,8 @@ Public Class FrmMain
         File.Copy(UploadFileDirectory & UpdaterManifest, FinalBinaryFolderPath & UpdaterManifest)
         File.Copy(UploadFileDirectory & EXEManifest, FinalBinaryFolderPath & EXEManifest)
         File.Copy(UploadFileDirectory & LatestVersionXML, FinalBinaryFolderPath & LatestVersionXML)
-        File.Copy(UploadFileDirectory & JWTDLL, FinalBinaryFolderPath & JWTDLL)
-        File.Copy(UploadFileDirectory & IMTokensJWTDLL, FinalBinaryFolderPath & IMTokensJWTDLL)
-        File.Copy(UploadFileDirectory & IMJsonWebTokensDLL, FinalBinaryFolderPath & IMJsonWebTokensDLL)
-        File.Copy(UploadFileDirectory & IMTokensDLL, FinalBinaryFolderPath & IMTokensDLL)
-        File.Copy(UploadFileDirectory & IMLoggingDLL, FinalBinaryFolderPath & IMLoggingDLL)
-        File.Copy(UploadFileDirectory & IMAbstractionsDLL, FinalBinaryFolderPath & IMAbstractionsDLL)
         File.Copy(UploadFileDirectory & LPSolveDLL, FinalBinaryFolderPath & LPSolveDLL)
         File.Copy(UploadFileDirectory & LPSolve55DLL, FinalBinaryFolderPath & LPSolve55DLL)
-        File.Copy(UploadFileDirectory & SBUFFERSDLL, FinalBinaryFolderPath & SBUFFERSDLL)
         ' DB
         File.Copy(SDEWorkingDirectory & EVEIPHDB, FinalBinaryFolderPath & EVEIPHDB)
 
@@ -8893,11 +8871,6 @@ Public Class FrmMain
             NewFilesAdded = True
         End If
 
-        If MD5CalcFile(EVEIPHRootDirectory & SBUFFERSDLL) <> MD5CalcFile(FileDirectory & SBUFFERSDLL) Then
-            File.Copy(EVEIPHRootDirectory & SBUFFERSDLL, FileDirectory & SBUFFERSDLL, True)
-            NewFilesAdded = True
-        End If
-
         'If MD5CalcFile(EVEIPHRootDirectory & SQLiteDLL) <> MD5CalcFile(FileDirectory & SQLiteDLL) Then
         '    File.Copy(EVEIPHRootDirectory & SQLiteDLL, FileDirectory & SQLiteDLL, True)
         '    NewFilesAdded = True
@@ -8915,36 +8888,6 @@ Public Class FrmMain
 
         If MD5CalcFile(EVEIPHRootDirectory & EXEManifest) <> MD5CalcFile(FileDirectory & EXEManifest) Then
             File.Copy(EVEIPHRootDirectory & EXEManifest, FileDirectory & EXEManifest, True)
-            NewFilesAdded = True
-        End If
-
-        If MD5CalcFile(EVEIPHRootDirectory & IMTokensJWTDLL) <> MD5CalcFile(FileDirectory & IMTokensJWTDLL) Then
-            File.Copy(EVEIPHRootDirectory & IMTokensJWTDLL, FileDirectory & IMTokensJWTDLL, True)
-            NewFilesAdded = True
-        End If
-
-        If MD5CalcFile(EVEIPHRootDirectory & IMJsonWebTokensDLL) <> MD5CalcFile(FileDirectory & IMJsonWebTokensDLL) Then
-            File.Copy(EVEIPHRootDirectory & IMJsonWebTokensDLL, FileDirectory & IMJsonWebTokensDLL, True)
-            NewFilesAdded = True
-        End If
-
-        If MD5CalcFile(EVEIPHRootDirectory & IMTokensDLL) <> MD5CalcFile(FileDirectory & IMTokensDLL) Then
-            File.Copy(EVEIPHRootDirectory & IMTokensDLL, FileDirectory & IMTokensDLL, True)
-            NewFilesAdded = True
-        End If
-
-        If MD5CalcFile(EVEIPHRootDirectory & IMLoggingDLL) <> MD5CalcFile(FileDirectory & IMLoggingDLL) Then
-            File.Copy(EVEIPHRootDirectory & IMLoggingDLL, FileDirectory & IMLoggingDLL, True)
-            NewFilesAdded = True
-        End If
-
-        If MD5CalcFile(EVEIPHRootDirectory & IMAbstractionsDLL) <> MD5CalcFile(FileDirectory & IMAbstractionsDLL) Then
-            File.Copy(EVEIPHRootDirectory & IMAbstractionsDLL, FileDirectory & IMAbstractionsDLL, True)
-            NewFilesAdded = True
-        End If
-
-        If MD5CalcFile(EVEIPHRootDirectory & JWTDLL) <> MD5CalcFile(FileDirectory & JWTDLL) Then
-            File.Copy(EVEIPHRootDirectory & JWTDLL, FileDirectory & JWTDLL, True)
             NewFilesAdded = True
         End If
 
@@ -9064,13 +9007,6 @@ Public Class FrmMain
             writer.WriteEndElement()
 
             writer.WriteStartElement("row")
-            writer.WriteAttributeString("Name", SBUFFERSDLL)
-            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & SBUFFERSDLL).FileVersion)
-            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & SBUFFERSDLL))
-            writer.WriteAttributeString("URL", SBUFFERSURL)
-            writer.WriteEndElement()
-
-            writer.WriteStartElement("row")
             writer.WriteAttributeString("Name", SQLiteDLL)
             writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & SQLiteDLL).FileVersion)
             writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & SQLiteDLL))
@@ -9110,48 +9046,6 @@ Public Class FrmMain
             writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & LPSolve55DLL).FileVersion)
             writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & LPSolve55DLL))
             writer.WriteAttributeString("URL", LPSolve55DLLURL)
-            writer.WriteEndElement()
-
-            writer.WriteStartElement("row")
-            writer.WriteAttributeString("Name", JWTDLL)
-            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & JWTDLL).FileVersion)
-            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & JWTDLL))
-            writer.WriteAttributeString("URL", JWTDLLURL)
-            writer.WriteEndElement()
-
-            writer.WriteStartElement("row")
-            writer.WriteAttributeString("Name", IMTokensJWTDLL)
-            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & IMTokensJWTDLL).FileVersion)
-            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & IMTokensJWTDLL))
-            writer.WriteAttributeString("URL", IMTokensJWTDLLURL)
-            writer.WriteEndElement()
-
-            writer.WriteStartElement("row")
-            writer.WriteAttributeString("Name", IMJsonWebTokensDLL)
-            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & IMJsonWebTokensDLL).FileVersion)
-            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & IMJsonWebTokensDLL))
-            writer.WriteAttributeString("URL", IMJsonWebTokensDLLURL)
-            writer.WriteEndElement()
-
-            writer.WriteStartElement("row")
-            writer.WriteAttributeString("Name", IMTokensDLL)
-            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & IMTokensDLL).FileVersion)
-            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & IMTokensDLL))
-            writer.WriteAttributeString("URL", IMTokensDLLURL)
-            writer.WriteEndElement()
-
-            writer.WriteStartElement("row")
-            writer.WriteAttributeString("Name", IMLoggingDLL)
-            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & IMLoggingDLL).FileVersion)
-            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & IMLoggingDLL))
-            writer.WriteAttributeString("URL", IMLoggingDLLURL)
-            writer.WriteEndElement()
-
-            writer.WriteStartElement("row")
-            writer.WriteAttributeString("Name", IMAbstractionsDLL)
-            writer.WriteAttributeString("Version", FileVersionInfo.GetVersionInfo(FileDirectory & IMAbstractionsDLL).FileVersion)
-            writer.WriteAttributeString("MD5", MD5CalcFile(FileDirectory & IMAbstractionsDLL))
-            writer.WriteAttributeString("URL", IMAbstractionsDLLURL)
             writer.WriteEndElement()
 
             ' End document.
