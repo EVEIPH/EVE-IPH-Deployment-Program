@@ -19,7 +19,7 @@ Public Class FrmMain
     Private EVEIPHRootDirectory As String ' For the debugging process, will copy images here as well
     Private SDEWorkingDirectory As String ' Where the main db, final DB, and image zip is stored 
     Private UploadFileDirectory As String ' Where all the files we want to sync to the server for download are
-    Private UploadFileTestDirectory As String
+    Private MSIDirectory As String
 
     ' DB
     Private DatabasePath As String ' Where we build the SQLite database
@@ -43,7 +43,6 @@ Public Class FrmMain
 
     ' File names
     Private ReadOnly MSIInstaller As String = "EVE Isk per Hour.msi"
-    Private ReadOnly MSIDirectory As String = "C:\Users\Brian\EVE Stuff\EVE IPH Project\EVEIPHSetupWizard\"
 
     ' Special Processing
     Private Const StructureRigCategory As Integer = -66
@@ -611,9 +610,9 @@ Public Class FrmMain
             If Not Directory.Exists(UploadFileDirectory) Then
                 UploadFileDirectory = ""
             End If
-            UploadFileTestDirectory = BPStream.ReadLine
-            If Not Directory.Exists(UploadFileTestDirectory) Then
-                UploadFileTestDirectory = ""
+            MSIDirectory = BPStream.ReadLine
+            If Not Directory.Exists(MSIDirectory) Then
+                MSIDirectory = ""
             End If
 
             BPStream.Close()
@@ -622,7 +621,7 @@ Public Class FrmMain
             EVEIPHRootDirectory = ""
             SDEWorkingDirectory = ""
             UploadFileDirectory = ""
-            UploadFileTestDirectory = ""
+            MSIDirectory = ""
             VersionNumber = ""
         End If
     End Sub
@@ -648,9 +647,9 @@ Public Class FrmMain
             End If
         End If
 
-        If UploadFileTestDirectory <> "" Then
-            If UploadFileTestDirectory.Substring(Len(UploadFileTestDirectory) - 1) <> "\" Then
-                UploadFileTestDirectory &= "\"
+        If MSIDirectory <> "" Then
+            If MSIDirectory.Substring(Len(MSIDirectory) - 1) <> "\" Then
+                MSIDirectory &= "\"
             End If
         End If
 
@@ -670,8 +669,8 @@ Public Class FrmMain
             lblFilesPath.Text = UploadFileDirectory
         End If
 
-        If UploadFileTestDirectory <> "\" Then
-            lblTestPath.Text = UploadFileTestDirectory
+        If MSIDirectory <> "\" Then
+            lblMSIInstaller.Text = MSIDirectory
         End If
 
         If EVEIPHRootDirectory <> "\" Then
@@ -724,14 +723,14 @@ Public Class FrmMain
     End Sub
 
     Private Sub BtnSelectTestFilePath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectTestFilePath.Click
-        If UploadFileTestDirectory <> "" Then
-            FolderBrowserDialog.SelectedPath = UploadFileTestDirectory
+        If MSIDirectory <> "" Then
+            FolderBrowserDialog.SelectedPath = MSIDirectory
         End If
 
         If FolderBrowserDialog.ShowDialog() = DialogResult.OK Then
             Try
-                lblTestPath.Text = FolderBrowserDialog.SelectedPath
-                UploadFileTestDirectory = FolderBrowserDialog.SelectedPath
+                lblMSIInstaller.Text = FolderBrowserDialog.SelectedPath
+                MSIDirectory = FolderBrowserDialog.SelectedPath
                 Call SetFilePaths()
             Catch ex As Exception
                 MsgBox(Err.Description, vbExclamation, Application.ProductName)
@@ -774,9 +773,9 @@ Public Class FrmMain
             Exit Sub
         End If
 
-        If Trim(lblTestPath.Text) = "" Then
+        If Trim(lblMSIInstaller.Text) = "" Then
             MsgBox("Invalid Installer/Binary test file path", vbExclamation, Application.ProductName)
-            lblTestPath.Focus()
+            lblMSIInstaller.Focus()
             Exit Sub
         End If
 
@@ -805,7 +804,7 @@ Public Class FrmMain
         EVEIPHRootDirectory = lblRootDebugFolderPath.Text
         SDEWorkingDirectory = lblWorkingFolderPath.Text
         UploadFileDirectory = lblFilesPath.Text
-        UploadFileTestDirectory = lblTestPath.Text
+        MSIDirectory = lblMSIInstaller.Text
 
         ' Save the file path as a text file and the database name
         MyStream = File.CreateText(SettingsFileName)
@@ -814,7 +813,7 @@ Public Class FrmMain
         MyStream.Write(lblRootDebugFolderPath.Text & Environment.NewLine)
         MyStream.Write(lblWorkingFolderPath.Text & Environment.NewLine)
         MyStream.Write(lblFilesPath.Text & Environment.NewLine)
-        MyStream.Write(lblTestPath.Text & Environment.NewLine)
+        MyStream.Write(lblMSIInstaller.Text & Environment.NewLine)
 
         MyStream.Flush()
         MyStream.Close()
@@ -882,11 +881,6 @@ Public Class FrmMain
             Directory.Delete(FinalBinaryFolderPath, True)
         End If
 
-        If chkCreateTest.Checked Then
-            ' Copy the test.txt to the binary
-            File.Copy(EVEIPHRootDirectory & "Test.txt", FinalBinaryFolderPath & "Test.txt")
-        End If
-
         Directory.CreateDirectory(FinalBinaryFolderPath)
 
         ' Copy all these files from the latest file directory (should be most up to date) to the working directory to make the zip
@@ -940,11 +934,7 @@ Public Class FrmMain
         Dim di As DirectoryInfo
 
         If UploadFileDirectory <> "" Then
-            If chkCreateTest.Checked Then
-                di = New DirectoryInfo(UploadFileTestDirectory)
-            Else
-                di = New DirectoryInfo(UploadFileDirectory)
-            End If
+            di = New DirectoryInfo(UploadFileDirectory)
 
             Dim fiArr As FileInfo() = di.GetFiles()
 
@@ -8853,18 +8843,16 @@ Public Class FrmMain
     ' Copies all the files from directories and then builds the xml file and saves it here for upload to github
     Private Sub CopyFilesBuildXML()
         Dim NewFilesAdded As Boolean = False
-        Dim FileDirectory As String = ""
-
-        If chkCreateTest.Checked Then
-            FileDirectory = UploadFileTestDirectory
-        Else
-            FileDirectory = UploadFileDirectory
-        End If
+        Dim FileDirectory As String = UploadFileDirectory
 
         On Error Resume Next
         Me.Cursor = Cursors.WaitCursor
         Application.DoEvents()
         Call EnableButtons(False)
+
+        If MD5CalcFile(MSIDirectory & MSIInstaller) <> MD5CalcFile(FileDirectory & MSIInstaller) Then
+            File.Copy(MSIDirectory & MSIInstaller, FileDirectory & MSIInstaller, True)
+        End If
 
         If MD5CalcFile(EVEIPHRootDirectory & JSONDLL) <> MD5CalcFile(FileDirectory & JSONDLL) Then
             File.Copy(EVEIPHRootDirectory & JSONDLL, FileDirectory & JSONDLL, True)
@@ -8901,11 +8889,6 @@ Public Class FrmMain
             NewFilesAdded = True
         End If
 
-        If MD5CalcFile(MSIDirectory & MSIInstaller) <> MD5CalcFile(FileDirectory & MSIInstaller) Then
-            File.Copy(MSIDirectory & MSIInstaller, FileDirectory & MSIInstaller, True)
-            NewFilesAdded = True
-        End If
-
         If MD5CalcFile(EVEIPHRootDirectory & EVEIPHEXE) <> MD5CalcFile(FileDirectory & EVEIPHEXE) Then
             File.Copy(EVEIPHRootDirectory & EVEIPHEXE, FileDirectory & EVEIPHEXE, True)
             NewFilesAdded = True
@@ -8928,8 +8911,10 @@ Public Class FrmMain
 
         On Error GoTo 0
 
-        ' Output the Latest XML File 
-        Call WriteLatestXMLFile()
+        ' Output the Latest XML File if we added new files
+        If NewFilesAdded Then
+            Call WriteLatestXMLFile()
+        End If
 
         ' Refresh the grid
         Call LoadFileGrid()

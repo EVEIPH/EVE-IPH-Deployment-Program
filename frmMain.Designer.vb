@@ -1,5 +1,5 @@
 ﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
-Partial Class frmMain
+Partial Class FrmMain
     Inherits System.Windows.Forms.Form
 
     'Form overrides dispose to clean up the component list.
@@ -23,15 +23,15 @@ Partial Class frmMain
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container()
-        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmMain))
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(FrmMain))
         Me.FolderBrowserDialog = New System.Windows.Forms.FolderBrowserDialog()
         Me.ToolTip = New System.Windows.Forms.ToolTip(Me.components)
         Me.TabPage2 = New System.Windows.Forms.TabPage()
         Me.txtVersionNumber = New System.Windows.Forms.TextBox()
         Me.txtDBName = New System.Windows.Forms.TextBox()
-        Me.lblTestPath = New System.Windows.Forms.Label()
+        Me.lblMSIInstaller = New System.Windows.Forms.Label()
         Me.btnSelectTestFilePath = New System.Windows.Forms.Button()
-        Me.lblTest = New System.Windows.Forms.Label()
+        Me.lblMSIFolder = New System.Windows.Forms.Label()
         Me.lblVersionNumber = New System.Windows.Forms.Label()
         Me.lblDBName = New System.Windows.Forms.Label()
         Me.btnSaveFilePath = New System.Windows.Forms.Button()
@@ -45,7 +45,6 @@ Partial Class frmMain
         Me.btnSelectWorkingPath = New System.Windows.Forms.Button()
         Me.lblWorkingFolder = New System.Windows.Forms.Label()
         Me.TabPage1 = New System.Windows.Forms.TabPage()
-        Me.chkCreateTest = New System.Windows.Forms.CheckBox()
         Me.btnRefreshList = New System.Windows.Forms.Button()
         Me.lblDBNameDisplay1 = New System.Windows.Forms.Label()
         Me.lblDBNameDisplay = New System.Windows.Forms.Label()
@@ -67,9 +66,9 @@ Partial Class frmMain
         '
         Me.TabPage2.Controls.Add(Me.txtVersionNumber)
         Me.TabPage2.Controls.Add(Me.txtDBName)
-        Me.TabPage2.Controls.Add(Me.lblTestPath)
+        Me.TabPage2.Controls.Add(Me.lblMSIInstaller)
         Me.TabPage2.Controls.Add(Me.btnSelectTestFilePath)
-        Me.TabPage2.Controls.Add(Me.lblTest)
+        Me.TabPage2.Controls.Add(Me.lblMSIFolder)
         Me.TabPage2.Controls.Add(Me.lblVersionNumber)
         Me.TabPage2.Controls.Add(Me.lblDBName)
         Me.TabPage2.Controls.Add(Me.btnSaveFilePath)
@@ -95,7 +94,7 @@ Partial Class frmMain
         Me.txtVersionNumber.Location = New System.Drawing.Point(313, 23)
         Me.txtVersionNumber.Name = "txtVersionNumber"
         Me.txtVersionNumber.Size = New System.Drawing.Size(38, 20)
-        Me.txtVersionNumber.TabIndex = 5
+        Me.txtVersionNumber.TabIndex = 3
         '
         'txtDBName
         '
@@ -104,32 +103,31 @@ Partial Class frmMain
         Me.txtDBName.Size = New System.Drawing.Size(205, 20)
         Me.txtDBName.TabIndex = 1
         '
-        'lblTestPath
+        'lblMSIInstaller
         '
-        Me.lblTestPath.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-        Me.lblTestPath.Location = New System.Drawing.Point(18, 151)
-        Me.lblTestPath.Name = "lblTestPath"
-        Me.lblTestPath.Size = New System.Drawing.Size(333, 20)
-        Me.lblTestPath.TabIndex = 17
-        Me.lblTestPath.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+        Me.lblMSIInstaller.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+        Me.lblMSIInstaller.Location = New System.Drawing.Point(17, 164)
+        Me.lblMSIInstaller.Name = "lblMSIInstaller"
+        Me.lblMSIInstaller.Size = New System.Drawing.Size(333, 40)
+        Me.lblMSIInstaller.TabIndex = 8
         '
         'btnSelectTestFilePath
         '
-        Me.btnSelectTestFilePath.Location = New System.Drawing.Point(18, 174)
+        Me.btnSelectTestFilePath.Location = New System.Drawing.Point(18, 207)
         Me.btnSelectTestFilePath.Name = "btnSelectTestFilePath"
         Me.btnSelectTestFilePath.Size = New System.Drawing.Size(55, 23)
-        Me.btnSelectTestFilePath.TabIndex = 18
+        Me.btnSelectTestFilePath.TabIndex = 9
         Me.btnSelectTestFilePath.Text = "Select"
         Me.btnSelectTestFilePath.UseVisualStyleBackColor = True
         '
-        'lblTest
+        'lblMSIFolder
         '
-        Me.lblTest.AutoSize = True
-        Me.lblTest.Location = New System.Drawing.Point(15, 135)
-        Me.lblTest.Name = "lblTest"
-        Me.lblTest.Size = New System.Drawing.Size(122, 13)
-        Me.lblTest.TabIndex = 16
-        Me.lblTest.Text = "Test Deployment Folder:"
+        Me.lblMSIFolder.AutoSize = True
+        Me.lblMSIFolder.Location = New System.Drawing.Point(17, 149)
+        Me.lblMSIFolder.Name = "lblMSIFolder"
+        Me.lblMSIFolder.Size = New System.Drawing.Size(61, 13)
+        Me.lblMSIFolder.TabIndex = 7
+        Me.lblMSIFolder.Text = "MSI Folder:"
         '
         'lblVersionNumber
         '
@@ -137,7 +135,7 @@ Partial Class frmMain
         Me.lblVersionNumber.Location = New System.Drawing.Point(229, 26)
         Me.lblVersionNumber.Name = "lblVersionNumber"
         Me.lblVersionNumber.Size = New System.Drawing.Size(85, 13)
-        Me.lblVersionNumber.TabIndex = 4
+        Me.lblVersionNumber.TabIndex = 2
         Me.lblVersionNumber.Text = "Version Number:"
         '
         'lblDBName
@@ -151,97 +149,93 @@ Partial Class frmMain
         '
         'btnSaveFilePath
         '
-        Me.btnSaveFilePath.Location = New System.Drawing.Point(127, 343)
+        Me.btnSaveFilePath.Location = New System.Drawing.Point(135, 433)
         Me.btnSaveFilePath.Name = "btnSaveFilePath"
         Me.btnSaveFilePath.Size = New System.Drawing.Size(97, 28)
-        Me.btnSaveFilePath.TabIndex = 15
+        Me.btnSaveFilePath.TabIndex = 16
         Me.btnSaveFilePath.Text = "Save Settings"
         Me.btnSaveFilePath.UseVisualStyleBackColor = True
         '
         'lblFilesPath
         '
         Me.lblFilesPath.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-        Me.lblFilesPath.Location = New System.Drawing.Point(18, 86)
+        Me.lblFilesPath.Location = New System.Drawing.Point(17, 74)
         Me.lblFilesPath.Name = "lblFilesPath"
-        Me.lblFilesPath.Size = New System.Drawing.Size(333, 20)
-        Me.lblFilesPath.TabIndex = 7
-        Me.lblFilesPath.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+        Me.lblFilesPath.Size = New System.Drawing.Size(333, 40)
+        Me.lblFilesPath.TabIndex = 5
         '
         'btnSelectFilePath
         '
-        Me.btnSelectFilePath.Location = New System.Drawing.Point(18, 109)
+        Me.btnSelectFilePath.Location = New System.Drawing.Point(18, 117)
         Me.btnSelectFilePath.Name = "btnSelectFilePath"
         Me.btnSelectFilePath.Size = New System.Drawing.Size(55, 23)
-        Me.btnSelectFilePath.TabIndex = 8
+        Me.btnSelectFilePath.TabIndex = 6
         Me.btnSelectFilePath.Text = "Select"
         Me.btnSelectFilePath.UseVisualStyleBackColor = True
         '
         'lblFiles
         '
         Me.lblFiles.AutoSize = True
-        Me.lblFiles.Location = New System.Drawing.Point(15, 70)
+        Me.lblFiles.Location = New System.Drawing.Point(17, 58)
         Me.lblFiles.Name = "lblFiles"
         Me.lblFiles.Size = New System.Drawing.Size(98, 13)
-        Me.lblFiles.TabIndex = 6
+        Me.lblFiles.TabIndex = 4
         Me.lblFiles.Text = "Deployment Folder:"
         '
         'lblRootDebugFolderPath
         '
         Me.lblRootDebugFolderPath.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-        Me.lblRootDebugFolderPath.Location = New System.Drawing.Point(18, 285)
+        Me.lblRootDebugFolderPath.Location = New System.Drawing.Point(15, 347)
         Me.lblRootDebugFolderPath.Name = "lblRootDebugFolderPath"
-        Me.lblRootDebugFolderPath.Size = New System.Drawing.Size(333, 20)
-        Me.lblRootDebugFolderPath.TabIndex = 13
-        Me.lblRootDebugFolderPath.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+        Me.lblRootDebugFolderPath.Size = New System.Drawing.Size(333, 40)
+        Me.lblRootDebugFolderPath.TabIndex = 14
         '
         'btnSelectRootDebugPath
         '
-        Me.btnSelectRootDebugPath.Location = New System.Drawing.Point(18, 308)
+        Me.btnSelectRootDebugPath.Location = New System.Drawing.Point(18, 390)
         Me.btnSelectRootDebugPath.Name = "btnSelectRootDebugPath"
         Me.btnSelectRootDebugPath.Size = New System.Drawing.Size(55, 23)
-        Me.btnSelectRootDebugPath.TabIndex = 14
+        Me.btnSelectRootDebugPath.TabIndex = 15
         Me.btnSelectRootDebugPath.Text = "Select"
         Me.btnSelectRootDebugPath.UseVisualStyleBackColor = True
         '
         'lblRootDebugFolder
         '
         Me.lblRootDebugFolder.AutoSize = True
-        Me.lblRootDebugFolder.Location = New System.Drawing.Point(15, 269)
+        Me.lblRootDebugFolder.Location = New System.Drawing.Point(15, 331)
         Me.lblRootDebugFolder.Name = "lblRootDebugFolder"
         Me.lblRootDebugFolder.Size = New System.Drawing.Size(142, 13)
-        Me.lblRootDebugFolder.TabIndex = 12
+        Me.lblRootDebugFolder.TabIndex = 13
         Me.lblRootDebugFolder.Text = "EVEIPH Root Debug Folder:"
         '
         'lblWorkingFolderPath
         '
         Me.lblWorkingFolderPath.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
-        Me.lblWorkingFolderPath.Location = New System.Drawing.Point(18, 220)
+        Me.lblWorkingFolderPath.Location = New System.Drawing.Point(17, 255)
         Me.lblWorkingFolderPath.Name = "lblWorkingFolderPath"
-        Me.lblWorkingFolderPath.Size = New System.Drawing.Size(333, 20)
-        Me.lblWorkingFolderPath.TabIndex = 10
-        Me.lblWorkingFolderPath.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
+        Me.lblWorkingFolderPath.Size = New System.Drawing.Size(333, 40)
+        Me.lblWorkingFolderPath.TabIndex = 11
         '
         'btnSelectWorkingPath
         '
-        Me.btnSelectWorkingPath.Location = New System.Drawing.Point(18, 243)
+        Me.btnSelectWorkingPath.Location = New System.Drawing.Point(18, 298)
         Me.btnSelectWorkingPath.Name = "btnSelectWorkingPath"
         Me.btnSelectWorkingPath.Size = New System.Drawing.Size(55, 23)
-        Me.btnSelectWorkingPath.TabIndex = 11
+        Me.btnSelectWorkingPath.TabIndex = 12
         Me.btnSelectWorkingPath.Text = "Select"
         Me.btnSelectWorkingPath.UseVisualStyleBackColor = True
         '
         'lblWorkingFolder
         '
         Me.lblWorkingFolder.AutoSize = True
-        Me.lblWorkingFolder.Location = New System.Drawing.Point(15, 204)
+        Me.lblWorkingFolder.Location = New System.Drawing.Point(17, 239)
         Me.lblWorkingFolder.Name = "lblWorkingFolder"
         Me.lblWorkingFolder.Size = New System.Drawing.Size(107, 13)
-        Me.lblWorkingFolder.TabIndex = 9
+        Me.lblWorkingFolder.TabIndex = 10
         Me.lblWorkingFolder.Text = "SDE Working Folder:"
         '
         'TabPage1
         '
-        Me.TabPage1.Controls.Add(Me.chkCreateTest)
         Me.TabPage1.Controls.Add(Me.btnRefreshList)
         Me.TabPage1.Controls.Add(Me.lblDBNameDisplay1)
         Me.TabPage1.Controls.Add(Me.lblDBNameDisplay)
@@ -261,18 +255,9 @@ Partial Class frmMain
         Me.TabPage1.Text = "DB Updater & Deployment"
         Me.TabPage1.UseVisualStyleBackColor = True
         '
-        'chkCreateTest
-        '
-        Me.chkCreateTest.Location = New System.Drawing.Point(123, 462)
-        Me.chkCreateTest.Name = "chkCreateTest"
-        Me.chkCreateTest.Size = New System.Drawing.Size(124, 21)
-        Me.chkCreateTest.TabIndex = 13
-        Me.chkCreateTest.Text = "Create Test Version"
-        Me.chkCreateTest.UseVisualStyleBackColor = True
-        '
         'btnRefreshList
         '
-        Me.btnRefreshList.Location = New System.Drawing.Point(243, 157)
+        Me.btnRefreshList.Location = New System.Drawing.Point(243, 140)
         Me.btnRefreshList.Name = "btnRefreshList"
         Me.btnRefreshList.Size = New System.Drawing.Size(97, 40)
         Me.btnRefreshList.TabIndex = 12
@@ -299,7 +284,7 @@ Partial Class frmMain
         '
         'btnCopyFilesBuildXML
         '
-        Me.btnCopyFilesBuildXML.Location = New System.Drawing.Point(27, 157)
+        Me.btnCopyFilesBuildXML.Location = New System.Drawing.Point(27, 140)
         Me.btnCopyFilesBuildXML.Name = "btnCopyFilesBuildXML"
         Me.btnCopyFilesBuildXML.Size = New System.Drawing.Size(97, 40)
         Me.btnCopyFilesBuildXML.TabIndex = 9
@@ -308,7 +293,7 @@ Partial Class frmMain
         '
         'btnBuildBinary
         '
-        Me.btnBuildBinary.Location = New System.Drawing.Point(135, 157)
+        Me.btnBuildBinary.Location = New System.Drawing.Point(135, 140)
         Me.btnBuildBinary.Name = "btnBuildBinary"
         Me.btnBuildBinary.Size = New System.Drawing.Size(97, 40)
         Me.btnBuildBinary.TabIndex = 10
@@ -320,9 +305,10 @@ Partial Class frmMain
         Me.lstFileInformation.FullRowSelect = True
         Me.lstFileInformation.GridLines = True
         Me.lstFileInformation.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable
-        Me.lstFileInformation.Location = New System.Drawing.Point(27, 205)
+        Me.lstFileInformation.HideSelection = False
+        Me.lstFileInformation.Location = New System.Drawing.Point(27, 186)
         Me.lstFileInformation.Name = "lstFileInformation"
-        Me.lstFileInformation.Size = New System.Drawing.Size(313, 251)
+        Me.lstFileInformation.Size = New System.Drawing.Size(313, 290)
         Me.lstFileInformation.TabIndex = 11
         Me.lstFileInformation.UseCompatibleStateImageBehavior = False
         Me.lstFileInformation.View = System.Windows.Forms.View.Details
@@ -380,7 +366,7 @@ Partial Class frmMain
         Me.TabControl1.Size = New System.Drawing.Size(374, 512)
         Me.TabControl1.TabIndex = 19
         '
-        'frmMain
+        'FrmMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(96.0!, 96.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi
@@ -388,7 +374,7 @@ Partial Class frmMain
         Me.ClientSize = New System.Drawing.Size(374, 512)
         Me.Controls.Add(Me.TabControl1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
-        Me.Name = "frmMain"
+        Me.Name = "FrmMain"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
         Me.Text = "EVE IPH Deployment Program"
         Me.TabPage2.ResumeLayout(False)
@@ -404,9 +390,9 @@ Partial Class frmMain
     Friend WithEvents TabPage2 As TabPage
     Friend WithEvents txtVersionNumber As TextBox
     Friend WithEvents txtDBName As TextBox
-    Friend WithEvents lblTestPath As Label
+    Friend WithEvents lblMSIInstaller As Label
     Friend WithEvents btnSelectTestFilePath As Button
-    Friend WithEvents lblTest As Label
+    Friend WithEvents lblMSIFolder As Label
     Friend WithEvents lblVersionNumber As Label
     Friend WithEvents lblDBName As Label
     Friend WithEvents btnSaveFilePath As Button
@@ -420,7 +406,6 @@ Partial Class frmMain
     Friend WithEvents btnSelectWorkingPath As Button
     Friend WithEvents lblWorkingFolder As Label
     Friend WithEvents TabPage1 As TabPage
-    Friend WithEvents chkCreateTest As CheckBox
     Friend WithEvents btnRefreshList As Button
     Friend WithEvents lblDBNameDisplay1 As Label
     Friend WithEvents lblDBNameDisplay As Label
