@@ -17,3 +17,4 @@ Service References/*
 *.nuget.targets
 UpgradeLog.htm
 *.vsidx
+*.json
