@@ -7262,6 +7262,7 @@ Public Class FrmMain
         SQL &= "ID INTEGER NOT NULL,"
         SQL &= "ItemID INTEGER NOT NULL,"
         SQL &= "LocationID INTEGER NOT NULL,"
+        SQL &= "LocationType VARCHAR(15) NOT NULL," ' [ station, solar_system, item, other ]
         SQL &= "TypeID INTEGER NOT NULL,"
         SQL &= "Quantity INTEGER NOT NULL,"
         SQL &= "Flag INTEGER NOT NULL,"
@@ -7856,6 +7857,7 @@ Public Class FrmMain
         Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (156,'HiddenModifiers','Hidden Modifiers',0,118)", EVEIPHSQLiteDB.DBRef)
         Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (174,'CrateLoot','Crate Loot',1,119)", EVEIPHSQLiteDB.DBRef)
         Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (500,'AutoFit','Auto Fit',0,120)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (505,'In Space','In Space',0,121)", EVEIPHSQLiteDB.DBRef)
 
         ' Index
         SQL = "CREATE INDEX IDX_ITEM_FLAG_ID ON INVENTORY_FLAGS (FlagID)"
