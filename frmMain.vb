@@ -658,7 +658,6 @@ Public Class FrmMain
         FinalDBPath = SDEWorkingDirectory & FinalDBName
 
         txtDBName.Text = DatabaseName
-        lblDBNameDisplay.Text = DatabaseName
         txtVersionNumber.Text = VersionNumber
 
         If SDEWorkingDirectory <> "\" Then
@@ -798,7 +797,6 @@ Public Class FrmMain
         End If
 
         DatabaseName = txtDBName.Text
-        lblDBNameDisplay.Text = DatabaseName
         VersionNumber = txtVersionNumber.Text
 
         EVEIPHRootDirectory = lblRootDebugFolderPath.Text
