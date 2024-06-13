@@ -3645,6 +3645,8 @@ Public Class FrmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/planets/','esi-planets.manage_planets','To import character planetary interaction information')"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/ship/','esi-location.read_ship_type','To import character's curent ship type and name')"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/corporations/{corporation_id}/assets/','esi-assets.read_corporation_assets','To import corporation assets')"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -7858,6 +7860,7 @@ Public Class FrmMain
         Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (174,'CrateLoot','Crate Loot',1,119)", EVEIPHSQLiteDB.DBRef)
         Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (500,'AutoFit','Auto Fit',0,120)", EVEIPHSQLiteDB.DBRef)
         Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (505,'In Space','In Space',0,121)", EVEIPHSQLiteDB.DBRef)
+        Call Execute_SQLiteSQL("INSERT INTO INVENTORY_FLAGS VALUES (506,'Industry Jobs','Industry Jobs',1,122)", EVEIPHSQLiteDB.DBRef)
 
         ' Index
         SQL = "CREATE INDEX IDX_ITEM_FLAG_ID ON INVENTORY_FLAGS (FlagID)"
