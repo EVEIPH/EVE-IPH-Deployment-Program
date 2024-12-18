@@ -659,7 +659,6 @@ Public Class FrmMain
         FinalDBPath = SDEWorkingDirectory & FinalDBName
 
         txtDBName.Text = DatabaseName
-        lblDBNameDisplay.Text = DatabaseName
         txtVersionNumber.Text = VersionNumber
 
         If SDEWorkingDirectory <> "\" Then
@@ -668,10 +667,6 @@ Public Class FrmMain
 
         If UploadFileDirectory <> "\" Then
             lblFilesPath.Text = UploadFileDirectory
-        End If
-
-        If UploadFileTestDirectory <> "\" Then
-            lblTestPath.Text = UploadFileTestDirectory
         End If
 
         If EVEIPHRootDirectory <> "\" Then
@@ -723,14 +718,14 @@ Public Class FrmMain
         End If
     End Sub
 
-    Private Sub BtnSelectTestFilePath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectTestFilePath.Click
+    Private Sub btnSelectMSIPath_Click(sender As System.Object, e As System.EventArgs) Handles btnSelectMSIPath.Click
         If UploadFileTestDirectory <> "" Then
             FolderBrowserDialog.SelectedPath = UploadFileTestDirectory
         End If
 
         If FolderBrowserDialog.ShowDialog() = DialogResult.OK Then
             Try
-                lblTestPath.Text = FolderBrowserDialog.SelectedPath
+                lblMSIInstaller.Text = FolderBrowserDialog.SelectedPath
                 UploadFileTestDirectory = FolderBrowserDialog.SelectedPath
                 Call SetFilePaths()
             Catch ex As Exception
@@ -774,12 +769,6 @@ Public Class FrmMain
             Exit Sub
         End If
 
-        If Trim(lblTestPath.Text) = "" Then
-            MsgBox("Invalid Installer/Binary test file path", vbExclamation, Application.ProductName)
-            lblTestPath.Focus()
-            Exit Sub
-        End If
-
         If Trim(lblWorkingFolderPath.Text) = "" Then
             MsgBox("Invalid Images file path", vbExclamation, Application.ProductName)
             lblWorkingFolderPath.Focus()
@@ -799,13 +788,11 @@ Public Class FrmMain
         End If
 
         DatabaseName = txtDBName.Text
-        lblDBNameDisplay.Text = DatabaseName
         VersionNumber = txtVersionNumber.Text
 
         EVEIPHRootDirectory = lblRootDebugFolderPath.Text
         SDEWorkingDirectory = lblWorkingFolderPath.Text
         UploadFileDirectory = lblFilesPath.Text
-        UploadFileTestDirectory = lblTestPath.Text
 
         ' Save the file path as a text file and the database name
         MyStream = File.CreateText(SettingsFileName)
@@ -814,7 +801,6 @@ Public Class FrmMain
         MyStream.Write(lblRootDebugFolderPath.Text & Environment.NewLine)
         MyStream.Write(lblWorkingFolderPath.Text & Environment.NewLine)
         MyStream.Write(lblFilesPath.Text & Environment.NewLine)
-        MyStream.Write(lblTestPath.Text & Environment.NewLine)
 
         MyStream.Flush()
         MyStream.Close()
@@ -882,11 +868,6 @@ Public Class FrmMain
             Directory.Delete(FinalBinaryFolderPath, True)
         End If
 
-        If chkCreateTest.Checked Then
-            ' Copy the test.txt to the binary
-            File.Copy(EVEIPHRootDirectory & "Test.txt", FinalBinaryFolderPath & "Test.txt")
-        End If
-
         Directory.CreateDirectory(FinalBinaryFolderPath)
 
         ' Copy all these files from the latest file directory (should be most up to date) to the working directory to make the zip
@@ -940,11 +921,7 @@ Public Class FrmMain
         Dim di As DirectoryInfo
 
         If UploadFileDirectory <> "" Then
-            If chkCreateTest.Checked Then
-                di = New DirectoryInfo(UploadFileTestDirectory)
-            Else
-                di = New DirectoryInfo(UploadFileDirectory)
-            End If
+            di = New DirectoryInfo(UploadFileDirectory)
 
             Dim fiArr As FileInfo() = di.GetFiles()
 
@@ -3645,7 +3622,7 @@ Public Class FrmMain
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
         SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/planets/','esi-planets.manage_planets','To import character planetary interaction information')"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
-        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/ship/','esi-location.read_ship_type','To import character's curent ship type and name')"
+        SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/characters/{character_id}/ship/','esi-location.read_ship_type','To import character curent ship type and name')"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
         SQL = "INSERT INTO ESI_ENDPOINT_ROUTE_TO_SCOPE VALUES ('/corporations/{corporation_id}/assets/','esi-assets.read_corporation_assets','To import corporation assets')"
@@ -9227,11 +9204,7 @@ Public Class FrmMain
         Dim NewFilesAdded As Boolean = False
         Dim FileDirectory As String = ""
 
-        If chkCreateTest.Checked Then
-            FileDirectory = UploadFileTestDirectory
-        Else
-            FileDirectory = UploadFileDirectory
-        End If
+        FileDirectory = UploadFileDirectory
 
         On Error Resume Next
         Me.Cursor = Cursors.WaitCursor

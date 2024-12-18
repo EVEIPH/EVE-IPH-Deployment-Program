@@ -29,7 +29,7 @@ Partial Class FrmMain
         Me.txtVersionNumber = New System.Windows.Forms.TextBox()
         Me.txtDBName = New System.Windows.Forms.TextBox()
         Me.lblMSIInstaller = New System.Windows.Forms.Label()
-        Me.btnSelectTestFilePath = New System.Windows.Forms.Button()
+        Me.btnSelectMSIPath = New System.Windows.Forms.Button()
         Me.lblMSIFolder = New System.Windows.Forms.Label()
         Me.lblVersionNumber = New System.Windows.Forms.Label()
         Me.btnSaveFilePath = New System.Windows.Forms.Button()
@@ -76,14 +76,14 @@ Partial Class FrmMain
         Me.lblMSIInstaller.Size = New System.Drawing.Size(333, 40)
         Me.lblMSIInstaller.TabIndex = 53
         '
-        'btnSelectTestFilePath
+        'btnSelectMSIPath
         '
-        Me.btnSelectTestFilePath.Location = New System.Drawing.Point(352, 222)
-        Me.btnSelectTestFilePath.Name = "btnSelectTestFilePath"
-        Me.btnSelectTestFilePath.Size = New System.Drawing.Size(55, 23)
-        Me.btnSelectTestFilePath.TabIndex = 54
-        Me.btnSelectTestFilePath.Text = "Select"
-        Me.btnSelectTestFilePath.UseVisualStyleBackColor = True
+        Me.btnSelectMSIPath.Location = New System.Drawing.Point(352, 222)
+        Me.btnSelectMSIPath.Name = "btnSelectMSIPath"
+        Me.btnSelectMSIPath.Size = New System.Drawing.Size(55, 23)
+        Me.btnSelectMSIPath.TabIndex = 54
+        Me.btnSelectMSIPath.Text = "Select"
+        Me.btnSelectMSIPath.UseVisualStyleBackColor = True
         '
         'lblMSIFolder
         '
@@ -291,7 +291,7 @@ Partial Class FrmMain
         Me.Controls.Add(Me.txtVersionNumber)
         Me.Controls.Add(Me.txtDBName)
         Me.Controls.Add(Me.lblMSIInstaller)
-        Me.Controls.Add(Me.btnSelectTestFilePath)
+        Me.Controls.Add(Me.btnSelectMSIPath)
         Me.Controls.Add(Me.lblMSIFolder)
         Me.Controls.Add(Me.lblVersionNumber)
         Me.Controls.Add(Me.btnSaveFilePath)
@@ -327,7 +327,7 @@ Partial Class FrmMain
     Friend WithEvents txtVersionNumber As TextBox
     Friend WithEvents txtDBName As TextBox
     Friend WithEvents lblMSIInstaller As Label
-    Friend WithEvents btnSelectTestFilePath As Button
+    Friend WithEvents btnSelectMSIPath As Button
     Friend WithEvents lblMSIFolder As Label
     Friend WithEvents lblVersionNumber As Label
     Friend WithEvents btnSaveFilePath As Button
