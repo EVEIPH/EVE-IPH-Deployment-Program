@@ -300,6 +300,7 @@ Public Class FrmMain
         AbyssalRakovene = 56629
         HadalRakovene = 56630
 
+        ' A0 Ores
         Mordunium = 74521
         PlumMordunium = 74522
         PrizeMordunium = 74523
@@ -316,6 +317,28 @@ Public Class FrmMain
         NobleDucinium = 74534
         RoyalDucinium = 74535
         ImperialDucinium = 74536
+
+        ' Equinox Ores
+        Hezorime = 82163
+        DullHezorime = 82164
+        SerratedHezorime = 82165
+        SharpHezorime = 82166
+        Ueganite = 82205
+        FoggyUeganite = 82206
+        OvercastUeganite = 82207
+        StormyUeganite = 82208
+        Kylixium = 81900
+        KaolinKylixium = 81901
+        ArgilKylixium = 81902
+        AdobeKylixium = 81903
+        Griemeer = 81975
+        ClearGriemeer = 81976
+        InkyGriemeer = 81977
+        OpaqueGriemeer = 81978
+        Nocxite = 82016
+        FragrantNocxite = 82017
+        IntoxicatingNocxite = 82018
+        AmbrosialNocxite = 82019
 
         'BatchCompressedArkonor = 28367
         'BatchCompressedCrimsonArkonor = 28385
@@ -452,6 +475,7 @@ Public Class FrmMain
         CompressedMagmaMercoxit = 62587
         CompressedVitreousMercoxit = 62588
 
+        ' A0 Ores
         CompressedMordunium = 75275
         CompressedPlumMordunium = 75276
         CompressedPrizeMordunium = 75277
@@ -468,6 +492,28 @@ Public Class FrmMain
         CompressedNobleDucinium = 75288
         CompressedRoyalDucinium = 75289
         CompressedImperialDucinium = 75290
+
+        ' Equinox Ores
+        CompressedHezorime = 82312
+        CompressedDullHezorime = 82313
+        CompressedSerratedHezorime = 82314
+        CompressedSharpHezorime = 82315
+        CompressedUeganite = 82308
+        CompressedFoggyUeganite = 82309
+        CompressedOvercastUeganite = 82310
+        CompressedStormyUeganite = 82311
+        CompressedKylixium = 82300
+        CompressedKaolinKylixium = 82301
+        CompressedArgilKylixium = 82302
+        CompressedAdobeKylixium = 82303
+        CompressedGriemeer = 82316
+        CompressedClearGriemeer = 82317
+        CompressedInkyGriemeer = 82318
+        CompressedOpaqueGriemeer = 82319
+        CompressedNocxite = 82304
+        CompressedFragrantNocxite = 82305
+        CompressedIntoxicatingNocxite = 82306
+        CompressedAmbrosialNocxite = 82307
 
         CompressedAmberMykoserocin = 62377
         CompressedAzureMykoserocin = 62379
@@ -5214,6 +5260,40 @@ Public Class FrmMain
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Golden Omber'"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
+        ' 5/10/15% New Nullsec Ores - Kylixium, Griemeer, Nocxite, Hezorime, and Ueganite
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Kaolin Kylixium'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Clear Griemeer'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Fragrant Nocxite'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Dull Hezorime'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Foggy Ueganite'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Argil Kylixium'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Inky Griemeer'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Intoxicating Nocxite'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Serrated Hezorime'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 2 WHERE ORE_NAME LIKE '%Overcast Ueganite'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 3 WHERE ORE_NAME LIKE '%Adobe Kylixium'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 3 WHERE ORE_NAME LIKE '%Opaque Griemeer'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 3 WHERE ORE_NAME LIKE '%Ambrosial Nocxite'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE =3 WHERE ORE_NAME LIKE '%Sharp Hezorime'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+        SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 3 WHERE ORE_NAME LIKE '%Stormy Ueganite'"
+        Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
+
         ' Update the moon mining ores for 5%/10% yield 
         SQL = "UPDATE ORES SET HIGH_YIELD_ORE = 1 WHERE ORE_NAME LIKE '%Brimful%'"
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -5631,6 +5711,52 @@ Public Class FrmMain
             Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedRoyalDucinium & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
             Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.ImperialDucinium & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
             Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedImperialDucinium & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+
+            ' Equinox Ores
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Hezorime & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedHezorime & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.DullHezorime & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedDullHezorime & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.SerratedHezorime & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedSerratedHezorime & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.SharpHezorime & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedSharpHezorime & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Ueganite & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedUeganite & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.FoggyUeganite & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedFoggyUeganite & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.OvercastUeganite & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedOvercastUeganite & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.StormyUeganite & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedStormyUeganite & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Kylixium & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedKylixium & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.KaolinKylixium & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedKaolinKylixium & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.ArgilKylixium & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedArgilKylixium & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.AdobeKylixium & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedAdobeKylixium & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Griemeer & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedGriemeer & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.ClearGriemeer & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedClearGriemeer & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.InkyGriemeer & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedInkyGriemeer & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.OpaqueGriemeer & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedOpaqueGriemeer & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.Nocxite & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedNocxite & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.FragrantNocxite & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedFragrantNocxite & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.IntoxicatingNocxite & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedIntoxicatingNocxite & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.AmbrosialNocxite & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
+            Execute_SQLiteSQL("INSERT INTO ORE_LOCATIONS VALUES (" & MiningMat.CompressedAmbrosialNocxite & ",'Null Sec','" & GetOreRegion(i) & "')", EVEIPHSQLiteDB.DBRef)
         Next
 
         ' Wormholes
