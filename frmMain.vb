@@ -7372,7 +7372,8 @@ Public Class FrmMain
         SQL &= "Quantity INTEGER NOT NULL,"
         SQL &= "Flag INTEGER NOT NULL,"
         SQL &= "IsSingleton INTEGER NOT NULL,"
-        SQL &= "ItemName VARCHAR(50)"
+        SQL &= "ItemName VARCHAR(50),"
+        SQL &= "IsBPCopy INTEGER NOT NULL"
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
