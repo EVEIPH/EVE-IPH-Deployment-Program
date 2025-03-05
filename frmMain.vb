@@ -2347,7 +2347,9 @@ Public Class FrmMain
         SQL &= "META_GROUP INTEGER,"
         SQL &= "SIZE_GROUP VARCHAR(2) NOT NULL, "
         SQL &= "IGNORE INTEGER NOT NULL,"
-        SQL &= "FAVORITE INTEGER NOT NULL"
+        SQL &= "FAVORITE INTEGER NOT NULL,"
+        SQL &= "ADDITIONAL_COSTS FLOAT,"
+        SQL &= "INCLUDEBPCCOST NOT NULL"
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
@@ -2358,7 +2360,7 @@ Public Class FrmMain
         ' Now select the final query of data
         mainSQL = "SELECT BLUEPRINT_ID, BLUEPRINT_GROUP_ID, ITEM_ID, ITEM_GROUP_ID, ITEM_CATEGORY_ID, MARKET_GROUP_ID, MARKET_GROUP, TECH_LEVEL, PORTION_SIZE, "
         mainSQL &= "BASE_PRODUCTION_TIME, BASE_RESEARCH_TL_TIME, BASE_RESEARCH_ML_TIME, BASE_COPY_TIME, BASE_INVENTION_TIME, "
-        mainSQL &= "MAX_PRODUCTION_LIMIT, ITEM_TYPE, RACE_ID, META_GROUP, SIZE_GROUP, IGNORE, FAVORITE FROM ALL_BLUEPRINTS"
+        mainSQL &= "MAX_PRODUCTION_LIMIT, ITEM_TYPE, RACE_ID, META_GROUP, SIZE_GROUP, IGNORE, FAVORITE, 0, 0 FROM ALL_BLUEPRINTS"
         SQLCommand = New SQLiteCommand(mainSQL, SDEDB.DBRef)
         SQLReader1 = SQLCommand.ExecuteReader()
 
@@ -2389,7 +2391,9 @@ Public Class FrmMain
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(17)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(18)) & ","
             SQL &= BuildInsertFieldString(SQLReader1.GetValue(19)) & ","
-            SQL &= BuildInsertFieldString(SQLReader1.GetValue(20)) & ")"
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(20)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(21)) & ","
+            SQL &= BuildInsertFieldString(SQLReader1.GetValue(22)) & ")"
 
             Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
 
@@ -2405,7 +2409,7 @@ Public Class FrmMain
         SQL &= "ITEM_GROUP_ID, INVENTORY_GROUPS.groupName AS ITEM_GROUP, ITEM_CATEGORY_ID, INVENTORY_CATEGORIES.categoryName AS ITEM_CATEGORY, "
         SQL &= "MARKET_GROUP_ID, MARKET_GROUP, TECH_LEVEL, PORTION_SIZE, "
         SQL &= "BASE_PRODUCTION_TIME, BASE_RESEARCH_TL_TIME, BASE_RESEARCH_ML_TIME, BASE_COPY_TIME, BASE_INVENTION_TIME, "
-        SQL &= "MAX_PRODUCTION_LIMIT, ITEM_TYPE, RACE_ID, META_GROUP, SIZE_GROUP, IGNORE, FAVORITE "
+        SQL &= "MAX_PRODUCTION_LIMIT, ITEM_TYPE, RACE_ID, META_GROUP, SIZE_GROUP, IGNORE, FAVORITE, ADDITIONAL_COSTS, INCLUDEBPCCOST "
         SQL &= "FROM ALL_BLUEPRINTS_FACT, INVENTORY_TYPES AS ITBP, INVENTORY_GROUPS AS IGBP, INVENTORY_TYPES,  INVENTORY_GROUPS,  INVENTORY_CATEGORIES "
         SQL &= "WHERE BLUEPRINT_ID = ITBP.typeID AND ITBP.groupID = IGBP.groupID "
         SQL &= "AND ITEM_ID = INVENTORY_TYPES.typeID AND ITEM_CATEGORY_ID = INVENTORY_CATEGORIES.categoryID AND ITEM_GROUP_ID = INVENTORY_GROUPS.groupID "
@@ -4617,9 +4621,7 @@ Public Class FrmMain
         SQL &= "RUNS INTEGER NOT NULL,"
         SQL &= "BP_TYPE INTEGER NOT NULL,"
         SQL &= "OWNED INTEGER NOT NULL,"
-        SQL &= "SCANNED INTEGER NOT NULL,"
-        SQL &= "FAVORITE INTEGER NOT NULL,"
-        SQL &= "ADDITIONAL_COSTS FLOAT"
+        SQL &= "SCANNED INTEGER NOT NULL"
         SQL &= ")"
 
         Call Execute_SQLiteSQL(SQL, EVEIPHSQLiteDB.DBRef)
