@@ -2122,7 +2122,7 @@ Public Class FrmMain
         SQL = "CREATE TABLE ALL_BLUEPRINTS AS SELECT industryBlueprints.blueprintTypeID AS BLUEPRINT_ID, "
         SQL &= "invTypes1.typeName AS BLUEPRINT_NAME, "
         SQL &= "invGroups1.groupID AS BLUEPRINT_GROUP_ID, "
-        SQL &= "invGroups1.groupName AS  BLUEPRINT_GROUP, "
+        SQL &= "invGroups1.groupName AS BLUEPRINT_GROUP, "
         SQL &= "invTypes.typeID AS ITEM_ID, "
         SQL &= "invTypes.typeName AS ITEM_NAME, "
         SQL &= "invGroups.groupID AS ITEM_GROUP_ID, "
@@ -2147,7 +2147,7 @@ Public Class FrmMain
         SQL &= "0 AS FAVORITE "
         SQL &= "FROM invTypes "
         SQL &= "LEFT JOIN marketGroups ON invTypes.marketGroupID = marketGroups.marketGroupID "
-        SQL &= "LEFT JOIN dogmaTypeAttributes ON invTypes.typeID = dogmaTypeAttributes.typeID AND attributeID = 633, "
+        SQL &= "LEFT JOIN dogmaTypeAttributes ON invTypes.typeID = dogmaTypeAttributes.typeID AND attributeID = 633, " 'meta level 1692 is the meta group
         SQL &= "invTypes AS invTypes1, invGroups, invGroups AS invGroups1, invCategories, "
         SQL &= "industryActivityProducts, industryActivities, "
         SQL &= "industryBlueprints "
@@ -2179,6 +2179,9 @@ Public Class FrmMain
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
         SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 3 WHERE ITEM_CATEGORY = 'Subsystem' OR ITEM_GROUP = 'Strategic Cruiser' OR ITEM_GROUP = 'Tactical Destroyer'"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
+        ' Officer siege module bp
+        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 1 WHERE BLUEPRINT_ID = 88267"
+        Execute_SQLiteSQL(SQL, SDEDB.DBRef)
         ' Structure T1
         SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 1 WHERE META_GROUP = 54"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
@@ -2194,8 +2197,8 @@ Public Class FrmMain
         ' for abyssal - it uses meta value where attributeid = 1692 for some reason
         SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = META_GROUP, ITEM_TYPE = META_GROUP WHERE META_GROUP IN (1,2) AND (ITEM_TYPE IS NULL OR ITEM_TYPE = 0) AND META_GROUP IS NOT NULL"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
-        ' Treat all boosters as T1
-        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 1 WHERE BLUEPRINT_GROUP_ID = 718"
+        ' Treat all boosters and implants as T1
+        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 1 WHERE ITEM_CATEGORY_ID = 20"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
         SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 2, ITEM_TYPE = 2 WHERE BLUEPRINT_NAME LIKE 'Polarized%'"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
@@ -2203,7 +2206,7 @@ Public Class FrmMain
         SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 1 WHERE TECH_LEVEL = 0"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
-        ' Tech's first
+        ' T1 resets
         SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1 "
         SQL &= "WHERE (TECH_LEVEL=3 AND ITEM_GROUP='Hybrid Tech Components') "
         SQL &= "OR (TECH_LEVEL=2 AND ITEM_GROUP Like '%Construction Components') "
@@ -2212,51 +2215,44 @@ Public Class FrmMain
         SQL &= "OR (ITEM_GROUP='Tool')"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
-        ' Alliance Tournament ships others added - They are set as T2 (use t2 mats to build but can't be invented) but come up as faction in game ('Mimir','Freki','Adrestia','Utu','Vangel','Malice',
-        'Etana','Cambion','Moracha','Chremoas','Whiptail','Chameleon','Caedes','Marshal', 'Hydra', 'Pacifier', 'Monitor', 'Enforcer', 'Tiamat', 'Victor','Laelaps','Raiju')
-        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 1 WHERE BLUEPRINT_ID IN (3517,3519,32789,32791,33396,33398,33674,33676,42525,45486,45487,45528,45532,45535,48637,48638,60768,60767)"
+        ' Alliance Tournament ships others added - They are set as T2 (use t2 mats to build but can't be invented) but come up as faction in game ('Mimir','Freki','Adrestia','Utu','Vangel', etc.)
+        ' They are all 'Special Edition' ships so just set them here
+        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 1 "
+        SQL &= "WHERE MARKET_GROUP = 'CONCORD' OR MARKET_GROUP LIKE 'SPECIAL EDITION%'"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
-        ' Quick fix to update the sql table for Rubicon - Ascendancy Implant Blueprints (and Low-Grade Ascendancy) are set to T2 implant (Alpha), not invented though so set to T1
-        Call Execute_SQLiteSQL("UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1 WHERE BLUEPRINT_ID IN (33536,33543,33545,33546,33547,33548,33556,33558,33560,33562,33564,33566)", SDEDB.DBRef)
+        ' Now update the Item Types - Other tables take this item type data
+        ' Item types: 1 = T1, 2 = T2, 3 = storyline, 14 = Tech 3, 15 = Pirate, 16 = Navy
+        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 3 WHERE META_GROUP = 3" ' Consider storyline a tech 1 and set the storyline flag
+        Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
-        ' Now update the Item Types - Other tables take this item type data item types: 1 = T1, 2 = T2, 14 = Tech 3, 15 = Pirate, 16 = Navy
+        ' Update the T3, Pirate, and Navy flags
         SQL = "UPDATE ALL_BLUEPRINTS SET ITEM_TYPE = 14 WHERE TECH_LEVEL = 3" ' T3 stuff
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
-        SQL = "UPDATE ALL_BLUEPRINTS SET ITEM_TYPE = 15 WHERE MARKET_GROUP = 'Pirate Faction'"
+
+        ' All items for Navy/Pirate are set to META_GROUP = 4 (Faction) so search for Navy and set to 16, all others are 15 for pirate
+        SQL = "UPDATE ALL_BLUEPRINTS SET ITEM_TYPE = 15 WHERE META_GROUP = 4 " ' Pirate 
+        SQL &= "AND NOT (BLUEPRINT_NAME LIKE '%Fleet%' OR BLUEPRINT_NAME LIKE '%Navy%' OR BLUEPRINT_NAME LIKE '%CONCORD%' OR BLUEPRINT_NAME LIKE 'Consortium%')"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
-        SQL = "UPDATE ALL_BLUEPRINTS SET ITEM_TYPE = 16 WHERE MARKET_GROUP = 'Navy Faction'"
+
+        SQL = "UPDATE ALL_BLUEPRINTS SET ITEM_TYPE = 16 WHERE META_GROUP = 4 " ' Navy 
+        SQL &= "AND (BLUEPRINT_NAME LIKE '%Fleet%' OR BLUEPRINT_NAME LIKE '%Navy%' OR BLUEPRINT_NAME LIKE '%CONCORD%' OR BLUEPRINT_NAME LIKE 'Consortium%')"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
-        SQL = "UPDATE ALL_BLUEPRINTS SET ITEM_TYPE = 16 WHERE META_GROUP = 4 AND MARKET_GROUP IS NULL AND ITEM_CATEGORY = 'Ship'" ' Navy Faction Ships
-        Execute_SQLiteSQL(SQL, SDEDB.DBRef)
-        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1 WHERE TECH_LEVEL <> 1 AND META_GROUP = 3" ' Consider storyline a tech 1
-        Execute_SQLiteSQL(SQL, SDEDB.DBRef)
-        SQL = "UPDATE ALL_BLUEPRINTS SET ITEM_TYPE = 3 WHERE META_GROUP = 3" ' Storyline
-        Execute_SQLiteSQL(SQL, SDEDB.DBRef)
-        SQL = "UPDATE ALL_BLUEPRINTS SET ITEM_TYPE = 16 WHERE META_GROUP = 4 AND MARKET_GROUP = 'Scan Probes'"
-        Execute_SQLiteSQL(SQL, SDEDB.DBRef)
-        SQL = "UPDATE ALL_BLUEPRINTS SET ITEM_TYPE = 15 WHERE META_GROUP = 4 AND ITEM_CATEGORY IN ('Structure', 'Starbase')"
-        Execute_SQLiteSQL(SQL, SDEDB.DBRef)
-        SQL = "UPDATE ALL_BLUEPRINTS SET ITEM_TYPE = 16 WHERE META_GROUP = 4 AND ITEM_CATEGORY = 'Module'"
-        Execute_SQLiteSQL(SQL, SDEDB.DBRef)
-        SQL = "UPDATE ALL_BLUEPRINTS SET ITEM_TYPE = 16 WHERE META_GROUP = 4 AND ITEM_CATEGORY = 'Drone'" ' Augmented and Integrated drones
-        Execute_SQLiteSQL(SQL, SDEDB.DBRef)
+
+        ' Clean up
         SQL = "UPDATE ALL_BLUEPRINTS SET ITEM_TYPE = TECH_LEVEL WHERE ITEM_TYPE = 0 OR ITEM_TYPE IS NULL"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
-        SQL = "UPDATE ALL_BLUEPRINTS SET TECH_LEVEL = 1, ITEM_TYPE = 15 WHERE  BLUEPRINT_GROUP = 'Combat Drone Blueprint' AND ITEM_TYPE = 16" ' Aug/Integrated drones
-        Execute_SQLiteSQL(SQL, SDEDB.DBRef)
-        SQL = "UPDATE ALL_BLUEPRINTS SET ITEM_TYPE = 2, TECH_LEVEL = 2 WHERE BLUEPRINT_ID = 47331" ' For some reason, the Standup XL Energy Nuet II is marked as T1
-        Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
-        ' Add the S/M/L/XL tag to these here
+        ' Add the S/M/L/XL tag to each bp here
 
-        ' Drones are light, missiles are rockets and light
+        ' Small 
         SQL = "UPDATE ALL_BLUEPRINTS SET SIZE_GROUP = 'S' WHERE SIZE_GROUP = 'XX' AND ("
         SQL &= "ITEM_NAME LIKE '% S' OR ITEM_NAME Like '%Small%' "
         SQL &= "OR (ITEM_NAME Like '%Micro%' AND ITEM_GROUP <> 'Propulsion Module' AND ITEM_NAME NOT LIKE 'Microwave%') "
         SQL &= "OR ITEM_NAME Like '%Defender%' "
         SQL &= "OR (ITEM_CATEGORY = 'Implant') "
         SQL &= "OR ITEM_NAME Like '% S-Set%' "
+        SQL &= "OR BLUEPRINT_ID IN (36960,37538,36961,81922) " ' Cyno beacon/jammer, jump bridge, metenox
         SQL &= "OR ITEM_NAME IN ('Cap Booster 25','Cap Booster 50') "
         SQL &= "OR MARKET_GROUP IN ('Interdiction Probes', 'Mining Crystals', 'Nanite Repair Paste', 'Scan Probes', 'Survey Probes', 'Scripts') "
         SQL &= "OR (ITEM_CATEGORY = 'Drone' AND ITEM_ID IN (SELECT typeID from invTypes where packagedVolume = 5)) "
@@ -2267,37 +2263,40 @@ Public Class FrmMain
 
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
-        ' Drones are medium, missiles are heavys and hams
+        ' Medium
         SQL = "UPDATE ALL_BLUEPRINTS SET SIZE_GROUP = 'M' WHERE SIZE_GROUP = 'XX' AND ("
         SQL &= "ITEM_NAME LIKE '% M' OR ITEM_NAME Like '%Medium%' OR ITEM_NAME IN ('Cap Booster 75','Cap Booster 100') "
         SQL &= "OR (ITEM_CATEGORY = 'Drone' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE packagedVolume = 10)) "
         SQL &= "OR (ITEM_GROUP = 'Propulsion Module' AND ITEM_NAME Like '10MN%') "
         SQL &= "OR (ITEM_GROUP IN ('Gang Coordinator')) "
         SQL &= "OR ITEM_NAME Like '% M-Set%' "
+        SQL &= "OR BLUEPRINT_ID IN (36966,36971,36977)" ' Raitaru, Astrahus, Athanor"
         SQL &= "OR (ITEM_CATEGORY = 'Subsystem') "
         SQL &= "OR (ITEM_CATEGORY = 'Module' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE marketGroupID IN (562,565,568,572,575,578,1673,1674))) "
         SQL &= "OR (ITEM_CATEGORY IN ('Charge','Module') AND ITEM_NAME Like '%Heavy%' AND ITEM_NAME Not Like '%Jolt%')  "
         SQL &= "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE groupID IN (906,106,1201,1202,419,540,26,380,543,833,358,894,28,832,463,963)))) "
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
-        ' Drones are Heavy, missiles are cruise/torp, towers are regular towers (Caldari Control Tower)
+        ' Large
         SQL = "UPDATE ALL_BLUEPRINTS SET SIZE_GROUP = 'L' "
         SQL &= "WHERE SIZE_GROUP = 'XX' AND (ITEM_NAME LIKE '% L' "
         SQL &= "OR (ITEM_NAME Like '%Large%' AND ITEM_NAME NOT Like '%X-Large%') "
-        SQL &= "OR ITEM_NAME IN ('Cap Booster 150','Cap Booster 200')"
+        SQL &= "OR ITEM_NAME IN ('Cap Booster 150','Cap Booster 200') "
         SQL &= "OR (ITEM_CATEGORY = 'Drone' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE packagedVolume >= 25 and packagedVolume <=50)) "
         SQL &= "OR (ITEM_GROUP = 'Propulsion Module' AND ITEM_NAME Like '100MN%') "
-        SQL &= "OR (ITEM_NAME Like ('%Control Tower')) "
+        SQL &= "OR ITEM_NAME Like ('%Control Tower') "
+        SQL &= "OR ITEM_CATEGORY IN ('Starbase','Structure Module') "
+        SQL &= "OR ITEM_GROUP = 'Structure Components' "
         SQL &= "OR ITEM_NAME Like '% L-Set%' "
+        SQL &= "OR BLUEPRINT_ID IN (36967,36972,36978)" ' Fortizar, Azbel, Tatara
         SQL &= "OR (ITEM_CATEGORY = 'Deployable' AND ITEM_GROUP <> 'Mobile Warp Disruptor') "
-        SQL &= "OR (ITEM_CATEGORY = 'Structure' AND ITEM_GROUP <> 'Control Tower')"
         SQL &= "OR (ITEM_CATEGORY = 'Module' AND ITEM_NAME Like '%Heavy%' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE marketGroupID NOT IN (563,566,569,573,576,579,1675,1676))) "
         SQL &= "OR (ITEM_CATEGORY = 'Module' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE marketGroupID IN (563,566,569,573,576,579,1675,1676))) "
         SQL &= "OR (ITEM_CATEGORY IN ('Charge','Module') AND (ITEM_NAME Like '%Cruise%' OR ITEM_NAME Like '%Torpedo%') AND ITEM_NAME NOT LIKE '% XL%') "
         SQL &= "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE groupID IN (27, 898, 900))))"
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
-        ' Drones are fighters, missiles are upwell structures
+        ' Extra Large
         SQL = "UPDATE ALL_BLUEPRINTS SET SIZE_GROUP = 'XL' "
         SQL &= "WHERE SIZE_GROUP = 'XX' AND (ITEM_NAME LIKE '% XL%' "
         SQL &= "OR ITEM_NAME LIKE '%Capital%' "
@@ -2305,20 +2304,18 @@ Public Class FrmMain
         SQL &= "OR ITEM_NAME LIKE '%X-Large%' "
         SQL &= "OR ITEM_NAME LIKE '%Giant%' "
         SQL &= "OR ITEM_NAME LIKE '% XL-Set%' "
+        SQL &= "OR ITEM_NAME = 'Orca' "
+        SQL &= "OR BLUEPRINT_ID IN (40521,36968,36973)" ' Keepstar (both), Sotiyo 
         SQL &= "OR ITEM_CATEGORY IN ('Infrastructure Upgrades','Sovereignty Structures','Orbitals') "
         SQL &= "OR ITEM_GROUP IN ('Station Components', 'Remote ECM Burst', 'Super Weapon', 'Siege Module')"
         SQL &= "OR ITEM_NAME IN ('Cap Booster 400','Cap Booster 800') "
         SQL &= "OR (ITEM_CATEGORY = 'Fighter') "
-        SQL &= "OR (ITEM_CATEGORY IN ('Starbase','Structure Module')) "
         SQL &= "OR (ITEM_CATEGORY = 'Module' AND (ITEM_ID IN (SELECT typeID FROM invTypes WHERE marketGroupID IN (771,772,773,774,775,776,1642,1941)))) "
         SQL &= "OR (ITEM_GROUP IN ('Jump Drive Economizer','Drone Control Unit') OR ITEM_NAME LIKE 'Jump Portal%') "
         SQL &= "OR (ITEM_CATEGORY IN ('Charge','Module') AND ITEM_NAME Like '%Citadel%') "
         SQL &= "OR (ITEM_CATEGORY = 'Celestial' AND (ITEM_NAME Like 'Station%' OR ITEM_NAME LIKE '%Outpost%' OR ITEM_NAME LIKE '%Freight%')) "
         SQL &= "OR ITEM_GROUP LIKE 'Bomb%' "
-        SQL &= "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE groupID IN (30,485,513,547,659,883,902,941,1538))))"
-        Execute_SQLiteSQL(SQL, SDEDB.DBRef)
-
-        SQL = "UPDATE ALL_BLUEPRINTS SET SIZE_GROUP = 'XL' WHERE ITEM_NAME = 'Orca'"
+        SQL &= "OR (ITEM_CATEGORY = 'Ship' AND ITEM_ID IN (SELECT typeID FROM invTypes WHERE groupID IN (30,485,513,547,659,883,902,941,1538,4594,1972))))" ' Capital ships
         Execute_SQLiteSQL(SQL, SDEDB.DBRef)
 
         ' Anything left update to small (may need to revisit later)
